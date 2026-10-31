@@ -1,0 +1,10 @@
+# Datos personales reales (planes de la nutricionista): nunca se versionan
+datos-personales/
+*.pdf
+*.xlsx
+!**/tests/fixtures/**
+
+# Sistema / editores
+.DS_Store
+.idea/
+.vscode/
