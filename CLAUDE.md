@@ -38,6 +38,8 @@ WORKSPACE_PATH: /home/tonyjdev/Projects/workspace
 WORKSPACE_PROJECT_KEY: HEXM
 WORKSPACE_USER_EMAIL: test@example.com
 WORKSPACE_CLI: /home/tonyjdev/.agents/skills/workspace-task-creator/scripts/manage_workspace_task.sh
+BRANCH_DEVELOP: develop
+BRANCH_STAGING: (pendiente: se creará con el primer despliegue)
 BRANCH_MAIN: main
 BRANCH_FEATURE_PREFIX: feat/
 CHECK_CMD: (ninguno todavía; lo crea el nivel 0)

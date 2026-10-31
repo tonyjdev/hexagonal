@@ -19,7 +19,7 @@ Workspace define los estados: `suggested` → `backlog` → `open` → `in_progr
 | Fase | Comando | Qué hace |
 |---|---|---|
 | Crear | `/create-task` | Da de alta una tarea `HEXM` en Workspace con su descripción y criterios de aceptación. |
-| Empezar | `/start-task [HEXM-NNNN]` | Lee la tarea y sus documentos, crea la rama `feat/hexm-NNNN-slug` desde `main` y pasa la tarea a `in_progress`. |
+| Empezar | `/start-task [HEXM-NNNN]` | Lee la tarea y sus documentos, crea la rama `feat/hexm-NNNN-slug` desde `develop` y pasa la tarea a `in_progress`. |
 | Cerrar | `/close-task` | Gate de calidad, documentos de cierre (**Resultado, Pruebas y Explicación**), comentario de resultado, commit, PR, merge y cierre de la tarea. |
 
 **Regla fija:** una tarea = una rama = un PR. No se mezclan dos tareas en la misma rama.
@@ -60,9 +60,18 @@ Solo cuando aplican: `tech_debt` (deuda técnica), `domain_issue` (una regla de 
 
 ## 4. Ramas, commits y PR
 
-- Rama: `feat/hexm-NNNN-slug`, creada desde `main` actualizado. No hay rama `develop` ni worktrees: aquí trabaja un solo agente y así es más fácil de seguir.
+Estrategia de ramas: [ADR 0001](adr/0001-estrategia-de-ramas.md).
+
+```
+feat/hexm-NNNN-slug ──PR──► develop ──PR──► staging ──PR──► main
+                          (integración)  (preproducción)  (producción)
+                                          └─ se creará con el primer despliegue
+```
+
+- Rama de tarea: `feat/hexm-NNNN-slug`, creada desde `develop` actualizado. Sin worktrees: aquí trabaja un solo agente y así es más fácil de seguir.
 - Commits en español. El commit final de la tarea es `Done HEXM-NNNN: descripción`.
-- PR contra `main` en GitHub (`tonyjdev/hexagonal`), con resumen, cambios y verificación. Se fusiona con `gh pr merge --merge --delete-branch`.
+- PR contra **`develop`** en GitHub (`tonyjdev/hexagonal`), con resumen, cambios y verificación. Se fusiona con `gh pr merge --merge --delete-branch`.
+- `main` (y más adelante `staging`) **solo recibe promociones** por PR desde la rama anterior, nunca trabajo directo. Al cerrar un nivel se puede promocionar `develop` → `main`.
 - Ni los commits ni el PR llevan atribución `Co-Authored-By` de Claude.
 
 ## 5. Gate de calidad

@@ -1,6 +1,6 @@
 ---
 name: start-task
-description: "Empieza una tarea HEXM de Workspace: la selecciona, carga su descripción y documentos asociados, crea la rama feat/hexm-NNNN-slug desde main, la pasa a in_progress y prepara la implementación con las convenciones didácticas del proyecto. Usar al comenzar a trabajar en una tarea de este repositorio."
+description: "Empieza una tarea HEXM de Workspace: la selecciona, carga su descripción y documentos asociados, crea la rama feat/hexm-NNNN-slug desde develop, la pasa a in_progress y prepara la implementación con las convenciones didácticas del proyecto. Usar al comenzar a trabajar en una tarea de este repositorio."
 ---
 
 # Start Task
@@ -37,10 +37,10 @@ Forman parte de la fuente de la tarea. Presta atención a `domain_issue` (decisi
 
 ### 3. Crear la rama
 
-El árbol de trabajo debe estar limpio y en `main`. Si no lo está, PARA e informa.
+El árbol de trabajo debe estar limpio y en `develop`. Si no lo está, PARA e informa.
 
 ```bash
-git switch {BRANCH_MAIN} && git pull --ff-only
+git switch {BRANCH_DEVELOP} && git pull --ff-only
 git switch -c {BRANCH_FEATURE_PREFIX}{task-key-en-minúsculas}-{slug}
 ```
 

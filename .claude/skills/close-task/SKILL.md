@@ -19,9 +19,9 @@ Lee el bloque de configuración de la sección `## Task System` de `CLAUDE.md`. 
 
 ### 1. Comprobaciones previas
 
-- La rama actual debe ser `feat/hexm-NNNN-…`. De ahí sale `{TASK_KEY}` (`HEXM-NNNN`). Si estás en `main`, PARA.
+- La rama actual debe ser `feat/hexm-NNNN-…`. De ahí sale `{TASK_KEY}` (`HEXM-NNNN`). Si estás en `develop` o en `main`, PARA.
 - Lee la tarea y sus documentos (`show`, `documents`) y repasa **cada criterio de aceptación** contra el código. Si falta alguno, PARA e informa.
-- Revisa el diff completo: `git diff {BRANCH_MAIN} --stat` y `git status`.
+- Revisa el diff completo: `git diff {BRANCH_DEVELOP} --stat` y `git status`.
 - Revisa que se cumplen las convenciones: identificadores en inglés, comentarios didácticos en español con `CONCEPTO:`, el dominio sin dependencias de Laravel y ningún dato personal real versionado.
 
 ### 2. Gate de calidad
@@ -92,9 +92,9 @@ Con estas secciones: **Resumen**, **Verificación** (los comandos y su resultado
 git add -A                       # sin .env, credenciales ni datos personales
 git commit -m "Done {TASK_KEY}: {descripción en español}"
 git push -u origin HEAD
-gh pr create --base {BRANCH_MAIN} --title "feat({TASK_KEY}): {Título}" --body "<Resumen, Cambios y Verificación>"
+gh pr create --base {BRANCH_DEVELOP} --title "feat({TASK_KEY}): {Título}" --body "<Resumen, Cambios y Verificación>"
 gh pr merge --merge --delete-branch
-git switch {BRANCH_MAIN} && git pull --ff-only
+git switch {BRANCH_DEVELOP} && git pull --ff-only
 ```
 
 Si es la última tarea del nivel, crea y sube la etiqueta: `git tag -a nivel-NN -m "Nivel NN: título" && git push origin nivel-NN`.
