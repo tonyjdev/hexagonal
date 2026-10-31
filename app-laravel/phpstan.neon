@@ -29,7 +29,7 @@ parameters:
     # es costoso.
     level: max
 
-    # Código analizado. En HEXM-0003 se añadirá src/ (el núcleo hexagonal).
+    # Código analizado: src/ (el núcleo hexagonal) y el código de Laravel.
     #
     # Quedan fuera, a propósito:
     # - config/: son arrays declarativos que leen env(), y env() devuelve
@@ -39,6 +39,7 @@ parameters:
     # - tests/: los tests de Pest usan closures con $this enlazado
     #   dinámicamente, que PHPStan no puede seguir sin un plugin adicional.
     paths:
+        - src
         - app
         - bootstrap/app.php
         - database
