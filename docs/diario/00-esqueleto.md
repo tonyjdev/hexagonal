@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-10-31 · **Etiqueta git:** `nivel-00`
 
-Tareas: HEXM-0001, HEXM-0002 y HEXM-0003.
+Tareas: HEXM-0001, HEXM-0002 y HEXM-0003, más HEXM-0004 como refuerzo posterior a la etiqueta (ver el anexo).
 
 ## Qué se ha construido
 
@@ -47,3 +47,11 @@ Todavía no hay ni una línea de negocio, y es lo esperado: este nivel prepara e
 - Neal Ford y otros, *Building Evolutionary Architectures* (*fitness functions*).
 - Documentación de Pest: *Architecture Testing*.
 - Ejercicio opcional: crea `src/Recipes/Domain/Probe.php` con `use Illuminate\Support\Collection;`, ejecuta `php artisan test --testsuite=Architecture` y lee el mensaje de error. Después bórralo.
+
+## Anexo: HEXM-0004, lista blanca de dependencias
+
+Al repasar cómo detectan los tests "que no se use Laravel", se comprobó que la lista negra dejaba pasar Carbon, `Laravel\Prompts` y cualquier librería que use Laravel por dentro. Se añadieron reglas de **lista blanca** (`toOnlyUse`): el núcleo solo puede usar PHP nativo, su propio código y las librerías autorizadas en un ADR (hoy, ninguna). Ver el [ADR 0004](../adr/0004-lista-blanca-de-dependencias-en-el-nucleo.md).
+
+También se comprobó un límite: el código dinámico (`$fn()`, `new $class`) no lo detectan ni los tests de arquitectura ni PHPStan; queda para la revisión de código.
+
+La etiqueta `nivel-00` no se ha movido (una etiqueta publicada no se reescribe): este refuerzo está en `develop` después de ella.

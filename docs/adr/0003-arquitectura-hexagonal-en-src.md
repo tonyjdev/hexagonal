@@ -1,6 +1,6 @@
 # 0003. Arquitectura hexagonal con el núcleo en `src/`
 
-**Fecha:** 2026-10-31 · **Estado:** aceptada · **Tarea:** HEXM-0003
+**Fecha:** 2026-10-31 · **Estado:** aceptada (complementada por el [ADR 0004](0004-lista-blanca-de-dependencias-en-el-nucleo.md)) · **Tarea:** HEXM-0003
 
 ## Contexto
 

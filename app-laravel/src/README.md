@@ -41,3 +41,14 @@ El glosario completo (español ↔ código) está en [`docs/DOMINIO.md`](../../d
 | **Infrastructure** | Todo lo anterior y Laravel. Es la única capa que puede hablar con otro contexto, a través de su capa de aplicación | — |
 
 **Estas reglas no son una convención: las comprueban los tests de arquitectura** (`tests/Architecture/`), que se ejecutan dentro de `composer ci:check`.
+
+### Lista blanca: solo PHP y el propio núcleo
+
+`Domain` y `Application` se comprueban con una **lista blanca** ([ADR 0004](../../docs/adr/0004-lista-blanca-de-dependencias-en-el-nucleo.md)): además de PHP nativo (`DateTimeImmutable`, `InvalidArgumentException`, `array_map`…), solo pueden usar lo que aparece en la columna "Puede usar". No basta con no usar Laravel: **cualquier** librería externa (Carbon, un paquete de Symfony, una librería que use Laravel por dentro…) hace fallar los tests.
+
+**Para autorizar una librería en el núcleo** (por ejemplo, `ramsey/uuid`):
+
+1. Escribe un ADR que explique por qué el núcleo la necesita y por qué no basta con PHP nativo.
+2. Añade su namespace raíz a `authorizedLibraries()` en `tests/Architecture/HexagonalLayersTest.php`.
+
+**Límite conocido:** los tests analizan el código sin ejecutarlo, así que no ven el código dinámico (`new $class`, `$fn()`). PHPStan tampoco lo señala. En el núcleo no se escribe, y lo vigila la revisión de código.
