@@ -102,7 +102,7 @@ hexagonal/
 │   ├── explicaciones/        # el porqué de cada tarea (copia de Workspace)
 │   ├── diario/               # una entrada por nivel terminado
 │   └── adr/                  # decisiones de arquitectura
-├── app-laravel/              # núcleo hexagonal (PHP 8.5 / Laravel 12)
+├── app-laravel/              # núcleo hexagonal (PHP 8.5 / Laravel 13)
 │   └── src/                  # código propio, fuera de app/ a propósito
 │       ├── Recipes/          #   contexto Recetario
 │       │   ├── Domain/

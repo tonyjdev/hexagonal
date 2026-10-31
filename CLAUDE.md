@@ -6,7 +6,7 @@ Instrucciones permanentes para trabajar en este repositorio. Se aplican en **tod
 
 Un proyecto **de aprendizaje**: una aplicación real (gestión de los planes de la nutricionista + recetario) que sirve como excusa para aprender:
 
-1. **Arquitectura hexagonal** (y DDD táctico) con **PHP 8.5 / Laravel 12 / PostgreSQL**, el stack principal del usuario.
+1. **Arquitectura hexagonal** (y DDD táctico) con **PHP 8.5 / Laravel 13 / PostgreSQL**, el stack principal del usuario.
 2. **Python + FastAPI** en servicios pequeños que actúan como adaptadores externos.
 3. **IA aplicada** (LLM, structured outputs, embeddings, pgvector, RAG, agentes, modelos locales), siguiendo el plan de aprendizaje personal del usuario.
 

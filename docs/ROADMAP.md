@@ -40,7 +40,7 @@ El roadmap tiene tres bloques:
 
 | | Nivel | Qué se construye | Conceptos |
 |---|---|---|---|
-| 🟡 | **0. Esqueleto** (HEXM-0001 a 0003) | Laravel 12 en `app-laravel/`, PostgreSQL con Docker Compose, Pest, autoload de `src/`, PHPStan y los primeros **tests de arquitectura** (el dominio no puede usar `Illuminate\*`). | Estructura hexagonal, regla de dependencias, tests de arquitectura |
+| 🟡 | **0. Esqueleto** (HEXM-0001 a 0003) | Laravel 13 en `app-laravel/`, PostgreSQL con Docker Compose, Pest, autoload de `src/`, PHPStan y los primeros **tests de arquitectura** (el dominio no puede usar `Illuminate\*`). | Estructura hexagonal, regla de dependencias, tests de arquitectura |
 | ⬜ | **1. Recetario: dominio** | `Recipe`, `RecipeId`, `Ingredient`, `Quantity`, `Unit`, `Step`, `Servings` y el caso de uso `CreateRecipe` con repositorio **en memoria**. Solo tests, sin base de datos ni HTTP. | Entidad, value object, invariantes, puerto de salida, caso de uso, adaptador en memoria |
 | ⬜ | **2. Recetario: adaptadores** | Repositorio con Eloquent/PostgreSQL (con su *mapper* dominio ↔ modelo), API REST (`/api/recipes`) y binding de puertos en un *service provider*. | Adaptadores *driven* y *driving*, inyección de dependencias, mapeo de persistencia |
 | ⬜ | **3. Planes: dominio** | `NutritionPlan`, `MenuWeek`, `MenuDay`, `Dish`, `FixedMeal`, `OptionGroup`, `ExchangeTable`. Reglas: dos semanas, 6 días con menú, comida + cena. | Agregados y sus límites, enums, colecciones inmutables |
@@ -84,3 +84,4 @@ El roadmap tiene tres bloques:
 | Fecha | Nivel | Nota |
 |---|---|---|
 | 2026-10-31 | – | Definición del proyecto, dominio, convenciones y roadmap. |
+| 2026-10-31 | 0 | HEXM-0001: Laravel 13 + PostgreSQL 18 (pgvector) con Docker Compose. |

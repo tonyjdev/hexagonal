@@ -72,7 +72,7 @@ No describe lo que se ha hecho, sino **por qué se ha hecho así**:
 - *Alternativas descartadas*: sobre todo "cómo se haría en un Laravel clásico" y por qué aquí no.
 - *Conceptos aplicados*: el concepto, una definición breve y el fichero donde verlo.
 
-**Copia en el repositorio (obligatoria):** guarda la misma Explicación en `docs/explicaciones/{TASK_KEY}-{slug}.md` (con el `slug` de la rama) y añade su línea al índice `docs/explicaciones/README.md`, bajo el nivel correspondiente. Debe tener exactamente el mismo contenido que el documento de Workspace. Usa el mismo fichero para el `create-document`, para que no puedan divergir.
+**Copia en el repositorio (obligatoria):** guarda la misma Explicación en `docs/explicaciones/{TASK_KEY}-{slug}.md` (con el `slug` de la rama) y añade su línea al índice `docs/explicaciones/README.md`, bajo el nivel correspondiente. Debe tener exactamente el mismo contenido que el documento de Workspace. Usa el mismo fichero para el `create-document`, para que no puedan divergir. Pasa siempre **rutas absolutas** a `--document-file` y `--comment-file`: el script se ejecuta desde Workspace y no resuelve rutas relativas a este repositorio.
 
 **Opcionales**, solo si aplican: `tech_debt`, `domain_issue`, `watchlist`, `backlog`, `suggested`. Si no aplica ninguno, dilo en el resultado.
 
