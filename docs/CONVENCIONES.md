@@ -83,6 +83,7 @@ Además de los comentarios, el asistente:
 - **Tests**: Pest en PHP (incluidos *tests de arquitectura* que comprueban que el dominio no depende de Laravel) y pytest en Python.
 - **Un commit por paso lógico**, con mensaje en español que explique el porqué.
 - **Una etiqueta git por nivel terminado** (`nivel-01`, `nivel-02`…), para poder volver atrás y ver la evolución.
+- **Tareas**: el trabajo se organiza en tareas `HEXM` gestionadas en Workspace; cada una se cierra con los documentos Resultado, Pruebas y Explicación. Ver [`TAREAS.md`](TAREAS.md).
 - **Diario del proyecto**: al terminar cada nivel se escribe `docs/diario/NN-titulo.md` con lo hecho, los conceptos aprendidos, las decisiones tomadas y las dudas pendientes.
 - **Decisiones de arquitectura importantes** se registran como ADR en `docs/adr/NNNN-titulo.md` (contexto → decisión → consecuencias).
 
@@ -97,6 +98,8 @@ hexagonal/
 │   ├── CONVENCIONES.md       # este documento
 │   ├── ROADMAP.md            # niveles y estado
 │   ├── DOMINIO.md            # glosario y modelo de dominio
+│   ├── TAREAS.md             # gestión de tareas con Workspace (HEXM)
+│   ├── explicaciones/        # el porqué de cada tarea (copia de Workspace)
 │   ├── diario/               # una entrada por nivel terminado
 │   └── adr/                  # decisiones de arquitectura
 ├── app-laravel/              # núcleo hexagonal (PHP 8.5 / Laravel 12)

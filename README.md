@@ -7,6 +7,8 @@ Proyecto de aprendizaje de **arquitectura hexagonal** con PHP/Laravel, **Python/
 - [Convenciones](docs/CONVENCIONES.md): idioma, nomenclatura, comentarios y forma de trabajar.
 - [Roadmap](docs/ROADMAP.md): niveles del proyecto y estado actual.
 - [Dominio](docs/DOMINIO.md): glosario (lenguaje ubicuo) y reglas de negocio.
+- [Tareas](docs/TAREAS.md): gestión de tareas con Workspace (proyecto `HEXM`).
+- [Explicaciones](docs/explicaciones/): por qué se hizo cada tarea así, a nivel de arquitectura y de negocio.
 - [Diario](docs/diario/): qué se aprendió en cada nivel.
 - [ADR](docs/adr/): decisiones de arquitectura.
 
