@@ -42,5 +42,5 @@ BRANCH_DEVELOP: develop
 BRANCH_STAGING: (pendiente: se creará con el primer despliegue)
 BRANCH_MAIN: main
 BRANCH_FEATURE_PREFIX: feat/
-CHECK_CMD: (ninguno todavía; lo crea el nivel 0)
+CHECK_CMD: cd app-laravel && composer ci:check
 ```

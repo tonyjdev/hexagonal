@@ -1,0 +1,45 @@
+# ============================================================================
+# PHPStan + Larastan: análisis estático
+# ============================================================================
+#
+# CONCEPTO: análisis estático
+# PHPStan lee el código SIN ejecutarlo y detecta errores que, de otro modo,
+# solo aparecerían en producción: llamar a un método que no existe, pasar un
+# string donde se espera un int, olvidar que algo puede ser null...
+# Es como el compilador de un lenguaje tipado, pero para PHP.
+#
+# Larastan es una extensión de PHPStan que entiende la "magia" de Laravel
+# (facades, Eloquent, el contenedor...), que PHPStan solo no sabría seguir.
+#
+# Por qué importa en arquitectura hexagonal: los puertos son interfaces y los
+# value objects son tipos. Con tipos estrictos y un análisis al nivel máximo,
+# PHPStan comprueba que cada adaptador cumple exactamente el contrato de su
+# puerto. Las fronteras entre capas dejan de ser una convención y pasan a
+# comprobarse en cada ejecución del gate.
+#
+# Ejecutar:  composer types:check
+# ============================================================================
+
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    # "max" es el nivel más estricto (por encima del 10). Empezar en el máximo
+    # con el proyecto vacío es fácil; subir de nivel con mucho código escrito
+    # es costoso.
+    level: max
+
+    # Código analizado. En HEXM-0003 se añadirá src/ (el núcleo hexagonal).
+    #
+    # Quedan fuera, a propósito:
+    # - config/: son arrays declarativos que leen env(), y env() devuelve
+    #   `mixed` por diseño (Laravel no tiene un lector tipado de variables de
+    #   entorno). Al nivel máximo solo generaría avisos que obligarían a poner
+    #   casts para silenciarlos. No hay lógica nuestra ahí.
+    # - tests/: los tests de Pest usan closures con $this enlazado
+    #   dinámicamente, que PHPStan no puede seguir sin un plugin adicional.
+    paths:
+        - app
+        - bootstrap/app.php
+        - database
+        - routes
