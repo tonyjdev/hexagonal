@@ -85,3 +85,4 @@ El roadmap tiene tres bloques:
 |---|---|---|
 | 2026-10-31 | – | Definición del proyecto, dominio, convenciones y roadmap. |
 | 2026-10-31 | 0 | HEXM-0001: Laravel 13 + PostgreSQL 18 (pgvector) con Docker Compose. |
+| 2026-10-31 | 0 | HEXM-0002: gate `composer ci:check` (Pint, Larastan `max`, Pest) y tests sobre PostgreSQL (ADR 0002). |

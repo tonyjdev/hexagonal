@@ -23,8 +23,14 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
+        <!--
+            Los tests usan PostgreSQL (el mismo motor que en desarrollo), pero en
+            una base de datos propia, hexagonal_test, para no borrar los datos de
+            desarrollo. El host, el puerto y las credenciales se leen de .env.
+            Ver docs/adr/0002-base-de-datos-de-los-tests.md.
+        -->
+        <env name="DB_CONNECTION" value="pgsql"/>
+        <env name="DB_DATABASE" value="hexagonal_test"/>
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>

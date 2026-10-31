@@ -44,6 +44,13 @@ php artisan key:generate
 # 3. Crear las tablas
 php artisan migrate
 
+# 3b. Base de datos de los tests (solo si tu volumen de Docker ya existía
+#     antes de HEXM-0002; en volúmenes nuevos se crea sola)
+docker compose exec postgres createdb -U hexagonal hexagonal_test
+
+# 3c. Gate de calidad: formato + análisis estático + tests
+composer ci:check
+
 # 4. Arrancar la aplicación
 php artisan serve                  # http://localhost:8000
 ```
@@ -53,4 +60,5 @@ Para parar la base de datos: `docker compose down` (conserva los datos) o `docke
 ### Versiones elegidas
 
 - **Laravel 13**: la última versión estable cuando empezó el proyecto, y la misma que usan los demás proyectos del autor.
+- **Pest 5, Larastan 3 (PHPStan al nivel `max`) y Pint** como gate de calidad (`composer ci:check`).
 - **PostgreSQL 18 con pgvector** (`pgvector/pgvector:pg18`): pgvector hará falta en el bloque C (embeddings), y usar ya esa imagen evita migrar de imagen más adelante.

@@ -76,7 +76,22 @@ feat/hexm-NNNN-slug ──PR──► develop ──PR──► staging ──PR
 
 ## 5. Gate de calidad
 
-Antes de cerrar una tarea, tiene que pasar el comando `CHECK_CMD` definido en `CLAUDE.md`. Hasta que el nivel 0 lo cree, el gate son los tests que existan (o ninguno, si la tarea es solo documentación). Lo que se ejecutó se indica siempre en el documento de resultado.
+Antes de cerrar una tarea tiene que pasar el gate (`CHECK_CMD` en `CLAUDE.md`):
+
+```bash
+docker compose up -d                  # los tests usan PostgreSQL (ADR 0002)
+cd app-laravel && composer ci:check
+```
+
+`ci:check` ejecuta, por orden y parando en el primer fallo (de lo más rápido a lo más lento):
+
+| Paso | Comando suelto | Qué comprueba |
+|---|---|---|
+| 1. Formato | `composer format:check` | Pint, con el preset de Laravel. Para corregirlo: `composer lint`. |
+| 2. Análisis estático | `composer types:check` | PHPStan + Larastan al nivel `max`. |
+| 3. Tests | `composer test` | Pest, contra la base de datos `hexagonal_test`. |
+
+La salida exacta del gate se copia siempre en el documento de resultado de la tarea.
 
 ## 6. Herramienta
 

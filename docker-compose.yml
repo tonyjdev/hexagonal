@@ -54,6 +54,9 @@ services:
     # /var/lib/postgresql/data, como en versiones anteriores).
     volumes:
       - postgres-data:/var/lib/postgresql
+      # Scripts que se ejecutan la primera vez que se crea el volumen
+      # (crean la base de datos de los tests). Solo lectura (:ro).
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
 
     # Comprobación de salud: Docker marca el servicio como "healthy" cuando
     # PostgreSQL ya acepta conexiones. Sirve para saber cuándo se puede migrar.

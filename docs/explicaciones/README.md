@@ -9,3 +9,4 @@ Fichero: `HEXM-NNNN-slug.md`. Secciones: Explicación · Lógica de negocio · D
 ### Nivel 0: Esqueleto
 
 - [HEXM-0001: Esqueleto Laravel y PostgreSQL](HEXM-0001-esqueleto-laravel-y-postgresql.md): por qué la base de datos va en Docker y es un detalle de infraestructura.
+- [HEXM-0002: Gate de calidad con Pest, PHPStan y Pint](HEXM-0002-gate-de-calidad-con-pest-phpstan-y-pint.md): por qué un gate único, el análisis estático al máximo y los tests contra PostgreSQL.
