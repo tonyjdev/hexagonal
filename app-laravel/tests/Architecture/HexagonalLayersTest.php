@@ -25,8 +25,8 @@
 | entere. Ver src/README.md y docs/adr/0003-arquitectura-hexagonal-en-src.md.
 |
 | Mientras las capas estén vacías, estos tests pasan "trivialmente". Su valor
-| aparece desde el nivel 1: el primer `use Illuminate\...` en el dominio los
-| rompe.
+| aparece desde el nivel 1: el primer `use Illuminate\...` en el dominio (o
+| de cualquier librería no autorizada, ver la lista blanca) los rompe.
 */
 
 /**
@@ -60,6 +60,55 @@ function laravel(): array
         'app', 'config', 'env', 'now', 'today', 'collect', 'event', 'dispatch',
         'logger', 'cache', 'request', 'response', 'route', 'view', 'auth', 'session',
     ];
+}
+
+/**
+ * Librerías externas autorizadas dentro del núcleo (Domain y Application).
+ *
+ * De momento, ninguna: el núcleo solo usa PHP nativo y su propio código.
+ * Autorizar una librería (por ejemplo, ramsey/uuid para los identificadores)
+ * es una decisión de arquitectura: se añade aquí su namespace y se justifica
+ * en un ADR. Ver src/README.md.
+ *
+ * @return list<string>
+ */
+function authorizedLibraries(): array
+{
+    return [];
+}
+
+/**
+ * La lista blanca de una capa: lo ÚNICO que puede usar, además de PHP nativo.
+ *
+ * CONCEPTO: lista blanca (allowlist) frente a lista negra (denylist)
+ * Las reglas de "no uses Laravel" son una lista negra: prohíben lo que se
+ * nos ha ocurrido prohibir, y todo lo demás pasa. En HEXM-0004 se comprobó
+ * que dejaban entrar Carbon, Laravel\Prompts (otro namespace) o cualquier
+ * librería que use Laravel por dentro. La lista blanca invierte la pregunta:
+ * no "¿usa algo prohibido?", sino "¿usa algo que no esté autorizado?".
+ * Las clases y funciones de PHP (DateTimeImmutable, array_map...) siempre
+ * están permitidas.
+ *
+ * @return list<string>
+ */
+function allowedDependencies(string $context, string $layer): array
+{
+    $allowed = match ($layer) {
+        // El dominio solo se conoce a sí mismo y al dominio compartido.
+        'Domain' => ["{$context}\\Domain", 'Shared\\Domain'],
+        // La aplicación orquesta su dominio; puede usar puertos transversales
+        // de Shared\Application (un EventBus, por ejemplo).
+        'Application' => [
+            "{$context}\\Domain",
+            "{$context}\\Application",
+            'Shared\\Domain',
+            'Shared\\Application',
+        ],
+        default => throw new InvalidArgumentException("Capa sin lista blanca: {$layer}"),
+    };
+
+    // array_unique: para Shared, "{$context}\Domain" y 'Shared\Domain' coinciden.
+    return array_values(array_unique([...$allowed, ...authorizedLibraries()]));
 }
 
 /**
@@ -101,6 +150,27 @@ arch('the application layer does not depend on Laravel', function (string $conte
 arch('the application layer does not depend on infrastructure', function (string $context) {
     expect("{$context}\\Application")->not->toUse("{$context}\\Infrastructure");
 })->with(fn () => [...businessContexts(), 'Shared']);
+
+// ---------------------------------------------------------------------------
+// Lista blanca del núcleo (Domain y Application)
+// ---------------------------------------------------------------------------
+
+arch('a core layer only uses PHP and its allowed dependencies', function (string $context, string $layer) {
+    // Esta regla es la red de seguridad: cubre lo que las listas negras de
+    // arriba no ven (librerías de terceros, paquetes de Laravel con otro
+    // namespace, librerías que dependen de Laravel por dentro). Las reglas de
+    // lista negra se mantienen porque su mensaje de error es más claro
+    // ("Expecting 'Recipes\Domain' not to use 'Illuminate'").
+    //
+    // Como en las fronteras entre contextos, una expectativa por namespace:
+    // en Pest 5 un array como objetivo de expect() puede dar falsos negativos.
+    //
+    // Límite conocido: el análisis es estático. El código dinámico
+    // (new $class, $fn(), call_user_func('now')) no se detecta, y PHPStan
+    // tampoco lo señala (comprobado en HEXM-0004). Queda para la revisión de
+    // código: en el núcleo no hay razón legítima para escribirlo.
+    expect("{$context}\\{$layer}")->toOnlyUse(allowedDependencies($context, $layer));
+})->with(fn () => [...businessContexts(), 'Shared'])->with(['Domain', 'Application']);
 
 // ---------------------------------------------------------------------------
 // Fronteras entre bounded contexts

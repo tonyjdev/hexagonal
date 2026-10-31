@@ -11,3 +11,4 @@ Fichero: `HEXM-NNNN-slug.md`. Secciones: Explicación · Lógica de negocio · D
 - [HEXM-0001: Esqueleto Laravel y PostgreSQL](HEXM-0001-esqueleto-laravel-y-postgresql.md): por qué la base de datos va en Docker y es un detalle de infraestructura.
 - [HEXM-0002: Gate de calidad con Pest, PHPStan y Pint](HEXM-0002-gate-de-calidad-con-pest-phpstan-y-pint.md): por qué un gate único, el análisis estático al máximo y los tests contra PostgreSQL.
 - [HEXM-0003: Estructura hexagonal y tests de arquitectura](HEXM-0003-estructura-hexagonal-y-tests-de-arquitectura.md): por qué el núcleo vive en `src/`, separado por contextos y capas, y por qué la regla de dependencias es un test.
+- [HEXM-0004: Tests de arquitectura con lista blanca](HEXM-0004-tests-de-arquitectura-con-lista-blanca.md): por qué prohibir Laravel no basta y el núcleo solo puede usar lo autorizado.
