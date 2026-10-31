@@ -8,4 +8,4 @@ Fichero: `HEXM-NNNN-slug.md`. Secciones: Explicación · Lógica de negocio · D
 
 ### Nivel 0: Esqueleto
 
-_(todavía ninguna)_
+- [HEXM-0001: Esqueleto Laravel y PostgreSQL](HEXM-0001-esqueleto-laravel-y-postgresql.md): por qué la base de datos va en Docker y es un detalle de infraestructura.

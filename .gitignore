@@ -8,3 +8,6 @@ datos-personales/
 .DS_Store
 .idea/
 .vscode/
+
+# Variables locales de docker compose (si se crean)
+/.env

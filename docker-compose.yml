@@ -1,0 +1,69 @@
+# ============================================================================
+# Servicios de desarrollo del proyecto
+# ============================================================================
+#
+# CONCEPTO: Docker Compose para servicios de desarrollo
+# Docker Compose describe en un único fichero los servicios externos que
+# necesita la aplicación (aquí, la base de datos) para que cualquiera pueda
+# levantarlos con un solo comando:
+#
+#     docker compose up -d      # arrancar en segundo plano
+#     docker compose ps         # ver el estado (debe salir "healthy")
+#     docker compose down       # parar (los datos se conservan en el volumen)
+#     docker compose down -v    # parar Y BORRAR los datos
+#
+# CONCEPTO: la base de datos es un detalle de infraestructura
+# En arquitectura hexagonal, el dominio no sabe qué base de datos hay detrás.
+# Que PostgreSQL viva en un contenedor que se enciende y se apaga refuerza esa
+# idea: es una pieza intercambiable que la aplicación usa a través de un
+# adaptador (de momento, Eloquent; en el nivel 2, nuestro propio repositorio).
+#
+# De momento solo se dockeriza la base de datos; PHP se ejecuta en local.
+# Dockerizar la aplicación completa llegará con el primer despliegue
+# (ver docs/adr/0001-estrategia-de-ramas.md).
+# ============================================================================
+
+name: hexagonal
+
+services:
+  postgres:
+    # Imagen oficial de PostgreSQL 18 con la extensión pgvector ya instalada.
+    # Hoy no usamos pgvector, pero la necesitaremos en el bloque C (embeddings
+    # y búsqueda semántica). Elegirla ya evita cambiar de imagen más adelante.
+    image: pgvector/pgvector:pg18
+    container_name: hexagonal-postgres
+
+    # Credenciales SOLO de desarrollo local: no son secretos reales.
+    # Se pueden sobrescribir con variables de entorno o con un fichero .env
+    # junto a este docker-compose.yml (ignorado por git).
+    environment:
+      POSTGRES_DB: ${HEXM_DB_DATABASE:-hexagonal}
+      POSTGRES_USER: ${HEXM_DB_USERNAME:-hexagonal}
+      POSTGRES_PASSWORD: ${HEXM_DB_PASSWORD:-hexagonal}
+
+    # "puerto_en_tu_máquina:puerto_en_el_contenedor".
+    # Se usa el 5433 en el host porque el 5432 lo suele ocupar un PostgreSQL
+    # instalado en el sistema. Dentro del contenedor sigue siendo el 5432.
+    # Se publica solo en 127.0.0.1 para no exponer la base de datos a la red.
+    ports:
+      - "127.0.0.1:${HEXM_DB_PORT:-5433}:5432"
+
+    # Volumen con nombre: los datos sobreviven a "docker compose down".
+    # Desde PostgreSQL 18, la imagen guarda los datos en un subdirectorio por
+    # versión, así que el volumen se monta en /var/lib/postgresql (y no en
+    # /var/lib/postgresql/data, como en versiones anteriores).
+    volumes:
+      - postgres-data:/var/lib/postgresql
+
+    # Comprobación de salud: Docker marca el servicio como "healthy" cuando
+    # PostgreSQL ya acepta conexiones. Sirve para saber cuándo se puede migrar.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+    restart: unless-stopped
+
+volumes:
+  postgres-data:

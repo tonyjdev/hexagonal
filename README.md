@@ -14,6 +14,43 @@ Proyecto de aprendizaje de **arquitectura hexagonal** con PHP/Laravel, **Python/
 
 ## Stack
 
-- PHP 8.5 · Laravel 12 · PostgreSQL (+ pgvector)
+- PHP 8.5 · Laravel 13 · PostgreSQL 18 (+ pgvector)
 - Python · FastAPI (servicios satélite)
 - LLM / embeddings / RAG / agentes (bloque C del roadmap)
+
+## Puesta en marcha
+
+### Requisitos
+
+| Herramienta | Versión usada | Comprobar |
+|---|---|---|
+| PHP (con `pdo_pgsql`) | 8.5 | `php -v` y `php -m \| grep pdo_pgsql` |
+| Composer | 2.x | `composer --version` |
+| Docker + Docker Compose | 29 / 2.40 | `docker compose version` |
+
+### Pasos
+
+```bash
+# 1. Levantar PostgreSQL (puerto 5433 de tu máquina)
+docker compose up -d
+docker compose ps                  # esperar a que salga "(healthy)"
+
+# 2. Instalar y configurar Laravel
+cd app-laravel
+composer install
+cp .env.example .env               # ya viene configurado para el PostgreSQL de Docker
+php artisan key:generate
+
+# 3. Crear las tablas
+php artisan migrate
+
+# 4. Arrancar la aplicación
+php artisan serve                  # http://localhost:8000
+```
+
+Para parar la base de datos: `docker compose down` (conserva los datos) o `docker compose down -v` (los borra).
+
+### Versiones elegidas
+
+- **Laravel 13**: la última versión estable cuando empezó el proyecto, y la misma que usan los demás proyectos del autor.
+- **PostgreSQL 18 con pgvector** (`pgvector/pgvector:pg18`): pgvector hará falta en el bloque C (embeddings), y usar ya esa imagen evita migrar de imagen más adelante.
