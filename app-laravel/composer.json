@@ -27,6 +27,9 @@
     "autoload": {
         "psr-4": {
             "App\\": "app/",
+            "Recipes\\": "src/Recipes/",
+            "MealPlanning\\": "src/MealPlanning/",
+            "Shared\\": "src/Shared/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         }

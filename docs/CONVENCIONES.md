@@ -128,7 +128,7 @@ Infrastructure  ──►  Application  ──►  Domain
   HTTP, FastAPI)      entrada)           de salida)
 ```
 
-Las flechas solo van hacia dentro. El dominio no conoce nada de las capas exteriores.
+Las flechas solo van hacia dentro. El dominio no conoce nada de las capas exteriores. Las reglas completas (incluidas las fronteras entre contextos) están en [`app-laravel/src/README.md`](../app-laravel/src/README.md) y en el [ADR 0003](adr/0003-arquitectura-hexagonal-en-src.md), y las comprueban los tests de `app-laravel/tests/Architecture/` dentro de `composer ci:check`.
 
 ---
 
