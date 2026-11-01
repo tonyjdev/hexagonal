@@ -1,0 +1,273 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "CreateRecipe paso a paso: de los primitivos a la receta guardada",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0007/create-recipe-paso-a-paso.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "853065d3be956af0c835108204d1d6deded51e26"
+    },
+    "legend": {
+      "entries": {
+        "default": {
+          "label": "Llamada"
+        },
+        "emphasis": {
+          "label": "Llamada principal"
+        },
+        "security": {
+          "label": "Excepción de dominio"
+        },
+        "return": {
+          "label": "Respuesta"
+        }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "caller",
+      "type": "external",
+      "label": "Adaptador de entrada",
+      "sublabel": "hoy el test; nivel 2 HTTP",
+      "sources": [
+        {
+          "path": "app-laravel/tests/Unit/Recipes/Application/CreateRecipeTest.php",
+          "line": 48,
+          "end_line": 64,
+          "label": "beforeEach + caso feliz"
+        }
+      ]
+    },
+    {
+      "id": "use_case",
+      "type": "backend",
+      "label": "CreateRecipe",
+      "sublabel": "caso de uso",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Application/CreateRecipe.php",
+          "line": 51,
+          "end_line": 68,
+          "label": "__invoke()"
+        }
+      ]
+    },
+    {
+      "id": "value_objects",
+      "type": "backend",
+      "label": "Value objects",
+      "sublabel": "RecipeId, Servings, Ingredient, Step",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/RecipeId.php",
+          "line": 62,
+          "end_line": 85,
+          "label": "generate()"
+        },
+        {
+          "path": "app-laravel/src/Recipes/Application/CreateRecipe.php",
+          "line": 82,
+          "end_line": 100,
+          "label": "toIngredient()"
+        }
+      ]
+    },
+    {
+      "id": "recipe",
+      "type": "security",
+      "label": "Recipe",
+      "sublabel": "raíz del agregado",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/Recipe.php",
+          "line": 89,
+          "end_line": 106,
+          "label": "create()"
+        }
+      ]
+    },
+    {
+      "id": "repository",
+      "type": "database",
+      "label": "InMemoryRecipeRepository",
+      "sublabel": "vía el puerto RecipeRepository",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/RecipeRepository.php",
+          "line": 36,
+          "end_line": 48,
+          "label": "puerto"
+        },
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/InMemoryRecipeRepository.php",
+          "line": 48,
+          "end_line": 51,
+          "label": "save()"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 530,
+      "label": "Datos válidos"
+    },
+    {
+      "from": 545,
+      "to": 650,
+      "label": "Datos inválidos"
+    }
+  ],
+  "messages": [
+    {
+      "id": "invoke",
+      "from": "caller",
+      "to": "use_case",
+      "y": 160,
+      "label": "CreateRecipeCommand",
+      "variant": "emphasis",
+      "note": "primitivos: name, servings, ingredients, steps"
+    },
+    {
+      "id": "generate_id",
+      "from": "use_case",
+      "to": "value_objects",
+      "y": 210,
+      "label": "RecipeId::generate()",
+      "variant": "default"
+    },
+    {
+      "id": "id_back",
+      "from": "value_objects",
+      "to": "use_case",
+      "y": 238,
+      "label": "UUID v7",
+      "variant": "return"
+    },
+    {
+      "id": "translate",
+      "from": "use_case",
+      "to": "value_objects",
+      "y": 270,
+      "label": "traducir primitivos",
+      "variant": "default",
+      "note": "Servings::of · toIngredient · Step::fromString; cada uno valida su regla"
+    },
+    {
+      "id": "vos_back",
+      "from": "value_objects",
+      "to": "use_case",
+      "y": 340,
+      "label": "value objects válidos",
+      "variant": "return"
+    },
+    {
+      "id": "create",
+      "from": "use_case",
+      "to": "recipe",
+      "y": 372,
+      "label": "Recipe::create(...)",
+      "variant": "emphasis",
+      "note": "comprueba las invariantes: nombre, ≥ 1 ingrediente, sin repetidos"
+    },
+    {
+      "id": "recipe_back",
+      "from": "recipe",
+      "to": "use_case",
+      "y": 432,
+      "label": "Recipe válida",
+      "variant": "return"
+    },
+    {
+      "id": "save",
+      "from": "use_case",
+      "to": "repository",
+      "y": 464,
+      "label": "save(recipe)",
+      "variant": "emphasis",
+      "note": "CreateRecipe solo conoce la interfaz; el adaptador guarda un clone"
+    },
+    {
+      "id": "id_to_caller",
+      "from": "use_case",
+      "to": "caller",
+      "y": 522,
+      "label": "RecipeId",
+      "variant": "return"
+    },
+    {
+      "id": "invalid",
+      "from": "recipe",
+      "to": "use_case",
+      "y": 570,
+      "label": "lanza InvalidRecipe",
+      "variant": "security",
+      "note": "o InvalidServings, InvalidIngredient…"
+    },
+    {
+      "id": "propagates",
+      "from": "use_case",
+      "to": "caller",
+      "y": 625,
+      "label": "la excepción sube",
+      "variant": "security",
+      "note": "save() no llega a llamarse: no se guarda nada"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "use_case",
+      "from": 160,
+      "to": 530,
+      "type": "backend"
+    },
+    {
+      "participant": "value_objects",
+      "from": 205,
+      "to": 346,
+      "type": "backend"
+    },
+    {
+      "participant": "recipe",
+      "from": 367,
+      "to": 438,
+      "type": "security"
+    },
+    {
+      "participant": "repository",
+      "from": 459,
+      "to": 480,
+      "type": "database"
+    },
+    {
+      "participant": "use_case",
+      "from": 570,
+      "to": 630,
+      "type": "backend"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "El caso de uso orquesta, no decide",
+      "items": [
+        "Traduce primitivos a value objects, delega las reglas en Recipe::create() y guarda por el puerto.",
+        "No hay ni un if de negocio en CreateRecipe: las invariantes viven en el dominio."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Sin recetas a medias",
+      "items": [
+        "save() solo se llama con una receta ya creada, es decir, válida.",
+        "Las excepciones de dominio suben tal cual; en el nivel 2 se traducirán a HTTP 422."
+      ]
+    }
+  ]
+}

@@ -20,7 +20,7 @@ Workspace define los estados: `suggested` → `backlog` → `open` → `in_progr
 |---|---|---|
 | Crear | `/create-task` | Da de alta una tarea `HEXM` en Workspace con su descripción y criterios de aceptación. |
 | Empezar | `/start-task [HEXM-NNNN]` | Lee la tarea y sus documentos, crea la rama `feat/hexm-NNNN-slug` desde `develop` y pasa la tarea a `in_progress`. |
-| Cerrar | `/close-task` | Gate de calidad, documentos de cierre (**Resultado, Pruebas y Explicación**), comentario de resultado, commit, PR, merge y cierre de la tarea. |
+| Cerrar | `/close-task` | Gate de calidad, commit del trabajo, **diagramas Archify**, documentos de cierre (**Resultado, Pruebas y Explicación**), comentario de resultado, commit de documentación, PR, merge y cierre de la tarea. |
 
 **Regla fija:** una tarea = una rama = un PR. No se mezclan dos tareas en la misma rama.
 
@@ -53,6 +53,15 @@ Plantilla: `workspace/resources/task-document-templates/explanation.md`.
 3. **Decisiones de arquitectura**: por qué cada pieza está en su capa (dominio, aplicación o infraestructura), qué puertos y adaptadores intervienen, hacia dónde van las dependencias y cómo viaja una petición de principio a fin. Un diagrama ASCII si ayuda.
 4. **Alternativas descartadas**: lo que se podría haber hecho de otra forma (por ejemplo, "la lógica en el modelo Eloquent, como en un Laravel clásico") y por qué no se eligió.
 5. **Conceptos aplicados**: cada concepto (value object, puerto, adaptador…), con una definición breve y el fichero donde verlo.
+6. **Diagramas** (sección propia del proyecto, añadida a la plantilla): los diagramas Archify de la tarea, con su enlace, el tipo y qué pregunta responde cada uno, o el motivo por el que la tarea no tiene ninguno. Ver abajo.
+
+### Diagramas de cada tarea
+
+Al cerrar una tarea, **siempre que tenga algo que dibujar**, se generan con [Archify](https://github.com/tt-a1i/archify) entre uno y tres diagramas que acompañan a la Explicación: el flujo de datos de un caso de uso (`sequence`), una regla de negocio con sus ramas de error (`workflow`), las capas y los puertos (`architecture`), un agregado (`class`), las tablas (`erd`)…
+
+- Están **respaldados por el código**: cada elemento cita sus ficheros y líneas en el commit "Done" de la tarea, y Archify comprueba que existen. Por eso `/close-task` hace primero el commit del trabajo y después genera los diagramas.
+- **Solo se versiona la fuente** (`docs/diagramas/HEXM-NNNN/<slug>.<tipo>.json`). El HTML interactivo se regenera en local con `cd app-laravel && composer docs:diagrams`.
+- Convenciones, guía de tipos e índice: [`docs/diagramas/README.md`](diagramas/README.md).
 
 ### Documentos opcionales
 

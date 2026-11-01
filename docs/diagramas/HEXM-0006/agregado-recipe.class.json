@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "diagram_type": "class",
+  "meta": {
+    "title": "Agregado Recipe: entidad raíz y value objects",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0006/agregado-recipe.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "853065d3be956af0c835108204d1d6deded51e26"
+    }
+  },
+  "layout": {
+    "mode": "grid"
+  },
+  "types": [
+    {
+      "id": "recipe_id",
+      "label": "RecipeId",
+      "kind": "class",
+      "sublabel": "Value object · identidad UUID v7",
+      "row": 0,
+      "col": 0,
+      "methods": [
+        { "name": "generate", "returns": "RecipeId", "visibility": "public", "static": true },
+        { "name": "fromString", "parameters": "value: string", "returns": "RecipeId", "visibility": "public", "static": true },
+        { "name": "equals", "parameters": "other: RecipeId", "returns": "bool", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Domain/RecipeId.php", "line": 36, "end_line": 113, "label": "RecipeId" }
+      ]
+    },
+    {
+      "id": "recipe",
+      "label": "Recipe",
+      "kind": "class",
+      "sublabel": "Entidad · raíz del agregado",
+      "row": 0,
+      "col": 1,
+      "attributes": [
+        { "name": "id", "type": "RecipeId", "visibility": "private" },
+        { "name": "name", "type": "string", "visibility": "private" },
+        { "name": "servings", "type": "Servings", "visibility": "private" },
+        { "name": "ingredients", "type": "list<Ingredient>", "visibility": "private" },
+        { "name": "steps", "type": "list<Step>", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "create", "parameters": "id, name, servings, ingredients, steps", "returns": "Recipe", "visibility": "public", "static": true },
+        { "name": "rename", "parameters": "name: string", "returns": "void", "visibility": "public" },
+        { "name": "equals", "parameters": "other: Recipe", "returns": "bool", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Domain/Recipe.php", "line": 61, "end_line": 115, "label": "create() y rename()" },
+        { "path": "app-laravel/src/Recipes/Domain/Recipe.php", "line": 150, "end_line": 198, "label": "equals() e invariantes" }
+      ]
+    },
+    {
+      "id": "servings",
+      "label": "Servings",
+      "kind": "class",
+      "sublabel": "Value object · al menos 1 ración",
+      "row": 0,
+      "col": 2,
+      "methods": [
+        { "name": "of", "parameters": "value: int", "returns": "Servings", "visibility": "public", "static": true },
+        { "name": "equals", "parameters": "other: Servings", "returns": "bool", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Domain/Servings.php", "line": 23, "end_line": 45 }
+      ]
+    },
+    {
+      "id": "step",
+      "label": "Step",
+      "kind": "class",
+      "sublabel": "Value object · texto no vacío",
+      "row": 1,
+      "col": 0,
+      "methods": [
+        { "name": "fromString", "parameters": "text: string", "returns": "Step", "visibility": "public", "static": true },
+        { "name": "equals", "parameters": "other: Step", "returns": "bool", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Domain/Step.php", "line": 23, "end_line": 47 }
+      ]
+    },
+    {
+      "id": "ingredient",
+      "label": "Ingredient",
+      "kind": "class",
+      "sublabel": "Value object · nombre + cantidad opcional",
+      "row": 1,
+      "col": 1,
+      "attributes": [
+        { "name": "name", "type": "string", "visibility": "private" },
+        { "name": "quantity", "type": "?Quantity", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "of", "parameters": "name, quantity", "returns": "Ingredient", "visibility": "public", "static": true },
+        { "name": "toTaste", "parameters": "name: string", "returns": "Ingredient", "visibility": "public", "static": true },
+        { "name": "hasSameNameAs", "parameters": "other: Ingredient", "returns": "bool", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Domain/Ingredient.php", "line": 34, "end_line": 121 }
+      ]
+    },
+    {
+      "id": "invalid_recipe",
+      "label": "InvalidRecipe",
+      "kind": "class",
+      "sublabel": "Invariante incumplida, mensaje en español",
+      "row": 1,
+      "col": 2,
+      "methods": [
+        { "name": "emptyName", "returns": "self", "visibility": "public", "static": true },
+        { "name": "withoutIngredients", "returns": "self", "visibility": "public", "static": true },
+        { "name": "duplicatedIngredient", "parameters": "name: string", "returns": "self", "visibility": "public", "static": true }
+      ],
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Domain/InvalidRecipe.php", "line": 16, "end_line": 32 }
+      ]
+    },
+    {
+      "id": "unit",
+      "label": "Unit",
+      "kind": "enum",
+      "sublabel": "gram, piece, tablespoon, jar…",
+      "row": 2,
+      "col": 0,
+      "methods": [
+        { "name": "label", "returns": "string", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Domain/Unit.php", "line": 33, "end_line": 68 }
+      ]
+    },
+    {
+      "id": "quantity",
+      "label": "Quantity",
+      "kind": "class",
+      "sublabel": "Value object · fracción exacta > 0",
+      "row": 2,
+      "col": 1,
+      "attributes": [
+        { "name": "numerator", "type": "int", "visibility": "private" },
+        { "name": "denominator", "type": "int", "visibility": "private" },
+        { "name": "unit", "type": "Unit", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "fromString", "parameters": "amount, unit", "returns": "Quantity", "visibility": "public", "static": true },
+        { "name": "equals", "parameters": "other: Quantity", "returns": "bool", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Domain/Quantity.php", "line": 50, "end_line": 125 },
+        { "path": "app-laravel/src/Recipes/Domain/Quantity.php", "line": 184, "end_line": 189, "label": "equals()" }
+      ]
+    },
+    {
+      "id": "domain_exception",
+      "label": "DomainException",
+      "kind": "abstract",
+      "sublabel": "Shared\\Domain · base de errores de negocio",
+      "row": 2,
+      "col": 2,
+      "sources": [
+        { "path": "app-laravel/src/Shared/Domain/DomainException.php", "line": 33, "end_line": 33 }
+      ]
+    }
+  ],
+  "relationships": [
+    { "id": "has_identity", "from": "recipe", "to": "recipe_id", "kind": "association", "label": "identidad" },
+    { "id": "has_servings", "from": "recipe", "to": "servings", "kind": "association", "label": "raciones" },
+    { "id": "owns_ingredients", "from": "recipe", "to": "ingredient", "kind": "composition", "label": "1..* sin repetir" },
+    { "id": "owns_steps", "from": "recipe", "to": "step", "kind": "composition", "label": "0..* en orden" },
+    { "id": "throws_invalid", "from": "recipe", "to": "invalid_recipe", "kind": "dependency", "label": "lanza" },
+    { "id": "has_quantity", "from": "ingredient", "to": "quantity", "kind": "association", "label": "0..1 (null = al gusto)" },
+    { "id": "measured_in", "from": "quantity", "to": "unit", "kind": "association", "label": "unidad" },
+    { "id": "extends_domain_exception", "from": "invalid_recipe", "to": "domain_exception", "kind": "inheritance" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Invariantes de la receta",
+      "items": [
+        "Tiene nombre (no vacío).",
+        "Tiene al menos un ingrediente; uno al gusto también cuenta.",
+        "No repite ingredientes: mismo nombre sin distinguir mayúsculas.",
+        "Los pasos son opcionales; su orden es la posición en la lista."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Entidad frente a value object",
+      "items": [
+        "Recipe se compara por RecipeId: renombrada sigue siendo la misma receta.",
+        "Ingredient, Quantity, Step, Servings y RecipeId se comparan por valor y son inmutables.",
+        "Solo se entra al agregado por Recipe::create() y rename(); las listas salen como copias."
+      ]
+    }
+  ]
+}

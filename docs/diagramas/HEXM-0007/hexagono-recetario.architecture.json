@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Hexágono del recetario al cerrar el nivel 1",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0007/hexagono-recetario.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "853065d3be956af0c835108204d1d6deded51e26"
+    },
+    "legend": {
+      "entries": {
+        "external": { "label": "Adaptador de entrada" },
+        "backend": { "label": "Caso de uso" },
+        "security": { "label": "Dominio: reglas de negocio" },
+        "messagebus": { "label": "Puerto (interfaz)" },
+        "database": { "label": "Adaptador de salida" }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "caller",
+      "type": "external",
+      "label": "CreateRecipeTest",
+      "sublabel": "hace de entrada (nivel 2: HTTP)",
+      "pos": [40, 180],
+      "size": [170, 64],
+      "sources": [
+        { "path": "app-laravel/tests/Unit/Recipes/Application/CreateRecipeTest.php", "line": 48, "end_line": 64 }
+      ]
+    },
+    {
+      "id": "use_case",
+      "type": "backend",
+      "label": "CreateRecipe",
+      "sublabel": "orquesta, no decide",
+      "pos": [380, 180],
+      "size": [150, 64],
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Application/CreateRecipe.php", "line": 51, "end_line": 68 },
+        { "path": "app-laravel/src/Recipes/Application/CreateRecipeCommand.php", "line": 30, "end_line": 46, "label": "comando" }
+      ]
+    },
+    {
+      "id": "recipe",
+      "type": "security",
+      "label": "Recipe",
+      "sublabel": "raíz del agregado",
+      "tag": "invariantes",
+      "pos": [670, 180],
+      "size": [150, 64],
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Domain/Recipe.php", "line": 61, "end_line": 106 }
+      ]
+    },
+    {
+      "id": "value_objects",
+      "type": "security",
+      "label": "Value objects",
+      "sublabel": "RecipeId · Quantity · Ingredient…",
+      "pos": [670, 40],
+      "size": [150, 64],
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Domain/Quantity.php", "line": 50, "end_line": 110 },
+        { "path": "app-laravel/src/Recipes/Domain/Ingredient.php", "line": 34, "end_line": 55 },
+        { "path": "app-laravel/src/Recipes/Domain/RecipeId.php", "line": 36, "end_line": 62 }
+      ]
+    },
+    {
+      "id": "port",
+      "type": "messagebus",
+      "label": "RecipeRepository",
+      "sublabel": "save() · find()",
+      "pos": [670, 330],
+      "size": [150, 64],
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Domain/RecipeRepository.php", "line": 36, "end_line": 48 }
+      ]
+    },
+    {
+      "id": "adapter",
+      "type": "database",
+      "label": "InMemoryRecipeRepository",
+      "sublabel": "array de copias (clone)",
+      "pos": [930, 330],
+      "size": [180, 64],
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Infrastructure/InMemoryRecipeRepository.php", "line": 39, "end_line": 58 }
+      ]
+    },
+    {
+      "id": "domain_exception",
+      "type": "security",
+      "label": "DomainException",
+      "sublabel": "mensajes en español",
+      "pos": [930, 180],
+      "size": [180, 64],
+      "sources": [
+        { "path": "app-laravel/src/Shared/Domain/DomainException.php", "line": 33, "end_line": 33 },
+        { "path": "app-laravel/src/Recipes/Domain/InvalidRecipe.php", "line": 16, "end_line": 32, "label": "InvalidRecipe" }
+      ]
+    }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Recipes\\Application", "wraps": ["use_case"] },
+    { "kind": "region", "label": "Recipes\\Domain", "wraps": ["value_objects", "recipe", "port"] },
+    { "kind": "region", "label": "Recipes\\Infrastructure", "wraps": ["adapter"] },
+    { "kind": "region", "label": "Shared\\Domain", "wraps": ["domain_exception"] }
+  ],
+  "connections": [
+    { "id": "invoke", "from": "caller", "to": "use_case", "label": "CreateRecipeCommand", "variant": "emphasis" },
+    { "id": "create", "from": "use_case", "to": "recipe", "label": "Recipe::create()", "variant": "emphasis" },
+    { "id": "compose", "from": "recipe", "to": "value_objects", "label": "se compone de" },
+    { "id": "throws", "from": "recipe", "to": "domain_exception", "label": "lanza", "variant": "security" },
+    { "id": "save", "from": "use_case", "to": "port", "label": "save(recipe)", "variant": "emphasis", "fromSide": "bottom", "toSide": "left" },
+    { "id": "implements", "from": "adapter", "to": "port", "label": "implementa", "variant": "dashed" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Regla de dependencias",
+      "items": [
+        "Las flechas de código apuntan hacia dentro: Infrastructure → Domain, Application → Domain.",
+        "La llamada save() va hacia fuera, pero el adaptador depende del puerto: inversión de dependencias.",
+        "Lo garantizan los tests de arquitectura (lista blanca del ADR 0004)."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Lo que llega en el nivel 2",
+      "items": [
+        "Un adaptador Eloquent/PostgreSQL implementará el mismo puerto RecipeRepository.",
+        "Un controlador HTTP sustituirá al test como adaptador de entrada.",
+        "CreateRecipe, Recipe y el puerto no cambiarán."
+      ]
+    }
+  ]
+}

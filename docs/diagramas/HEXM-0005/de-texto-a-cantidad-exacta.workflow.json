@@ -1,0 +1,301 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "De texto a cantidad exacta: Quantity::fromString",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0005/de-texto-a-cantidad-exacta.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "853065d3be956af0c835108204d1d6deded51e26"
+    },
+    "legend": {
+      "entries": {
+        "external": {
+          "label": "Dato de entrada"
+        },
+        "backend": {
+          "label": "Paso del dominio"
+        },
+        "security": {
+          "label": "Regla o error de dominio"
+        },
+        "database": {
+          "label": "Value object resultante"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "person",
+      "label": "Receta escrita"
+    },
+    {
+      "id": "reading",
+      "label": "Quantity::fromString"
+    },
+    {
+      "id": "rules",
+      "label": "Quantity::fraction"
+    },
+    {
+      "id": "errors",
+      "label": "InvalidQuantity",
+      "variant": "exception"
+    }
+  ],
+  "phases": [
+    {
+      "id": "read",
+      "label": "Leer",
+      "fromCol": 0,
+      "toCol": 2
+    },
+    {
+      "id": "validate",
+      "label": "Validar y normalizar",
+      "fromCol": 3,
+      "toCol": 5,
+      "variant": "emphasis"
+    }
+  ],
+  "mainPath": [
+    "amount_text",
+    "recognize",
+    "to_fraction",
+    "check",
+    "simplify",
+    "exact"
+  ],
+  "nodes": [
+    {
+      "id": "amount_text",
+      "lane": "person",
+      "col": 0,
+      "type": "external",
+      "label": "\"1 ½\" + Unit::Jar",
+      "sublabel": "como en el plan"
+    },
+    {
+      "id": "recognize",
+      "lane": "reading",
+      "col": 1,
+      "type": "backend",
+      "label": "Reconocer formato",
+      "sublabel": "200 · 1,5 · 1/2 · ½ · 1 ½",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/Quantity.php",
+          "line": 125,
+          "end_line": 158,
+          "label": "fromString()"
+        }
+      ]
+    },
+    {
+      "id": "to_fraction",
+      "lane": "reading",
+      "col": 2,
+      "type": "backend",
+      "label": "Pasar a fracción",
+      "sublabel": "1 ½ → 3/2 · 1,5 → 15/10",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/Quantity.php",
+          "line": 138,
+          "end_line": 155,
+          "label": "decimal, fracción, mixto"
+        },
+        {
+          "path": "app-laravel/src/Recipes/Domain/Quantity.php",
+          "line": 191,
+          "end_line": 201,
+          "label": "mixed()"
+        }
+      ]
+    },
+    {
+      "id": "check",
+      "lane": "rules",
+      "col": 3,
+      "type": "security",
+      "label": "¿Fracción válida?",
+      "sublabel": "denominador ≠ 0 y valor > 0",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/Quantity.php",
+          "line": 93,
+          "end_line": 104
+        }
+      ]
+    },
+    {
+      "id": "simplify",
+      "lane": "rules",
+      "col": 4,
+      "type": "backend",
+      "label": "Simplificar por MCD",
+      "sublabel": "15/10 → 3/2 · 2/6 → 1/3",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/Quantity.php",
+          "line": 106,
+          "end_line": 110
+        },
+        {
+          "path": "app-laravel/src/Recipes/Domain/Quantity.php",
+          "line": 203,
+          "end_line": 214,
+          "label": "Euclides"
+        }
+      ]
+    },
+    {
+      "id": "exact",
+      "lane": "rules",
+      "col": 5,
+      "type": "database",
+      "label": "Quantity 3/2 bote",
+      "sublabel": "inmutable, equals() exacto",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/Quantity.php",
+          "line": 50,
+          "end_line": 82
+        },
+        {
+          "path": "app-laravel/src/Recipes/Domain/Quantity.php",
+          "line": 184,
+          "end_line": 189,
+          "label": "equals()"
+        }
+      ]
+    },
+    {
+      "id": "unreadable",
+      "lane": "errors",
+      "col": 1,
+      "type": "security",
+      "label": "unreadable()",
+      "sublabel": "\"al gusto\", \"1/2/3\"…",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/InvalidQuantity.php",
+          "line": 32,
+          "end_line": 35
+        }
+      ]
+    },
+    {
+      "id": "zero_denominator",
+      "lane": "errors",
+      "col": 3,
+      "type": "security",
+      "label": "zeroDenominator()",
+      "sublabel": "\"1/0\"",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/InvalidQuantity.php",
+          "line": 27,
+          "end_line": 30
+        }
+      ]
+    },
+    {
+      "id": "not_positive",
+      "lane": "errors",
+      "col": 4,
+      "type": "security",
+      "label": "notPositive()",
+      "sublabel": "\"0\", \"0/3\", -5",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/InvalidQuantity.php",
+          "line": 22,
+          "end_line": 25
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "read_text",
+      "from": "amount_text",
+      "to": "recognize",
+      "variant": "default"
+    },
+    {
+      "id": "known_format",
+      "from": "recognize",
+      "to": "to_fraction",
+      "label": "formato conocido",
+      "variant": "emphasis"
+    },
+    {
+      "id": "to_rules",
+      "from": "to_fraction",
+      "to": "check",
+      "label": "num / den",
+      "variant": "default"
+    },
+    {
+      "id": "valid",
+      "from": "check",
+      "to": "simplify",
+      "label": "sí",
+      "variant": "emphasis"
+    },
+    {
+      "id": "build",
+      "from": "simplify",
+      "to": "exact",
+      "variant": "emphasis"
+    },
+    {
+      "id": "no_format",
+      "from": "recognize",
+      "to": "unreadable",
+      "label": "ninguno encaja",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "den_zero",
+      "from": "check",
+      "to": "zero_denominator",
+      "label": "den = 0",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "not_positive_edge",
+      "from": "check",
+      "to": "not_positive",
+      "label": "valor ≤ 0",
+      "variant": "security",
+      "role": "error"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Por qué numerador/denominador",
+      "items": [
+        "⅓ no cabe en un float (0,333…); como 1/3 es exacto.",
+        "Simplificada, 2/6 y ⅓ guardan lo mismo: equals() compara campo a campo.",
+        "Sumar cantidades para la lista de la compra no pierde precisión."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Fuera de Quantity",
+      "items": [
+        "\"Al gusto\" y \"una pizca\" no son cantidades: el ingrediente va sin Quantity (Ingredient::toTaste).",
+        "Todos los errores heredan de Shared\\Domain\\DomainException, con mensaje en español."
+      ]
+    }
+  ]
+}
