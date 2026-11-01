@@ -6,6 +6,6 @@ Contexto que gestiona **recetas**: nombre, raciones, ingredientes con su cantida
 |---|---|
 | `Domain/` | `Recipe` (entidad), `RecipeId`, `Ingredient`, `Quantity`, `Unit`, `Step` y `Servings` (value objects), `RecipeDeleted` (evento) y el puerto `RecipeRepository` (interfaz). |
 | `Application/` | Casos de uso: `CreateRecipe`, `GetRecipe`, `DeleteRecipe`… Orquestan el dominio a través de sus puertos. |
-| `Infrastructure/` | Adaptadores: `EloquentRecipeRepository` (y `InMemoryRecipeRepository` para los tests), controladores HTTP de `/api/recipes` y el service provider que conecta cada puerto con su adaptador. |
+| `Infrastructure/` | Adaptadores: `Persistence/Eloquent/` (`EloquentRecipeRepository`, sus modelos y su *mapper*) e `InMemoryRecipeRepository` para los tests; `Http/` con los controladores de `/api/recipes` (`CreateRecipeController` y su `CreateRecipeRequest`), y `RecipesServiceProvider`, que conecta cada puerto con su adaptador. |
 
 Otros contextos solo conocen una receta por su `RecipeId`.

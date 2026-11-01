@@ -2,7 +2,7 @@
 
 Hoja de ruta del proyecto organizada en **niveles**. Cada nivel es pequeño, termina con tests en verde y una etiqueta git (`nivel-NN`), y añade **un concepto nuevo** cada vez.
 
-**Estado actual:** 🟡 Nivel 2 (Recetario: adaptadores), en curso: repositorio Eloquent hecho (HEXM-0009); faltan el *binding* del puerto y la API. Nivel 1 terminado (`nivel-01`).
+**Estado actual:** 🟡 Nivel 2 (Recetario: adaptadores), en curso: repositorio Eloquent (HEXM-0009) y alta de recetas por API con el *binding* del puerto (HEXM-0010) hechos; falta la consulta `GET /api/recipes/{id}` (HEXM-0011). Nivel 1 terminado (`nivel-01`).
 
 Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado
 
@@ -93,3 +93,4 @@ El roadmap tiene tres bloques:
 | 2026-11-01 | 1 | HEXM-0007: caso de uso `CreateRecipe`, puerto `RecipeRepository` y adaptador `InMemoryRecipeRepository`. **Nivel 1 terminado** (`nivel-01`, diario `01-recetario-dominio.md`). |
 | 2026-11-01 | – | HEXM-0008: diagramas Archify en las tareas (transversal). `/close-task` genera diagramas respaldados por el código que acompañan a cada Explicación; diagramas del nivel 1 en `docs/diagramas/`. |
 | 2026-11-01 | 2 | HEXM-0009: `EloquentRecipeRepository` (segundo adaptador del puerto), tablas del recetario, *mapper* de persistencia y tests de contrato del puerto con los dos adaptadores; reconstitución con `Recipe::create()` (ADR 0006). |
+| 2026-11-01 | 2 | HEXM-0010: `POST /api/recipes`, primer adaptador *driving*: `CreateRecipeController` + `CreateRecipeRequest` (validación de forma), `RecipesServiceProvider` (*binding* del puerto a Eloquent) y traducción global de `DomainException` a HTTP 422; tests de arquitectura para HTTP y service providers (ADR 0007). |

@@ -1,0 +1,437 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Alta de una receta por HTTP: POST /api/recipes",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0010/alta-de-receta-por-http.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "988a05a055738a86fb7b118493877b9bbba7649c"
+    },
+    "legend": {
+      "entries": {
+        "default": {
+          "label": "Llamada"
+        },
+        "emphasis": {
+          "label": "Camino principal"
+        },
+        "security": {
+          "label": "Rechazo (422)"
+        },
+        "return": {
+          "label": "Respuesta"
+        }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Cliente HTTP",
+      "sublabel": "curl, tests de feature",
+      "sources": [
+        {
+          "path": "app-laravel/tests/Feature/Recipes/Infrastructure/Http/CreateRecipeEndpointTest.php",
+          "line": 70,
+          "end_line": 102,
+          "label": "camino válido"
+        },
+        {
+          "path": "app-laravel/tests/Feature/Recipes/Infrastructure/Http/CreateRecipeEndpointTest.php",
+          "line": 119,
+          "end_line": 166,
+          "label": "reglas de negocio"
+        },
+        {
+          "path": "app-laravel/tests/Feature/Recipes/Infrastructure/Http/CreateRecipeEndpointTest.php",
+          "line": 172,
+          "end_line": 199,
+          "label": "mal formadas"
+        }
+      ]
+    },
+    {
+      "id": "request",
+      "type": "backend",
+      "label": "Validación de forma",
+      "sublabel": "CreateRecipeRequest",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Http/CreateRecipeRequest.php",
+          "line": 86,
+          "end_line": 99,
+          "label": "rules()"
+        },
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Http/CreateRecipeRequest.php",
+          "line": 112,
+          "end_line": 133,
+          "label": "toCommand()"
+        }
+      ]
+    },
+    {
+      "id": "controller",
+      "type": "backend",
+      "label": "Controlador HTTP",
+      "sublabel": "CreateRecipeController",
+      "sources": [
+        {
+          "path": "app-laravel/routes/api.php",
+          "line": 35,
+          "end_line": 35,
+          "label": "ruta"
+        },
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Http/CreateRecipeController.php",
+          "line": 51,
+          "end_line": 65
+        }
+      ]
+    },
+    {
+      "id": "usecase",
+      "type": "backend",
+      "label": "CreateRecipe",
+      "sublabel": "caso de uso (sin cambios)",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Application/CreateRecipe.php",
+          "line": 55,
+          "end_line": 68,
+          "label": "__invoke()"
+        }
+      ]
+    },
+    {
+      "id": "recipe",
+      "type": "security",
+      "label": "Recipe",
+      "sublabel": "dominio: reglas",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/Recipe.php",
+          "line": 89,
+          "end_line": 106,
+          "label": "create()"
+        },
+        {
+          "path": "app-laravel/src/Recipes/Domain/Recipe.php",
+          "line": 161,
+          "end_line": 197,
+          "label": "invariantes"
+        },
+        {
+          "path": "app-laravel/src/Recipes/Domain/Servings.php",
+          "line": 27,
+          "end_line": 34,
+          "label": "Servings::of()"
+        }
+      ]
+    },
+    {
+      "id": "repository",
+      "type": "database",
+      "label": "Repositorio",
+      "sublabel": "EloquentRecipeRepository",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/RecipesServiceProvider.php",
+          "line": 68,
+          "end_line": 72,
+          "label": "binding"
+        },
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Persistence/Eloquent/EloquentRecipeRepository.php",
+          "line": 56,
+          "end_line": 90,
+          "label": "save()"
+        }
+      ]
+    },
+    {
+      "id": "handler",
+      "type": "security",
+      "label": "Manejador global",
+      "sublabel": "DomainException → 422",
+      "sources": [
+        {
+          "path": "app-laravel/bootstrap/app.php",
+          "line": 59,
+          "end_line": 65,
+          "label": "render()"
+        },
+        {
+          "path": "app-laravel/bootstrap/app.php",
+          "line": 72,
+          "end_line": 72,
+          "label": "dontReport()"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 140,
+      "to": 640,
+      "label": "1. Receta válida → 201"
+    },
+    {
+      "from": 660,
+      "to": 790,
+      "label": "2. Petición mal formada → 422 de validación"
+    },
+    {
+      "from": 810,
+      "to": 1110,
+      "label": "3. Regla de negocio incumplida → 422 del dominio"
+    }
+  ],
+  "messages": [
+    {
+      "id": "post_ok",
+      "from": "client",
+      "to": "request",
+      "y": 165,
+      "label": "POST /api/recipes",
+      "variant": "emphasis",
+      "note": "el contenedor construye el controlador: CreateRecipe + EloquentRecipeRepository"
+    },
+    {
+      "id": "shape_ok",
+      "from": "request",
+      "to": "controller",
+      "y": 230,
+      "label": "forma válida",
+      "variant": "default",
+      "note": "rules(): campos presentes y tipos correctos"
+    },
+    {
+      "id": "to_command",
+      "from": "controller",
+      "to": "request",
+      "y": 290,
+      "label": "toCommand()",
+      "variant": "default"
+    },
+    {
+      "id": "command",
+      "from": "request",
+      "to": "controller",
+      "y": 320,
+      "label": "CreateRecipeCommand",
+      "variant": "return",
+      "note": "null → \"\" en los textos: el vacío lo juzga el dominio"
+    },
+    {
+      "id": "invoke",
+      "from": "controller",
+      "to": "usecase",
+      "y": 385,
+      "label": "__invoke(command)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "create",
+      "from": "usecase",
+      "to": "recipe",
+      "y": 420,
+      "label": "Recipe::create(...)",
+      "variant": "emphasis",
+      "note": "comprueba las invariantes"
+    },
+    {
+      "id": "valid",
+      "from": "recipe",
+      "to": "usecase",
+      "y": 475,
+      "label": "Recipe válida",
+      "variant": "return"
+    },
+    {
+      "id": "save",
+      "from": "usecase",
+      "to": "repository",
+      "y": 505,
+      "label": "save(recipe)",
+      "variant": "default",
+      "note": "transacción en PostgreSQL"
+    },
+    {
+      "id": "saved",
+      "from": "repository",
+      "to": "usecase",
+      "y": 560,
+      "label": "void",
+      "variant": "return"
+    },
+    {
+      "id": "id",
+      "from": "usecase",
+      "to": "controller",
+      "y": 590,
+      "label": "RecipeId",
+      "variant": "return"
+    },
+    {
+      "id": "created",
+      "from": "controller",
+      "to": "client",
+      "y": 620,
+      "label": "201 {\"id\"} + Location",
+      "variant": "return"
+    },
+    {
+      "id": "post_bad",
+      "from": "client",
+      "to": "request",
+      "y": 690,
+      "label": "POST con \"servings\": \"dos\"",
+      "variant": "default"
+    },
+    {
+      "id": "invalid_shape",
+      "from": "request",
+      "to": "client",
+      "y": 725,
+      "label": "422 {\"message\", \"errors\"}",
+      "variant": "security",
+      "note": "Laravel responde solo: el controlador no se ejecuta"
+    },
+    {
+      "id": "post_rule",
+      "from": "client",
+      "to": "request",
+      "y": 840,
+      "label": "POST con \"ingredients\": []",
+      "variant": "default"
+    },
+    {
+      "id": "shape_ok_2",
+      "from": "request",
+      "to": "controller",
+      "y": 870,
+      "label": "forma válida",
+      "variant": "default",
+      "note": "present admite la lista vacía"
+    },
+    {
+      "id": "invoke_2",
+      "from": "controller",
+      "to": "usecase",
+      "y": 930,
+      "label": "__invoke(command)",
+      "variant": "default"
+    },
+    {
+      "id": "create_2",
+      "from": "usecase",
+      "to": "recipe",
+      "y": 960,
+      "label": "Recipe::create(...)",
+      "variant": "default"
+    },
+    {
+      "id": "throw",
+      "from": "recipe",
+      "to": "handler",
+      "y": 990,
+      "label": "throw InvalidRecipe",
+      "variant": "security",
+      "note": "sube sin try/catch; save() no llega a llamarse"
+    },
+    {
+      "id": "domain_422",
+      "from": "handler",
+      "to": "client",
+      "y": 1060,
+      "label": "422 {\"message\": \"Una receta debe tener al menos un ingrediente.\"}",
+      "variant": "security"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "request",
+      "from": 165,
+      "to": 320,
+      "type": "backend"
+    },
+    {
+      "participant": "controller",
+      "from": 230,
+      "to": 620,
+      "type": "backend"
+    },
+    {
+      "participant": "usecase",
+      "from": 385,
+      "to": 590,
+      "type": "backend"
+    },
+    {
+      "participant": "recipe",
+      "from": 420,
+      "to": 475,
+      "type": "security"
+    },
+    {
+      "participant": "repository",
+      "from": 505,
+      "to": 560,
+      "type": "database"
+    },
+    {
+      "participant": "request",
+      "from": 690,
+      "to": 725,
+      "type": "backend"
+    },
+    {
+      "participant": "controller",
+      "from": 870,
+      "to": 930,
+      "type": "backend"
+    },
+    {
+      "participant": "usecase",
+      "from": 930,
+      "to": 960,
+      "type": "backend"
+    },
+    {
+      "participant": "recipe",
+      "from": 960,
+      "to": 990,
+      "type": "security"
+    },
+    {
+      "participant": "handler",
+      "from": 990,
+      "to": 1060,
+      "type": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Adaptador driving",
+      "items": [
+        "El controlador solo traduce: petición → comando → caso de uso → 201.",
+        "CreateRecipe no ha cambiado: el adaptador de Eloquent llega por RecipesServiceProvider."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Dos 422 distintos",
+      "items": [
+        "Con \"errors\": la petición no cumple el contrato (la para la FormRequest).",
+        "Solo \"message\", en español: el negocio no lo permite (lo traduce un único manejador)."
+      ]
+    }
+  ]
+}
