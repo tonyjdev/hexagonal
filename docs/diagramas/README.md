@@ -51,6 +51,8 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 |---|---|---|
 | HEXM-0009 | [Tablas del recetario](HEXM-0009/tablas-del-recetario.erd.json) (`erd`) | El agregado `Recipe` repartido en tres tablas: el uuid de la raíz, la clave compuesta `(recipe_id, position)` de los value objects y la cantidad exacta en tres columnas. |
 | HEXM-0009 | [Guardar y cargar una receta](HEXM-0009/guardar-y-cargar-una-receta.sequence.json) (`sequence`) | `save()` dentro de una transacción (con el ROLLBACK si falla a mitad) y `find()` reconstruyendo la receta con `Recipe::create()`. |
+| HEXM-0010 | [Alta de una receta por HTTP](HEXM-0010/alta-de-receta-por-http.sequence.json) (`sequence`) | `POST /api/recipes` de punta a punta en sus tres caminos: 201 con la receta guardada, 422 de validación sin llegar al controlador y 422 del dominio traducido por el manejador global. |
+| HEXM-0010 | [Forma frente a reglas](HEXM-0010/forma-frente-a-reglas.workflow.json) (`workflow`) | Quién rechaza cada petición: la frontera HTTP comprueba campos y tipos; el núcleo, las reglas de negocio. |
 
 ### Transversal
 

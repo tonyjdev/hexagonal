@@ -1,0 +1,257 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "¿Quién rechaza una receta? Forma en la frontera, reglas en el dominio",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0010/forma-frente-a-reglas.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "988a05a055738a86fb7b118493877b9bbba7649c"
+    },
+    "legend": {
+      "entries": {
+        "external": {
+          "label": "Petición del cliente"
+        },
+        "backend": {
+          "label": "Traducción (adaptador)"
+        },
+        "security": {
+          "label": "Filtro o rechazo"
+        },
+        "database": {
+          "label": "Receta guardada"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "client",
+      "label": "Cliente"
+    },
+    {
+      "id": "boundary",
+      "label": "Frontera HTTP (Infrastructure)"
+    },
+    {
+      "id": "core",
+      "label": "Núcleo (Application + Domain)"
+    },
+    {
+      "id": "rejected",
+      "label": "Respuestas 422",
+      "variant": "exception"
+    }
+  ],
+  "phases": [
+    {
+      "id": "shape",
+      "label": "1. Forma: ¿cumple el contrato?",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "rules",
+      "label": "2. Reglas: ¿lo permite el negocio?",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "emphasis"
+    }
+  ],
+  "mainPath": [
+    "payload",
+    "shape_check",
+    "to_command",
+    "rules_check",
+    "saved"
+  ],
+  "nodes": [
+    {
+      "id": "payload",
+      "lane": "client",
+      "col": 0,
+      "type": "external",
+      "label": "POST /api/recipes",
+      "sublabel": "JSON de la receta"
+    },
+    {
+      "id": "shape_check",
+      "lane": "boundary",
+      "col": 0,
+      "type": "security",
+      "label": "¿Campos y tipos?",
+      "sublabel": "present · integer · list · string",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Http/CreateRecipeRequest.php",
+          "line": 86,
+          "end_line": 99,
+          "label": "rules()"
+        }
+      ]
+    },
+    {
+      "id": "to_command",
+      "lane": "boundary",
+      "col": 1,
+      "type": "backend",
+      "label": "toCommand()",
+      "sublabel": "null → \"\" en los textos",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Http/CreateRecipeRequest.php",
+          "line": 112,
+          "end_line": 133
+        }
+      ]
+    },
+    {
+      "id": "rules_check",
+      "lane": "core",
+      "col": 2,
+      "type": "security",
+      "label": "¿Cumple las reglas?",
+      "sublabel": "≥ 1 ingrediente · ≥ 1 ración · cantidad > 0",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Application/CreateRecipe.php",
+          "line": 55,
+          "end_line": 68,
+          "label": "CreateRecipe"
+        },
+        {
+          "path": "app-laravel/src/Recipes/Domain/Recipe.php",
+          "line": 161,
+          "end_line": 197,
+          "label": "invariantes"
+        },
+        {
+          "path": "app-laravel/src/Recipes/Domain/Servings.php",
+          "line": 27,
+          "end_line": 34,
+          "label": "Servings::of()"
+        }
+      ]
+    },
+    {
+      "id": "saved",
+      "lane": "core",
+      "col": 3,
+      "type": "database",
+      "label": "201 Created",
+      "sublabel": "id + Location; receta en PostgreSQL",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Http/CreateRecipeController.php",
+          "line": 55,
+          "end_line": 64
+        }
+      ]
+    },
+    {
+      "id": "validation_error",
+      "lane": "rejected",
+      "col": 0,
+      "type": "security",
+      "label": "422 + errors",
+      "sublabel": "\"servings\": \"dos\" · amount: 200",
+      "sources": [
+        {
+          "path": "app-laravel/tests/Feature/Recipes/Infrastructure/Http/CreateRecipeEndpointTest.php",
+          "line": 172,
+          "end_line": 199,
+          "label": "peticiones mal formadas"
+        }
+      ]
+    },
+    {
+      "id": "domain_error",
+      "lane": "rejected",
+      "col": 2,
+      "type": "security",
+      "label": "422 + message",
+      "sublabel": "\"servings\": 0 · ingredients: []",
+      "sources": [
+        {
+          "path": "app-laravel/bootstrap/app.php",
+          "line": 59,
+          "end_line": 65,
+          "label": "manejador global"
+        },
+        {
+          "path": "app-laravel/tests/Feature/Recipes/Infrastructure/Http/CreateRecipeEndpointTest.php",
+          "line": 119,
+          "end_line": 166,
+          "label": "reglas de negocio"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "send",
+      "from": "payload",
+      "to": "shape_check",
+      "variant": "default"
+    },
+    {
+      "id": "well_formed",
+      "from": "shape_check",
+      "to": "to_command",
+      "label": "sí",
+      "variant": "emphasis"
+    },
+    {
+      "id": "command",
+      "from": "to_command",
+      "to": "rules_check",
+      "label": "comando",
+      "variant": "emphasis"
+    },
+    {
+      "id": "allowed",
+      "from": "rules_check",
+      "to": "saved",
+      "label": "sí",
+      "variant": "emphasis"
+    },
+    {
+      "id": "malformed",
+      "from": "shape_check",
+      "to": "validation_error",
+      "label": "falta o tipo incorrecto",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "broken_rule",
+      "from": "rules_check",
+      "to": "domain_error",
+      "label": "DomainException",
+      "variant": "security",
+      "role": "error"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Por qué la frontera no repite reglas",
+      "items": [
+        "Sin min:1, sin in:gram,jar, y present en vez de required: esas reglas ya viven en el dominio.",
+        "Escritas una vez en el dominio, protegen también a Artisan o al importador de Python."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Cómo distinguir los dos 422",
+      "items": [
+        "Con \"errors\" por campo (en inglés, tech_debt): no cumple el contrato y no llega al caso de uso.",
+        "Solo \"message\" en español: el negocio no lo permite y no se guarda nada."
+      ]
+    }
+  ]
+}

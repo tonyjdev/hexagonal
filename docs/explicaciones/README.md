@@ -24,6 +24,7 @@ Los diagramas Archify de cada tarea están en [`../diagramas/`](../diagramas/REA
 ### Nivel 2: Recetario (adaptadores)
 
 - [HEXM-0009: Repositorio Eloquent de recetas](HEXM-0009-repositorio-eloquent-de-recetas.md): por qué el modelo de Eloquent no es la receta, cómo se reconstituye un agregado sin saltarse sus invariantes, por qué guardar es una transacción y por qué los tests de contrato. Diagramas: [tablas del recetario](../diagramas/HEXM-0009/tablas-del-recetario.erd.json) y [guardar y cargar una receta](../diagramas/HEXM-0009/guardar-y-cargar-una-receta.sequence.json).
+- [HEXM-0010: Alta de recetas por API](HEXM-0010-alta-de-recetas-por-api.md): por qué el controlador solo traduce, por qué la frontera valida la forma y deja las reglas al dominio, cómo llegan los errores de dominio como 422 desde un único manejador y qué es la raíz de composición. Diagramas: [alta de una receta por HTTP](../diagramas/HEXM-0010/alta-de-receta-por-http.sequence.json) y [forma frente a reglas](../diagramas/HEXM-0010/forma-frente-a-reglas.workflow.json).
 
 ### Transversal
 
