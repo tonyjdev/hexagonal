@@ -21,6 +21,10 @@ Los diagramas Archify de cada tarea están en [`../diagramas/`](../diagramas/REA
 - [HEXM-0006: Entidad Recipe e ingredientes](HEXM-0006-entidad-recipe-e-ingredientes.md): por qué una receta es una entidad y un ingrediente no, qué protege un agregado y por qué no hay setters. Diagrama: [agregado Recipe](../diagramas/HEXM-0006/agregado-recipe.class.json).
 - [HEXM-0007: Caso de uso CreateRecipe con repositorio en memoria](HEXM-0007-caso-de-uso-createrecipe-con-repositorio-en-memoria.md): por qué el caso de uso orquesta sin decidir, por qué el repositorio es un puerto del dominio y por qué un fake en memoria en vez de un mock. Diagramas: [CreateRecipe paso a paso](../diagramas/HEXM-0007/create-recipe-paso-a-paso.sequence.json) y [hexágono del recetario](../diagramas/HEXM-0007/hexagono-recetario.architecture.json).
 
+### Nivel 2: Recetario (adaptadores)
+
+- [HEXM-0009: Repositorio Eloquent de recetas](HEXM-0009-repositorio-eloquent-de-recetas.md): por qué el modelo de Eloquent no es la receta, cómo se reconstituye un agregado sin saltarse sus invariantes, por qué guardar es una transacción y por qué los tests de contrato. Diagramas: [tablas del recetario](../diagramas/HEXM-0009/tablas-del-recetario.erd.json) y [guardar y cargar una receta](../diagramas/HEXM-0009/guardar-y-cargar-una-receta.sequence.json).
+
 ### Transversal
 
 - [HEXM-0008: Diagramas Archify en las tareas](HEXM-0008-diagramas-archify-en-las-tareas.md): por qué los diagramas se generan desde una fuente versionada, respaldados por el código en un commit fijo, y por qué el cierre de una tarea tiene dos commits.

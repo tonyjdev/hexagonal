@@ -1,0 +1,246 @@
+{
+  "schema_version": 1,
+  "diagram_type": "erd",
+  "meta": {
+    "title": "Tablas del recetario: un agregado Recipe en tres tablas",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0009/tablas-del-recetario.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "a639d2995b784879e2ec7e7d0e3d4313a92aa54e"
+    },
+    "legend": {
+      "entries": {
+        "pk": {
+          "label": "Clave primaria (uuid o compuesta)"
+        },
+        "fk": {
+          "label": "Clave foránea a recipes.id"
+        },
+        "one": {
+          "label": "Una receta"
+        },
+        "many": {
+          "label": "Varias filas"
+        },
+        "optional": {
+          "label": "Puede no haber ninguna"
+        }
+      }
+    },
+    "views": [
+      {
+        "id": "raiz",
+        "label": "La raíz del agregado",
+        "focus": [
+          "recipes"
+        ],
+        "note": "Identidad (uuid generado por el dominio), nombre y raciones. Las marcas de tiempo son operativas."
+      },
+      {
+        "id": "value_objects",
+        "label": "Value objects sin id propio",
+        "focus": [
+          "recipe_ingredients",
+          "recipe_steps",
+          "recipes"
+        ],
+        "note": "Clave compuesta (recipe_id, position): la posición es el orden de la lista en el dominio."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "gapX": 96,
+    "gapY": 40
+  },
+  "entities": [
+    {
+      "id": "recipe_ingredients",
+      "label": "recipe_ingredients",
+      "sublabel": "Ingredient (value object)",
+      "tag": "agregado Recipe",
+      "row": 0,
+      "col": 0,
+      "width": 250,
+      "attributes": [
+        {
+          "name": "recipe_id",
+          "type": "uuid",
+          "key": [
+            "pk",
+            "fk"
+          ],
+          "references": "recipes.id"
+        },
+        {
+          "name": "position",
+          "type": "smallint",
+          "key": "pk"
+        },
+        {
+          "name": "name",
+          "type": "varchar(255)"
+        },
+        {
+          "name": "numerator",
+          "type": "integer NULL"
+        },
+        {
+          "name": "denominator",
+          "type": "integer NULL"
+        },
+        {
+          "name": "unit",
+          "type": "varchar(20) NULL"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/database/migrations/2026_11_01_000000_create_recipes_tables.php",
+          "line": 45,
+          "end_line": 66,
+          "label": "Schema::create"
+        },
+        {
+          "path": "app-laravel/database/migrations/2026_11_01_000000_create_recipes_tables.php",
+          "line": 76,
+          "end_line": 91,
+          "label": "CHECK de la cantidad"
+        }
+      ]
+    },
+    {
+      "id": "recipes",
+      "label": "recipes",
+      "sublabel": "Recipe (raíz del agregado)",
+      "tag": "agregado Recipe",
+      "row": 0,
+      "col": 1,
+      "width": 230,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "key": "pk"
+        },
+        {
+          "name": "name",
+          "type": "varchar(255)"
+        },
+        {
+          "name": "servings",
+          "type": "smallint"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp NULL"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp NULL"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/database/migrations/2026_11_01_000000_create_recipes_tables.php",
+          "line": 32,
+          "end_line": 43,
+          "label": "Schema::create"
+        },
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Persistence/Eloquent/RecipeModel.php",
+          "line": 50,
+          "end_line": 61,
+          "label": "relaciones ordenadas"
+        }
+      ]
+    },
+    {
+      "id": "recipe_steps",
+      "label": "recipe_steps",
+      "sublabel": "Step (value object)",
+      "tag": "agregado Recipe",
+      "row": 0,
+      "col": 2,
+      "width": 230,
+      "attributes": [
+        {
+          "name": "recipe_id",
+          "type": "uuid",
+          "key": [
+            "pk",
+            "fk"
+          ],
+          "references": "recipes.id"
+        },
+        {
+          "name": "position",
+          "type": "smallint",
+          "key": "pk"
+        },
+        {
+          "name": "text",
+          "type": "text"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/database/migrations/2026_11_01_000000_create_recipes_tables.php",
+          "line": 93,
+          "end_line": 101,
+          "label": "Schema::create"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "ingredients_recipe",
+      "from": "recipe_ingredients",
+      "to": "recipes",
+      "label": "≥ 1 ingrediente",
+      "fromCardinality": "many",
+      "toCardinality": "one"
+    },
+    {
+      "id": "steps_recipe",
+      "from": "recipe_steps",
+      "to": "recipes",
+      "label": "pasos opcionales",
+      "fromCardinality": "many",
+      "fromOptional": true,
+      "toCardinality": "one"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Claves",
+      "items": [
+        "recipes.id es un uuid que trae el dominio (RecipeId, UUID v7): no hay autoincremental.",
+        "Ingredientes y pasos no tienen id: su clave es (recipe_id, position), porque son value objects.",
+        "ON DELETE CASCADE: borrar la receta borra sus partes, como un agregado."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "La cantidad exacta",
+      "items": [
+        "½ bote se guarda como numerator 1, denominator 2, unit jar; nunca como 0.5.",
+        "Al gusto: las tres columnas a NULL.",
+        "Un CHECK obliga a que sean las tres nulas o las tres presentes y válidas (IS NOT NULL explícito: NULL > 0 no es false)."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Reglas que vigila el dominio",
+      "items": [
+        "Al menos un ingrediente y sin repetidos los comprueba Recipe::create(), no la base de datos.",
+        "Al cargar, RecipeMapper reconstruye con Recipe::create(): unos datos inválidos fallan en la lectura."
+      ]
+    }
+  ]
+}
