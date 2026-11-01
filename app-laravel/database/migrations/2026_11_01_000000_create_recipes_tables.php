@@ -72,10 +72,21 @@ return new class extends Migration
         // mano, un script de importación... El Schema Builder de Laravel no
         // tiene CHECK, así que se escribe en SQL (solo usamos PostgreSQL, ADR
         // 0002).
+        //
+        // CONCEPTO: lógica de tres valores de SQL (true, false y NULL)
+        // Una comparación con NULL no da false, da NULL ("desconocido"): con
+        // denominator NULL, "denominator > 0" es NULL. Y un CHECK solo
+        // rechaza la fila cuando la condición es FALSE; si es NULL, la deja
+        // pasar. Por eso cada columna se exige con IS NOT NULL de forma
+        // explícita: sin ello, (1, NULL, 'jar') se colaba (lo destapó la
+        // prueba manual de HEXM-0009).
         DB::statement(<<<'SQL'
             ALTER TABLE recipe_ingredients ADD CONSTRAINT recipe_ingredients_quantity_check CHECK (
                 (numerator IS NULL AND denominator IS NULL AND unit IS NULL)
-                OR (numerator > 0 AND denominator > 0 AND unit IS NOT NULL)
+                OR (
+                    numerator IS NOT NULL AND denominator IS NOT NULL AND unit IS NOT NULL
+                    AND numerator > 0 AND denominator > 0
+                )
             )
             SQL);
 

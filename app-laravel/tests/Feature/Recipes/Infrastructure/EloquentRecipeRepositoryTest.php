@@ -114,10 +114,16 @@ it('stores nothing of a new recipe if saving fails halfway', function () {
     expect(recipeRowCounts())->toBe(['recipes' => 0, 'ingredients' => 0, 'steps' => 0]);
 });
 
-it('rejects an incomplete quantity at the database level', function () {
+it('rejects an incomplete or invalid quantity at the database level', function (?int $numerator, ?int $denominator, ?string $unit) {
     // La segunda red: aunque alguien escriba en la tabla sin pasar por el
     // dominio, el CHECK de PostgreSQL no admite media cantidad (un número
-    // sin unidad).
+    // sin unidad, una fracción sin denominador...) ni una fracción a cero.
+    //
+    // Se prueban TODAS las combinaciones con alguna columna nula porque en
+    // HEXM-0009 la prueba manual descubrió que el primer CHECK dejaba pasar
+    // (1, NULL, 'jar'): en SQL, NULL > 0 no es false sino NULL, y un CHECK
+    // solo rechaza lo que da false. El test original solo probaba
+    // (1, NULL, NULL), que sí se rechazaba.
     $recipe = RecipeMother::chickpeaSalad();
     (new EloquentRecipeRepository)->save($recipe);
 
@@ -125,8 +131,16 @@ it('rejects an incomplete quantity at the database level', function () {
         'recipe_id' => $recipe->id()->value(),
         'position' => 1,
         'name' => 'Atún',
-        'numerator' => 1,
-        'denominator' => null,
-        'unit' => null,
+        'numerator' => $numerator,
+        'denominator' => $denominator,
+        'unit' => $unit,
     ]))->toThrow(QueryException::class, 'recipe_ingredients_quantity_check');
-});
+})->with([
+    'sin denominador' => [1, null, 'jar'],
+    'sin numerador' => [null, 2, 'jar'],
+    'sin unidad' => [1, 2, null],
+    'solo numerador' => [1, null, null],
+    'solo denominador' => [null, 2, null],
+    'solo unidad' => [null, null, 'jar'],
+    'denominador cero' => [1, 0, 'jar'],
+]);
