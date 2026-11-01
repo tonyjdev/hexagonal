@@ -55,6 +55,8 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 | HEXM-0010 | [Forma frente a reglas](HEXM-0010/forma-frente-a-reglas.workflow.json) (`workflow`) | Quién rechaza cada petición: la frontera HTTP comprueba campos y tipos; el núcleo, las reglas de negocio. |
 | HEXM-0011 | [Consultar una receta](HEXM-0011/consultar-una-receta.sequence.json) (`sequence`) | `GET /api/recipes/{id}` en sus tres resultados: 200 con el DTO de lectura (`RecipeView`) formateado por `RecipeResource`, 404 (`RecipeNotFound`) y 422 (id mal formado). |
 | HEXM-0011 | [Hexágono del recetario al cerrar el nivel 2](HEXM-0011/hexagono-recetario-nivel-2.architecture.json) (`architecture`) | Los dos adaptadores HTTP, el comando y la consulta, el puerto con sus dos implementaciones (Eloquent y memoria) y el *provider* que elige Eloquent. |
+| HEXM-0016 | [Dos canales, un caso de uso](HEXM-0016/dos-canales-un-caso-de-uso.architecture.json) (`architecture`) | La API y la web entran por controladores distintos, comparten `GetRecipe` y `RecipeView` sin cambios, y se separan en la presentación (`RecipeResource` o la vista Blade). |
+| HEXM-0016 | [Errores según el canal](HEXM-0016/errores-segun-el-canal.workflow.json) (`workflow`) | Qué ve el cliente al pedir una receta en cada canal: página 404 en español en la web (también para `abc`, por `whereUuid`) y 404/422 en JSON en la API. |
 
 ### Transversal
 

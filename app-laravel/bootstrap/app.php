@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Shared\Application\NotFound;
 use Shared\Domain\DomainException;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * ¿La petición espera una respuesta JSON? Las de la API (/api/*) siempre;
@@ -84,12 +85,18 @@ return Application::configure(basePath: dirname(__DIR__))
         | pide no existe. No hay ninguna regla de negocio incumplida.
         |
         | Mismo cuerpo {"message": "..."} que los otros errores, para que el
-        | cliente lea siempre el mensaje de la misma clave. Fuera de la API, el
-        | tratamiento por defecto de Laravel (de momento no hay páginas web).
+        | cliente lea siempre el mensaje de la misma clave.
+        |
+        | CONCEPTO: el mismo error, distinta respuesta según el canal
+        | En la web (HEXM-0016), el mismo RecipeNotFound se muestra como la
+        | página resources/views/errors/404.blade.php con el mensaje en
+        | español. Antes devolvía null y Laravel lo trataba como un error
+        | cualquiera: un 500. El caso de uso no sabe nada de esto; solo dice
+        | "no existe", y cada adaptador lo cuenta a su manera.
         */
-        $exceptions->render(function (NotFound $exception, Request $request) use ($wantsJson): ?JsonResponse {
+        $exceptions->render(function (NotFound $exception, Request $request) use ($wantsJson): Response {
             if (! $wantsJson($request)) {
-                return null;
+                return response()->view('errors.404', ['message' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
             }
 
             return new JsonResponse(['message' => $exception->getMessage()], JsonResponse::HTTP_NOT_FOUND);

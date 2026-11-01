@@ -33,11 +33,15 @@ it('does not report not found exceptions to the log', function () {
     Exceptions::assertNotReported(RecipeNotFound::class);
 });
 
-it('leaves not found exceptions outside the API to the default handling', function () {
-    // Sin JSON, el manejador devuelve null y Laravel aplica su tratamiento
-    // por defecto. Como NotFound no es una excepción HTTP de Laravel, eso es
-    // un 500: cuando haya páginas web se decidirá cómo mostrarlo.
-    Route::get('/_test/not-found', fn () => throw RecipeNotFound::withId(RecipeId::generate()));
+it('renders a not found exception outside the API as a 404 page in Spanish', function () {
+    // HEXM-0016: en la web, el mismo NotFound se muestra como la página 404
+    // de la aplicación (resources/views/errors/404.blade.php) con el mensaje
+    // del caso de uso. Antes de esta tarea acababa en un 500.
+    $id = RecipeId::fromString('01a19699-76e7-7a25-96dc-da0375dce729');
+    Route::get('/_test/not-found', fn () => throw RecipeNotFound::withId($id));
 
-    $this->get('/_test/not-found')->assertInternalServerError();
+    $this->get('/_test/not-found')
+        ->assertNotFound()
+        ->assertSee('Página no encontrada')
+        ->assertSee('No existe ninguna receta con el identificador «01a19699-76e7-7a25-96dc-da0375dce729».');
 });

@@ -70,4 +70,22 @@ final class RecipesServiceProvider extends ServiceProvider
         // Puerto de salida (Domain) → adaptador de salida (Infrastructure).
         $this->app->bind(RecipeRepository::class, EloquentRecipeRepository::class);
     }
+
+    /**
+     * boot() se ejecuta cuando todos los providers ya están registrados: es
+     * el sitio para configurar piezas del framework, como las vistas.
+     *
+     * CONCEPTO: namespace de vistas (loadViewsFrom)
+     * Las vistas del recetario viven dentro del contexto
+     * (Recipes/Infrastructure/Http/views), junto a los controladores que las
+     * usan, en vez de en resources/views. Con el namespace "recipes" se
+     * llaman como view('recipes::show'). Así todo el recetario se lee desde
+     * src/Recipes, igual que sus controladores y su repositorio (decisión de
+     * HEXM-0016). Es el mismo mecanismo que usan los paquetes de Laravel
+     * para traer sus propias vistas.
+     */
+    public function boot(): void
+    {
+        $this->loadViewsFrom(__DIR__.'/Http/views', 'recipes');
+    }
 }

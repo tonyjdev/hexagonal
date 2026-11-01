@@ -1,0 +1,116 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Errores según el canal: ¿qué ve el cliente al pedir una receta?",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0016/errores-segun-el-canal.html",
+    "quality_profile": "showcase",
+    "repository": { "url": "https://github.com/tonyjdev/hexagonal.git", "provider": "github", "revision": "f0ea71e5d092632a38cb6bb2a8348e2098b3a57d" },
+    "legend": {
+      "entries": {
+        "external": { "label": "Petición" },
+        "backend": { "label": "Caso de uso (el mismo en los dos canales)" },
+        "security": { "label": "Filtro o error" },
+        "database": { "label": "Respuesta correcta" }
+      }
+    }
+  },
+  "lanes": [
+    { "id": "client", "label": "Petición" },
+    { "id": "web", "label": "Canal web (HTML)" },
+    { "id": "web_errors", "label": "Página 404 en español", "variant": "exception" },
+    { "id": "api", "label": "Canal API (JSON)" },
+    { "id": "api_errors", "label": "Errores JSON", "variant": "exception" }
+  ],
+  "mainPath": ["request", "channel", "web_uuid", "web_get", "web_ok"],
+  "nodes": [
+    {
+      "id": "request", "lane": "client", "col": 0, "type": "external",
+      "label": "Pedir una receta", "sublabel": "por su id"
+    },
+    {
+      "id": "channel", "lane": "client", "col": 1, "type": "security",
+      "label": "¿Pide JSON?", "sublabel": "/api/* o Accept: JSON",
+      "sources": [ { "path": "app-laravel/bootstrap/app.php", "line": 16, "end_line": 16, "label": "$wantsJson" } ]
+    },
+    {
+      "id": "web_uuid", "lane": "web", "col": 2, "type": "security",
+      "label": "whereUuid('id')", "sublabel": "¿tiene forma de UUID?",
+      "sources": [ { "path": "app-laravel/routes/web.php", "line": 25, "end_line": 27 } ]
+    },
+    {
+      "id": "web_get", "lane": "web", "col": 3, "type": "backend",
+      "label": "GetRecipe", "sublabel": "¿existe?",
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Infrastructure/Http/RecipePageController.php", "line": 39, "end_line": 42 },
+        { "path": "app-laravel/src/Recipes/Application/GetRecipe.php", "line": 43, "end_line": 52 }
+      ]
+    },
+    {
+      "id": "web_ok", "lane": "web", "col": 4, "type": "database",
+      "label": "200 · página", "sublabel": "recipes::show",
+      "sources": [ { "path": "app-laravel/src/Recipes/Infrastructure/Http/views/show.blade.php", "line": 28, "end_line": 67 } ]
+    },
+    {
+      "id": "web_404_generic", "lane": "web_errors", "col": 2, "type": "security",
+      "label": "404 genérico", "sublabel": "\"La página que buscas no existe.\"",
+      "sources": [ { "path": "app-laravel/resources/views/errors/404.blade.php", "line": 19, "end_line": 23 } ]
+    },
+    {
+      "id": "web_404", "lane": "web_errors", "col": 3, "type": "security",
+      "label": "404 con mensaje", "sublabel": "\"No existe ninguna receta…\"",
+      "sources": [ { "path": "app-laravel/bootstrap/app.php", "line": 97, "end_line": 103, "label": "NotFound → vista" } ]
+    },
+    {
+      "id": "api_get", "lane": "api", "col": 2, "type": "backend",
+      "label": "GetRecipe", "sublabel": "¿forma válida? ¿existe?",
+      "sources": [ { "path": "app-laravel/src/Recipes/Infrastructure/Http/GetRecipeController.php", "line": 35, "end_line": 38 } ]
+    },
+    {
+      "id": "api_ok", "lane": "api", "col": 4, "type": "database",
+      "label": "200 · JSON", "sublabel": "RecipeResource",
+      "sources": [ { "path": "app-laravel/src/Recipes/Infrastructure/Http/RecipeResource.php", "line": 64, "end_line": 87 } ]
+    },
+    {
+      "id": "api_422", "lane": "api_errors", "col": 2, "type": "security",
+      "label": "422 · JSON", "sublabel": "InvalidRecipeId (ADR 0008)",
+      "sources": [ { "path": "app-laravel/bootstrap/app.php", "line": 61, "end_line": 67, "label": "DomainException" } ]
+    },
+    {
+      "id": "api_404", "lane": "api_errors", "col": 3, "type": "security",
+      "label": "404 · JSON", "sublabel": "RecipeNotFound",
+      "sources": [ { "path": "app-laravel/bootstrap/app.php", "line": 97, "end_line": 103, "label": "NotFound → JSON" } ]
+    }
+  ],
+  "edges": [
+    { "id": "ask", "from": "request", "to": "channel", "variant": "default" },
+    { "id": "html", "from": "channel", "to": "web_uuid", "label": "no: HTML", "variant": "emphasis" },
+    { "id": "json", "from": "channel", "to": "api_get", "label": "sí: JSON", "variant": "default" },
+    { "id": "uuid_ok", "from": "web_uuid", "to": "web_get", "label": "sí", "variant": "emphasis" },
+    { "id": "web_found", "from": "web_get", "to": "web_ok", "label": "existe", "variant": "emphasis" },
+    { "id": "uuid_bad", "from": "web_uuid", "to": "web_404_generic", "label": "abc", "variant": "security", "role": "error" },
+    { "id": "web_missing", "from": "web_get", "to": "web_404", "label": "no existe", "variant": "security", "role": "error" },
+    { "id": "api_found", "from": "api_get", "to": "api_ok", "label": "existe", "variant": "default" },
+    { "id": "api_bad", "from": "api_get", "to": "api_422", "label": "abc", "variant": "security", "role": "error" },
+    { "id": "api_missing", "from": "api_get", "to": "api_404", "label": "no existe", "variant": "security", "role": "error" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Un error, dos formas de contarlo",
+      "items": [
+        "GetRecipe solo dice \"no existe\" (RecipeNotFound); el manejador global elige JSON o página según el canal.",
+        "Antes de HEXM-0016, fuera de la API, ese mismo error acababa en un 500."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "¿Por qué \"abc\" da 404 en la web y 422 en la API?",
+      "items": [
+        "Para una persona que escribe una URL, \"abc\" es una página que no existe (whereUuid).",
+        "Un programa sí quiere distinguir \"no puede existir\" (422) de \"no existe\" (404)."
+      ]
+    }
+  ]
+}

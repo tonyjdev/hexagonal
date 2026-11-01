@@ -71,7 +71,7 @@ El roadmap tiene tres bloques:
 
 ## Ideas para más adelante (sin priorizar)
 
-- Frontend propio (Blade + Livewire, Inertia o una SPA).
+- Frontend propio (Blade + Livewire, Inertia o una SPA). Primer paso hecho en HEXM-0016: la página de una receta con Blade (ADR 0009).
 - Escalar las raciones de una receta.
 - Registro de lo que realmente se ha comido y estadísticas.
 - Notificaciones ("mañana toca descongelar la merluza").
@@ -95,3 +95,4 @@ El roadmap tiene tres bloques:
 | 2026-11-01 | 2 | HEXM-0009: `EloquentRecipeRepository` (segundo adaptador del puerto), tablas del recetario, *mapper* de persistencia y tests de contrato del puerto con los dos adaptadores; reconstitución con `Recipe::create()` (ADR 0006). |
 | 2026-11-01 | 2 | HEXM-0010: `POST /api/recipes`, primer adaptador *driving*: `CreateRecipeController` + `CreateRecipeRequest` (validación de forma), `RecipesServiceProvider` (*binding* del puerto a Eloquent) y traducción global de `DomainException` a HTTP 422; tests de arquitectura para HTTP y service providers (ADR 0007). |
 | 2026-11-01 | 2 | HEXM-0011: `GET /api/recipes/{id}`, primer caso de uso de consulta (`GetRecipe`) con DTO de lectura (`RecipeView`), `Quantity::amountAsText()` ("1 ½"), `RecipeNotFound` → 404 e id mal formado → 422; JSON con un *API Resource* (ADR 0008). **Nivel 2 terminado** (`nivel-02`, diario `02-recetario-adaptadores.md`). |
+| 2026-11-01 | 2 | HEXM-0016: primera pantalla web, `GET /recipes/{id}` con Blade: segundo adaptador de entrada sobre `GetRecipe` y `RecipeView` sin tocar el núcleo, vistas en el contexto (`recipes::`), página 404 en español y errores según el canal (ADR 0009). Refuerzo posterior a `nivel-02`. |

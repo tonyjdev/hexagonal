@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Dos canales, un caso de uso: la receta en JSON y en HTML",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0016/dos-canales-un-caso-de-uso.html",
+    "quality_profile": "showcase",
+    "repository": { "url": "https://github.com/tonyjdev/hexagonal.git", "provider": "github", "revision": "f0ea71e5d092632a38cb6bb2a8348e2098b3a57d" },
+    "legend": {
+      "entries": {
+        "external": { "label": "Adaptador de entrada (ruta + controlador)" },
+        "backend": { "label": "Caso de uso / DTO de lectura" },
+        "messagebus": { "label": "Puerto (interfaz)" },
+        "frontend": { "label": "Presentación (adaptador)" }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "api_ctrl", "type": "external", "label": "GET /api/recipes/{id}", "sublabel": "GetRecipeController",
+      "pos": [40, 60], "size": [200, 64],
+      "sources": [
+        { "path": "app-laravel/routes/api.php", "line": 46, "end_line": 46, "label": "ruta" },
+        { "path": "app-laravel/src/Recipes/Infrastructure/Http/GetRecipeController.php", "line": 31, "end_line": 39 }
+      ]
+    },
+    {
+      "id": "web_ctrl", "type": "external", "label": "GET /recipes/{id}", "sublabel": "RecipePageController · whereUuid",
+      "pos": [40, 260], "size": [200, 64],
+      "sources": [
+        { "path": "app-laravel/routes/web.php", "line": 25, "end_line": 27, "label": "ruta web" },
+        { "path": "app-laravel/src/Recipes/Infrastructure/Http/RecipePageController.php", "line": 35, "end_line": 43 }
+      ]
+    },
+    {
+      "id": "get_uc", "type": "backend", "label": "GetRecipe", "sublabel": "sin cambios",
+      "pos": [380, 160], "size": [160, 64],
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Application/GetRecipe.php", "line": 43, "end_line": 52 }
+      ]
+    },
+    {
+      "id": "view", "type": "backend", "label": "RecipeView", "sublabel": "DTO de lectura, sin cambios",
+      "pos": [660, 160], "size": [180, 64],
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Application/RecipeView.php", "line": 37, "end_line": 66 }
+      ]
+    },
+    {
+      "id": "port", "type": "messagebus", "label": "RecipeRepository", "sublabel": "find() · Eloquent por el binding",
+      "pos": [370, 340], "size": [180, 64],
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Domain/RecipeRepository.php", "line": 36, "end_line": 48 }
+      ]
+    },
+    {
+      "id": "resource", "type": "frontend", "label": "RecipeResource", "sublabel": "JSON {\"data\": …}",
+      "pos": [960, 60], "size": [190, 64],
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Infrastructure/Http/RecipeResource.php", "line": 50, "end_line": 88 }
+      ]
+    },
+    {
+      "id": "blade", "type": "frontend", "label": "recipes::show", "sublabel": "HTML · tabla de ingredientes",
+      "pos": [960, 260], "size": [190, 64],
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Infrastructure/Http/views/show.blade.php", "line": 28, "end_line": 67 },
+        { "path": "app-laravel/src/Recipes/Infrastructure/RecipesServiceProvider.php", "line": 87, "end_line": 90, "label": "loadViewsFrom" },
+        { "path": "app-laravel/resources/views/components/layout.blade.php", "line": 22, "end_line": 52, "label": "<x-layout>" }
+      ]
+    }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Entrada (Infrastructure\\Http)", "wraps": ["api_ctrl", "web_ctrl"] },
+    { "kind": "region", "label": "Recipes\\Application", "wraps": ["get_uc", "view"] },
+    { "kind": "region", "label": "Recipes\\Domain", "wraps": ["port"] },
+    { "kind": "region", "label": "Presentación (Infrastructure\\Http)", "wraps": ["resource", "blade"] }
+  ],
+  "connections": [
+    { "id": "api_call", "from": "api_ctrl", "to": "get_uc", "label": "id", "variant": "emphasis" },
+    { "id": "web_call", "from": "web_ctrl", "to": "get_uc", "label": "id", "variant": "emphasis" },
+    { "id": "find", "from": "get_uc", "to": "port", "label": "find()" },
+    { "id": "returns", "from": "get_uc", "to": "view", "label": "devuelve", "variant": "emphasis" },
+    { "id": "to_json", "from": "view", "to": "resource", "label": "API" },
+    { "id": "to_html", "from": "view", "to": "blade", "label": "web" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "La promesa de la hexagonal",
+      "items": [
+        "Añadir la web fue añadir un adaptador: git diff sobre Domain y Application sale vacío.",
+        "Los dos controladores solo se diferencian en la presentación: RecipeResource o la vista Blade."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Decisiones (ADR 0009)",
+      "items": [
+        "Las vistas del recetario viven en su contexto (recipes::); el layout y la página 404, en resources/views.",
+        "Tabla sin concordancia: el plural de las unidades queda como tech_debt del dominio."
+      ]
+    }
+  ]
+}
