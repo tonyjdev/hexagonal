@@ -58,6 +58,8 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 | Paso de preparación | `Step` | Value object | Texto no vacío. El orden lo da su posición en la receta. |
 | Raciones | `Servings` | Value object | Al menos 1. |
 | Receta eliminada | `RecipeDeleted` | Evento de dominio | |
+| Repositorio de recetas | `RecipeRepository` | Puerto (de salida) | Guardar (`save`) y recuperar (`find`) recetas completas. Adaptadores: `InMemoryRecipeRepository` (tests) y, en el nivel 2, Eloquent. |
+| Crear receta | `CreateRecipe` | Caso de uso | Recibe un `CreateRecipeCommand` con datos primitivos, crea la receta y la guarda. Devuelve su `RecipeId`. |
 | Al gusto / una pizca | — | Concepto | Cantidad sin número: no es una `Quantity`, sino la ausencia de cantidad del ingrediente. |
 | Error de dominio | `DomainException` | Excepción (`Shared\Domain`) | Base de los errores de negocio, con mensaje en español para el usuario: `InvalidQuantity`, `InvalidServings`, `InvalidStep`, `InvalidRecipeId`, `InvalidIngredient`, `InvalidRecipe`. |
 
