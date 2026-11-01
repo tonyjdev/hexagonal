@@ -2,7 +2,7 @@
 
 Hoja de ruta del proyecto organizada en **niveles**. Cada nivel es pequeño, termina con tests en verde y una etiqueta git (`nivel-NN`), y añade **un concepto nuevo** cada vez.
 
-**Estado actual:** ⬜ Nivel 2 (Recetario: adaptadores), siguiente. Nivel 1 terminado (`nivel-01`).
+**Estado actual:** 🟡 Nivel 2 (Recetario: adaptadores), en curso: repositorio Eloquent hecho (HEXM-0009); faltan el *binding* del puerto y la API. Nivel 1 terminado (`nivel-01`).
 
 Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado
 
@@ -42,7 +42,7 @@ El roadmap tiene tres bloques:
 |---|---|---|---|
 | ✅ | **0. Esqueleto** (HEXM-0001 a 0004) | Laravel 13 en `app-laravel/`, PostgreSQL con Docker Compose, Pest, autoload de `src/`, PHPStan y los primeros **tests de arquitectura** (el dominio no puede usar `Illuminate\*`). | Estructura hexagonal, regla de dependencias, tests de arquitectura |
 | ✅ | **1. Recetario: dominio** (HEXM-0005 a 0007) | `Recipe`, `RecipeId`, `Ingredient`, `Quantity`, `Unit`, `Step`, `Servings` y el caso de uso `CreateRecipe` con repositorio **en memoria**. Solo tests, sin base de datos ni HTTP. | Entidad, value object, invariantes, puerto de salida, caso de uso, adaptador en memoria |
-| ⬜ | **2. Recetario: adaptadores** | Repositorio con Eloquent/PostgreSQL (con su *mapper* dominio ↔ modelo), API REST (`/api/recipes`) y binding de puertos en un *service provider*. | Adaptadores *driven* y *driving*, inyección de dependencias, mapeo de persistencia |
+| 🟡 | **2. Recetario: adaptadores** (HEXM-0009 a 0011) | Repositorio con Eloquent/PostgreSQL (con su *mapper* dominio ↔ modelo), API REST (`/api/recipes`) y binding de puertos en un *service provider*. | Adaptadores *driven* y *driving*, inyección de dependencias, mapeo de persistencia |
 | ⬜ | **3. Planes: dominio** | `NutritionPlan`, `MenuWeek`, `MenuDay`, `Dish`, `FixedMeal`, `OptionGroup`, `ExchangeTable`. Reglas: dos semanas, 6 días con menú, comida + cena. | Agregados y sus límites, enums, colecciones inmutables |
 | ⬜ | **4. Calendario** | `MealCalendar` y el caso de uso `GetMenuForDate` ("¿qué me toca hoy?"): alternancia de semanas, sábado libre y plan vigente. Puerto `Clock`. | Servicio de dominio, tiempo testeable, casos de uso de consulta |
 | ⬜ | **5. Planes: adaptadores** | Persistencia de planes, histórico de planes, API REST y alta manual de un plan. | Repositorio de agregados complejos, transacciones |
@@ -92,3 +92,4 @@ El roadmap tiene tres bloques:
 | 2026-11-01 | 1 | HEXM-0006: entidad `Recipe` (raíz de agregado) e `Ingredient`; invariantes: nombre, al menos un ingrediente, sin ingredientes repetidos, pasos opcionales. |
 | 2026-11-01 | 1 | HEXM-0007: caso de uso `CreateRecipe`, puerto `RecipeRepository` y adaptador `InMemoryRecipeRepository`. **Nivel 1 terminado** (`nivel-01`, diario `01-recetario-dominio.md`). |
 | 2026-11-01 | – | HEXM-0008: diagramas Archify en las tareas (transversal). `/close-task` genera diagramas respaldados por el código que acompañan a cada Explicación; diagramas del nivel 1 en `docs/diagramas/`. |
+| 2026-11-01 | 2 | HEXM-0009: `EloquentRecipeRepository` (segundo adaptador del puerto), tablas del recetario, *mapper* de persistencia y tests de contrato del puerto con los dos adaptadores; reconstitución con `Recipe::create()` (ADR 0006). |

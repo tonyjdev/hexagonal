@@ -196,3 +196,26 @@ arch('the shared kernel does not depend on any context', function () {
     // quedaría acoplado a todos los demás a través de él.
     expect('Shared')->not->toUse(businessContexts());
 });
+
+// ---------------------------------------------------------------------------
+// Persistencia
+// ---------------------------------------------------------------------------
+
+arch('Eloquent is only used in infrastructure', function () {
+    // CONCEPTO: Eloquent es un adaptador
+    // Los modelos de Eloquent son un detalle de cómo se guardan los datos.
+    // Dentro de src/ solo pueden aparecer en la capa Infrastructure de cada
+    // contexto (los repositorios y sus modelos, como
+    // Recipes\Infrastructure\Persistence\Eloquent). Fuera de src/, Laravel
+    // los usa en app/ (User) y database/ (factories, seeders).
+    //
+    // Las reglas de "el núcleo no usa Illuminate" ya lo impiden en Domain y
+    // Application; esta lo dice en positivo y en un solo sitio, y cubre
+    // también el caso de un contexto que guardara su modelo de Eloquent en
+    // otro contexto.
+    expect('Illuminate\Database\Eloquent')->toOnlyBeUsedIn([
+        'App',
+        'Database',
+        ...array_map(fn (string $context) => "{$context}\\Infrastructure", [...businessContexts(), 'Shared']),
+    ]);
+});
