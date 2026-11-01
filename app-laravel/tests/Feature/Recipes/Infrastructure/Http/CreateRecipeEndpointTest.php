@@ -78,7 +78,7 @@ it('creates a recipe and returns its id and location', function () {
     // RecipeId::fromString valida que sea un UUID: si el id no lo fuera,
     // lanzaría InvalidRecipeId y el test fallaría aquí.
     $recipeId = RecipeId::fromString($id);
-    $response->assertHeader('Location', url("/api/recipes/{$id}"));
+    $response->assertHeader('Location', route('recipes.show', ['id' => $id]));
 
     // Se comprueba lo guardado A TRAVÉS DEL PUERTO, no mirando las tablas:
     // lo que importa es que la receta que se recupera es la que se envió

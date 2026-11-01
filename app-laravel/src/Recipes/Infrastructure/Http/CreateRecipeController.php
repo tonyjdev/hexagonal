@@ -42,9 +42,9 @@ use Recipes\Application\CreateRecipe;
  * __invoke y la ruta apunta a la clase: Route::post('/recipes', CreateRecipeController::class).
  *
  * Respuesta: 201 Created, el id en el cuerpo y la URL del nuevo recurso en
- * la cabecera Location, como indica HTTP para un POST que crea algo. Esa URL
- * responderá cuando exista GET /api/recipes/{id} (HEXM-0011); entonces se
- * podrá generar con route() a partir de una ruta con nombre.
+ * la cabecera Location, como indica HTTP para un POST que crea algo. La URL
+ * es la de GET /api/recipes/{id} (HEXM-0011) y se genera con route() a
+ * partir del nombre de la ruta, sin escribirla a mano.
  *
  * CAPA: Infraestructura, adaptador de entrada HTTP (Recipes\Infrastructure\Http).
  */
@@ -59,7 +59,7 @@ final readonly class CreateRecipeController
         return new JsonResponse(
             ['id' => $id->value()],
             JsonResponse::HTTP_CREATED,
-            ['Location' => url("/api/recipes/{$id->value()}")],
+            ['Location' => route('recipes.show', ['id' => $id->value()])],
         );
     }
 }

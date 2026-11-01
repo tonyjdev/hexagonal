@@ -5,6 +5,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Shared\Application\NotFound;
 use Shared\Domain\DomainException;
 
 /**
@@ -70,4 +71,30 @@ return Application::configure(basePath: dirname(__DIR__))
         | despertar a nadie. Laravel hace lo mismo con sus ValidationException.
         */
         $exceptions->dontReport(DomainException::class);
+
+        /*
+        | CONCEPTO: "no encontrado" también se traduce en un único sitio
+        | Igual que con DomainException: un caso de uso de consulta lanza un
+        | NotFound concreto (RecipeNotFound, HEXM-0011) y aquí se convierte en
+        | HTTP 404 capturando la clase base de Shared\Application. Un "no
+        | encontrado" nuevo de cualquier contexto (un plan, en el nivel 5)
+        | queda cubierto sin tocar este fichero.
+        |
+        | Por qué 404 y no 422: la petición es correcta, pero el recurso que
+        | pide no existe. No hay ninguna regla de negocio incumplida.
+        |
+        | Mismo cuerpo {"message": "..."} que los otros errores, para que el
+        | cliente lea siempre el mensaje de la misma clave. Fuera de la API, el
+        | tratamiento por defecto de Laravel (de momento no hay páginas web).
+        */
+        $exceptions->render(function (NotFound $exception, Request $request) use ($wantsJson): ?JsonResponse {
+            if (! $wantsJson($request)) {
+                return null;
+            }
+
+            return new JsonResponse(['message' => $exception->getMessage()], JsonResponse::HTTP_NOT_FOUND);
+        });
+
+        // Buscar algo que no existe es una respuesta normal, no un fallo.
+        $exceptions->dontReport(NotFound::class);
     })->create();

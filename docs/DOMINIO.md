@@ -53,13 +53,17 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 | Receta | `Recipe` | Entidad / raíz de agregado | Nombre, raciones, ingredientes y pasos ordenados. Se compara por su `RecipeId`; cambia con métodos de negocio (`rename()`), no con setters. |
 | Identificador de receta | `RecipeId` | Value object | UUID v7 generado por el dominio ([ADR 0005](adr/0005-identificadores-uuid-v7-en-el-dominio.md)). Lo único que conoce `MealPlanning` de una receta. |
 | Ingrediente | `Ingredient` | Value object | Nombre + cantidad opcional: `Ingredient::of()` con cantidad, `Ingredient::toTaste()` "al gusto". El nombre se compara sin distinguir mayúsculas. |
-| Cantidad | `Quantity` | Value object | Número positivo + unidad. El número es una fracción exacta (numerador/denominador): ½, ⅓, ¾, 1 ½, 1,5… |
+| Cantidad | `Quantity` | Value object | Número positivo + unidad. El número es una fracción exacta (numerador/denominador): ½, ⅓, ¾, 1 ½, 1,5… Se lee con `fromString()` y se escribe como en los planes con `amountAsText()` (3/2 → "1 ½"). |
 | Unidad | `Unit` | Enum | gramo `Gram`, mililitro `Millilitre`, unidad `Piece`, cucharada sopera `Tablespoon`, cucharadita `Teaspoon`, vaso `Glass`, loncha `Slice`, filete `Fillet`, lata `Can`, bote `Jar`. |
 | Paso de preparación | `Step` | Value object | Texto no vacío. El orden lo da su posición en la receta. |
 | Raciones | `Servings` | Value object | Al menos 1. |
 | Receta eliminada | `RecipeDeleted` | Evento de dominio | |
 | Repositorio de recetas | `RecipeRepository` | Puerto (de salida) | Guardar (`save`) y recuperar (`find`) recetas completas. Adaptadores: `InMemoryRecipeRepository` (tests) y `EloquentRecipeRepository` (PostgreSQL, [ADR 0006](adr/0006-persistencia-del-agregado-recipe.md)); los dos cumplen los mismos tests de contrato. |
 | Crear receta | `CreateRecipe` | Caso de uso | Recibe un `CreateRecipeCommand` con datos primitivos, crea la receta y la guarda. Devuelve su `RecipeId`. Por HTTP: `POST /api/recipes` (adaptador `CreateRecipeController`, [ADR 0007](adr/0007-adaptador-http-validacion-de-forma-y-errores-de-dominio.md)). |
+| Consultar receta | `GetRecipe` | Caso de uso (consulta) | Recibe el id y devuelve un `RecipeView`; no cambia nada (CQS). Por HTTP: `GET /api/recipes/{id}` ([ADR 0008](adr/0008-consultas-dto-de-lectura-y-no-encontrado.md)). |
+| Vista de receta | `RecipeView`, `IngredientView` | DTO de lectura | La receta lista para mostrar, con primitivos: cantidad legible ("1 ½"), código y nombre de la unidad, y si es al gusto. La entidad `Recipe` nunca sale de la aplicación. |
+| Receta no encontrada | `RecipeNotFound` | Excepción (`Recipes\Application`) | No existe ninguna receta con ese id. Hereda de `NotFound`, no de `DomainException`. |
+| No encontrado | `NotFound` | Excepción (`Shared\Application`) | Base de "lo que buscas no existe", para todos los contextos. En la API llega como HTTP 404 `{"message": "…"}`. |
 | Al gusto / una pizca | — | Concepto | Cantidad sin número: no es una `Quantity`, sino la ausencia de cantidad del ingrediente. |
 | Error de dominio | `DomainException` | Excepción (`Shared\Domain`) | Base de los errores de negocio, con mensaje en español para el usuario: `InvalidQuantity`, `InvalidServings`, `InvalidStep`, `InvalidRecipeId`, `InvalidIngredient`, `InvalidRecipe`. En la API llegan como HTTP 422 `{"message": "…"}`, traducidos en un único manejador ([ADR 0007](adr/0007-adaptador-http-validacion-de-forma-y-errores-de-dominio.md)). |
 

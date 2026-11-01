@@ -97,6 +97,32 @@ describe('always valid', function () {
     });
 });
 
+describe('writing amounts as people do', function () {
+    it('writes the amount as it appears in the plans', function (Quantity $quantity, string $text) {
+        expect($quantity->amountAsText())->toBe($text);
+    })->with([
+        'a whole number' => [Quantity::of(200, Unit::Gram), '200'],
+        'a unicode fraction' => [Quantity::fraction(1, 2, Unit::Jar), '½'],
+        'a mixed number' => [Quantity::fraction(3, 2, Unit::Glass), '1 ½'],
+        'a mixed number with thirds' => [Quantity::fraction(7, 3, Unit::Glass), '2 ⅓'],
+        'a fraction without unicode character' => [Quantity::fraction(5, 7, Unit::Glass), '5/7'],
+        'a mixed number without unicode character' => [Quantity::fraction(12, 7, Unit::Glass), '1 5/7'],
+        // La cantidad no recuerda que se escribió con decimales: 1,5 es 3/2.
+        'a decimal, as a fraction' => [Quantity::fromString('1,5', Unit::Tablespoon), '1 ½'],
+    ]);
+
+    it('reads back exactly what it writes', function (string $written) {
+        // CONCEPTO: test de ida y vuelta (round trip)
+        // Escribir y volver a leer debe dar la MISMA cantidad. Así,
+        // cualquier cambio en el formato de amountAsText() que fromString()
+        // no sepa leer (otro separador, como "1-½" o "1 y ½"; un decimal con
+        // redondeo, como "0,33") rompe este test.
+        $quantity = Quantity::fromString($written, Unit::Jar);
+
+        expect(Quantity::fromString($quantity->amountAsText(), Unit::Jar)->equals($quantity))->toBeTrue();
+    })->with(['200', '½', '⅓', '⅔', '¼', '¾', '⅛', '1 ½', '2 ¾', '1/5', '3 2/7', '1,25', '0,3']);
+});
+
 describe('comparison by value', function () {
     it('is equal to another quantity with the same amount and unit', function () {
         expect(Quantity::fromString('1 ½', Unit::Glass)->equals(Quantity::fraction(3, 2, Unit::Glass)))->toBeTrue();

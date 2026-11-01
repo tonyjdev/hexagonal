@@ -5,7 +5,7 @@ Piezas **mínimas** que necesitan varios contextos. En DDD se llama *shared kern
 | Capa | Ejemplos de lo que puede ir aquí |
 |---|---|
 | `Domain/` | Una excepción base de dominio, un tipo `Uuid`, la interfaz `DomainEvent`… |
-| `Application/` | Puertos transversales, como un `EventBus` o un `TransactionManager`. |
+| `Application/` | La excepción base `NotFound` (HEXM-0011, → HTTP 404) y puertos transversales, como un `EventBus` o un `TransactionManager`. |
 | `Infrastructure/` | Sus adaptadores con Laravel. |
 
 **Regla:** `Shared` no depende de ningún contexto (los tests de arquitectura lo comprueban). Antes de mover algo aquí, conviene preguntarse si es *de verdad* común o si solo se parece: duplicar un poco es mejor que acoplar dos contextos por una abstracción prematura.
