@@ -30,6 +30,17 @@
 
 use Illuminate\Support\Facades\Route;
 use Recipes\Infrastructure\Http\CreateRecipeController;
+use Recipes\Infrastructure\Http\GetRecipeController;
 
-// Recetario: alta de recetas (HEXM-0010).
-Route::post('/recipes', CreateRecipeController::class);
+// Recetario: alta de recetas (HEXM-0010) y consulta (HEXM-0011).
+//
+// Con nombre (->name()) para generar sus URL con route('recipes.show', ...)
+// en vez de escribirlas a mano: si la URL cambia, se cambia solo aquí. La
+// usa la cabecera Location del alta.
+//
+// Sin whereUuid() en {id}: la forma del identificador la valida el dominio
+// (InvalidRecipeId → 422 en español), decisión de HEXM-0011. Con la
+// restricción, Laravel respondería un 404 en inglés antes de llegar al
+// controlador.
+Route::post('/recipes', CreateRecipeController::class)->name('recipes.store');
+Route::get('/recipes/{id}', GetRecipeController::class)->name('recipes.show');

@@ -1,0 +1,395 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Hexágono del recetario al cerrar el nivel 2",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0011/hexagono-recetario-nivel-2.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "8acb7844e05ea71ee88b336e7bb581c766f06585"
+    },
+    "legend": {
+      "entries": {
+        "external": {
+          "label": "Adaptador de entrada (HTTP)"
+        },
+        "backend": {
+          "label": "Caso de uso / DTO"
+        },
+        "security": {
+          "label": "Dominio: reglas de negocio"
+        },
+        "messagebus": {
+          "label": "Puerto (interfaz)"
+        },
+        "database": {
+          "label": "Adaptador de salida"
+        },
+        "cloud": {
+          "label": "Raíz de composición"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "create_ctrl",
+      "type": "external",
+      "label": "POST /api/recipes",
+      "sublabel": "CreateRecipeController + FormRequest",
+      "pos": [
+        40,
+        90
+      ],
+      "size": [
+        210,
+        64
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Http/CreateRecipeController.php",
+          "line": 51,
+          "end_line": 65
+        },
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Http/CreateRecipeRequest.php",
+          "line": 112,
+          "end_line": 133,
+          "label": "toCommand()"
+        }
+      ]
+    },
+    {
+      "id": "get_ctrl",
+      "type": "external",
+      "label": "GET /api/recipes/{id}",
+      "sublabel": "GetRecipeController + RecipeResource",
+      "pos": [
+        40,
+        270
+      ],
+      "size": [
+        210,
+        64
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Http/GetRecipeController.php",
+          "line": 31,
+          "end_line": 39
+        },
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Http/RecipeResource.php",
+          "line": 50,
+          "end_line": 88
+        }
+      ]
+    },
+    {
+      "id": "create_uc",
+      "type": "backend",
+      "label": "CreateRecipe",
+      "sublabel": "comando",
+      "pos": [
+        400,
+        90
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Application/CreateRecipe.php",
+          "line": 55,
+          "end_line": 68
+        }
+      ]
+    },
+    {
+      "id": "get_uc",
+      "type": "backend",
+      "label": "GetRecipe",
+      "sublabel": "consulta",
+      "pos": [
+        400,
+        270
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Application/GetRecipe.php",
+          "line": 43,
+          "end_line": 52
+        }
+      ]
+    },
+    {
+      "id": "view",
+      "type": "backend",
+      "label": "RecipeView",
+      "sublabel": "DTO de lectura",
+      "pos": [
+        400,
+        430
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Application/RecipeView.php",
+          "line": 37,
+          "end_line": 66
+        },
+        {
+          "path": "app-laravel/src/Recipes/Application/IngredientView.php",
+          "line": 27,
+          "end_line": 49
+        }
+      ]
+    },
+    {
+      "id": "recipe",
+      "type": "security",
+      "label": "Recipe + value objects",
+      "sublabel": "invariantes · amountAsText()",
+      "pos": [
+        700,
+        90
+      ],
+      "size": [
+        190,
+        64
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/Recipe.php",
+          "line": 89,
+          "end_line": 106,
+          "label": "create()"
+        },
+        {
+          "path": "app-laravel/src/Recipes/Domain/Quantity.php",
+          "line": 196,
+          "end_line": 211,
+          "label": "amountAsText()"
+        }
+      ]
+    },
+    {
+      "id": "port",
+      "type": "messagebus",
+      "label": "RecipeRepository",
+      "sublabel": "save() · find()",
+      "pos": [
+        700,
+        270
+      ],
+      "size": [
+        190,
+        64
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/RecipeRepository.php",
+          "line": 36,
+          "end_line": 48
+        }
+      ]
+    },
+    {
+      "id": "eloquent",
+      "type": "database",
+      "label": "EloquentRecipeRepository",
+      "sublabel": "PostgreSQL",
+      "pos": [
+        1010,
+        190
+      ],
+      "size": [
+        200,
+        64
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Persistence/Eloquent/EloquentRecipeRepository.php",
+          "line": 47,
+          "end_line": 103
+        }
+      ]
+    },
+    {
+      "id": "memory",
+      "type": "database",
+      "label": "InMemoryRecipeRepository",
+      "sublabel": "tests rápidos",
+      "pos": [
+        1010,
+        350
+      ],
+      "size": [
+        200,
+        64
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/InMemoryRecipeRepository.php",
+          "line": 42,
+          "end_line": 71
+        }
+      ]
+    },
+    {
+      "id": "provider",
+      "type": "cloud",
+      "label": "RecipesServiceProvider",
+      "sublabel": "bind(puerto → Eloquent)",
+      "pos": [
+        1010,
+        50
+      ],
+      "size": [
+        200,
+        64
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/RecipesServiceProvider.php",
+          "line": 68,
+          "end_line": 72
+        },
+        {
+          "path": "app-laravel/bootstrap/providers.php",
+          "line": 13,
+          "end_line": 16
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Recipes\\Infrastructure\\Http",
+      "wraps": [
+        "create_ctrl",
+        "get_ctrl"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Recipes\\Application",
+      "wraps": [
+        "create_uc",
+        "get_uc",
+        "view"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Recipes\\Domain",
+      "wraps": [
+        "recipe",
+        "port"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Recipes\\Infrastructure",
+      "wraps": [
+        "provider",
+        "eloquent",
+        "memory"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "create_call",
+      "from": "create_ctrl",
+      "to": "create_uc",
+      "label": "CreateRecipeCommand",
+      "variant": "emphasis"
+    },
+    {
+      "id": "get_call",
+      "from": "get_ctrl",
+      "to": "get_uc",
+      "label": "id",
+      "variant": "emphasis"
+    },
+    {
+      "id": "create_recipe",
+      "from": "create_uc",
+      "to": "recipe",
+      "label": "Recipe::create()",
+      "variant": "emphasis"
+    },
+    {
+      "id": "save",
+      "from": "create_uc",
+      "to": "port",
+      "label": "save()"
+    },
+    {
+      "id": "find",
+      "from": "get_uc",
+      "to": "port",
+      "label": "find()",
+      "variant": "emphasis"
+    },
+    {
+      "id": "build_view",
+      "from": "get_uc",
+      "to": "view",
+      "label": "fromRecipe()"
+    },
+    {
+      "id": "eloquent_impl",
+      "from": "eloquent",
+      "to": "port",
+      "label": "implementa",
+      "variant": "dashed"
+    },
+    {
+      "id": "memory_impl",
+      "from": "memory",
+      "to": "port",
+      "label": "implementa",
+      "variant": "dashed"
+    },
+    {
+      "id": "bind",
+      "from": "provider",
+      "to": "eloquent",
+      "label": "bind()",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Lo que añadió el nivel 2",
+      "items": [
+        "Dos adaptadores de entrada HTTP y un segundo adaptador de salida (PostgreSQL) para el mismo puerto.",
+        "Una consulta (GetRecipe) con DTO de lectura junto al comando (CreateRecipe).",
+        "CreateRecipe, Recipe y RecipeRepository no cambiaron al enchufar la base de datos y HTTP."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Errores traducidos en un único sitio",
+      "items": [
+        "bootstrap/app.php: DomainException → 422 y NotFound → 404, con mensaje en español.",
+        "Los controladores no llevan try/catch; la validación de forma la hace la FormRequest (422 con errors)."
+      ]
+    }
+  ]
+}

@@ -173,6 +173,44 @@ final readonly class Quantity
     }
 
     /**
+     * El número escrito como lo haría una persona en una receta: el camino
+     * inverso de fromString().
+     *
+     *   200/1 → "200" · 1/2 → "½" · 3/2 → "1 ½" · 7/3 → "2 ⅓" · 5/7 → "5/7"
+     *
+     * CONCEPTO: el conocimiento del negocio vive en el dominio
+     * Saber que "un bote y medio" se escribe "1 ½" es conocimiento del
+     * recetario, igual que saber leerlo. Si este formato estuviera en el
+     * adaptador HTTP, la lista de la compra (bloque C) o un comando de Artisan
+     * tendrían que repetirlo. Aquí lo comparten todos. (Decisión de HEXM-0011.)
+     *
+     * Es una TRANSFORMACIÓN, no una pérdida: fromString($q->amountAsText())
+     * devuelve una cantidad igual a $q (lo comprueban los tests de ida y
+     * vuelta). Por eso la parte fraccionaria usa un carácter Unicode solo si
+     * fromString() sabe leerlo, y si no, "n/d".
+     *
+     * Límite conocido: un decimal se escribe como fracción, porque la
+     * cantidad no recuerda cómo se escribió. "1,5" vuelve como "1 ½" (que es
+     * como lo escriben los planes), pero "0,3" vuelve como "3/10".
+     */
+    public function amountAsText(): string
+    {
+        $whole = intdiv($this->numerator, $this->denominator);
+        $remainder = $this->numerator % $this->denominator;
+
+        if ($remainder === 0) {
+            return (string) $whole;
+        }
+
+        // array_search busca el par [numerador, denominador] entre los
+        // valores de la tabla y devuelve su clave ("½"), o false si no está.
+        $unicode = array_search([$remainder, $this->denominator], self::UNICODE_FRACTIONS, true);
+        $fraction = is_string($unicode) ? $unicode : "{$remainder}/{$this->denominator}";
+
+        return $whole === 0 ? $fraction : "{$whole} {$fraction}";
+    }
+
+    /**
      * Igualdad por valor: mismo número y misma unidad.
      *
      * Como la fracción siempre está simplificada, basta comparar campo a
