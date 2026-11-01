@@ -2,7 +2,7 @@
 
 Hoja de ruta del proyecto organizada en **niveles**. Cada nivel es pequeño, termina con tests en verde y una etiqueta git (`nivel-NN`), y añade **un concepto nuevo** cada vez.
 
-**Estado actual:** 🟡 Nivel 1 (Recetario: dominio), en curso: HEXM-0005 terminada, siguen HEXM-0006 y HEXM-0007. Nivel 0 terminado (`nivel-00`).
+**Estado actual:** 🟡 Nivel 1 (Recetario: dominio), en curso: HEXM-0005 y HEXM-0006 terminadas, sigue HEXM-0007. Nivel 0 terminado (`nivel-00`).
 
 Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado
 
@@ -89,3 +89,4 @@ El roadmap tiene tres bloques:
 | 2026-10-31 | 0 | HEXM-0003: estructura hexagonal en `src/` y tests de arquitectura (ADR 0003). **Nivel 0 terminado** (`nivel-00`, diario `00-esqueleto.md`). |
 | 2026-10-31 | 0 | HEXM-0004: lista blanca de dependencias en el núcleo (ADR 0004). Refuerzo posterior a `nivel-00`. |
 | 2026-11-01 | 1 | HEXM-0005: value objects del recetario (`RecipeId`, `Quantity`, `Unit`, `Servings`, `Step`) y excepción de dominio base; UUID v7 generado en el dominio (ADR 0005). |
+| 2026-11-01 | 1 | HEXM-0006: entidad `Recipe` (raíz de agregado) e `Ingredient`; invariantes: nombre, al menos un ingrediente, sin ingredientes repetidos, pasos opcionales. |

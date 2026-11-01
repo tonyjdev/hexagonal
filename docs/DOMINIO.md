@@ -50,16 +50,16 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 
 | Español | Código | Tipo DDD | Notas |
 |---|---|---|---|
-| Receta | `Recipe` | Entidad / raíz de agregado | |
+| Receta | `Recipe` | Entidad / raíz de agregado | Nombre, raciones, ingredientes y pasos ordenados. Se compara por su `RecipeId`; cambia con métodos de negocio (`rename()`), no con setters. |
 | Identificador de receta | `RecipeId` | Value object | UUID v7 generado por el dominio ([ADR 0005](adr/0005-identificadores-uuid-v7-en-el-dominio.md)). Lo único que conoce `MealPlanning` de una receta. |
-| Ingrediente | `Ingredient` | Value object | Nombre + cantidad opcional (sin cantidad = "al gusto"). |
+| Ingrediente | `Ingredient` | Value object | Nombre + cantidad opcional: `Ingredient::of()` con cantidad, `Ingredient::toTaste()` "al gusto". El nombre se compara sin distinguir mayúsculas. |
 | Cantidad | `Quantity` | Value object | Número positivo + unidad. El número es una fracción exacta (numerador/denominador): ½, ⅓, ¾, 1 ½, 1,5… |
 | Unidad | `Unit` | Enum | gramo `Gram`, mililitro `Millilitre`, unidad `Piece`, cucharada sopera `Tablespoon`, cucharadita `Teaspoon`, vaso `Glass`, loncha `Slice`, filete `Fillet`, lata `Can`, bote `Jar`. |
 | Paso de preparación | `Step` | Value object | Texto no vacío. El orden lo da su posición en la receta. |
 | Raciones | `Servings` | Value object | Al menos 1. |
 | Receta eliminada | `RecipeDeleted` | Evento de dominio | |
 | Al gusto / una pizca | — | Concepto | Cantidad sin número: no es una `Quantity`, sino la ausencia de cantidad del ingrediente. |
-| Error de dominio | `DomainException` | Excepción (`Shared\Domain`) | Base de los errores de negocio, con mensaje en español para el usuario: `InvalidQuantity`, `InvalidServings`, `InvalidStep`, `InvalidRecipeId`. |
+| Error de dominio | `DomainException` | Excepción (`Shared\Domain`) | Base de los errores de negocio, con mensaje en español para el usuario: `InvalidQuantity`, `InvalidServings`, `InvalidStep`, `InvalidRecipeId`, `InvalidIngredient`, `InvalidRecipe`. |
 
 ### Planes y calendario (`MealPlanning`)
 
@@ -105,5 +105,8 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 7. Intercambio de grasa: **solo en la comida o en la cena, no en ambas** (validable cuando el usuario elabore su semana 2).
 8. Una cantidad siempre es **mayor que cero** y se guarda de forma exacta (½ es exactamente ½). "Al gusto" o "una pizca" no son cantidades.
 9. Una receta da **al menos una ración**, y un paso de preparación **no puede estar vacío**.
+10. Una receta tiene **nombre** y **al menos un ingrediente**. Un ingrediente "al gusto" también cuenta.
+11. Una receta **no repite ingredientes**: dos ingredientes con el mismo nombre (sin distinguir mayúsculas ni espacios) son el mismo, aunque lleven cantidades distintas.
+12. Los **pasos de preparación son opcionales** y su orden es el de la lista: algunas recetas de los planes solo detallan ingredientes y raciones.
 
 Esta lista crecerá a medida que avance el proyecto.
