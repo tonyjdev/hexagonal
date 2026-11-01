@@ -1,0 +1,367 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Guardar y cargar una receta con EloquentRecipeRepository",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0009/guardar-y-cargar-una-receta.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "a639d2995b784879e2ec7e7d0e3d4313a92aa54e"
+    },
+    "legend": {
+      "entries": {
+        "default": {
+          "label": "Llamada"
+        },
+        "emphasis": {
+          "label": "Llamada principal / transacción"
+        },
+        "security": {
+          "label": "Fallo y ROLLBACK"
+        },
+        "return": {
+          "label": "Respuesta"
+        }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "caller",
+      "type": "external",
+      "label": "Quien usa el puerto",
+      "sublabel": "hoy los tests; luego CreateRecipe",
+      "sources": [
+        {
+          "path": "app-laravel/tests/Feature/Recipes/Infrastructure/RecipeRepositoryContractTest.php",
+          "line": 56,
+          "end_line": 79,
+          "label": "dataset + caso feliz"
+        }
+      ]
+    },
+    {
+      "id": "repository",
+      "type": "backend",
+      "label": "EloquentRecipeRepository",
+      "sublabel": "adaptador del puerto",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Persistence/Eloquent/EloquentRecipeRepository.php",
+          "line": 56,
+          "end_line": 90,
+          "label": "save()"
+        },
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Persistence/Eloquent/EloquentRecipeRepository.php",
+          "line": 92,
+          "end_line": 102,
+          "label": "find()"
+        }
+      ]
+    },
+    {
+      "id": "mapper",
+      "type": "backend",
+      "label": "RecipeMapper",
+      "sublabel": "dominio ↔ filas",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Persistence/Eloquent/RecipeMapper.php",
+          "line": 58,
+          "end_line": 69,
+          "label": "toDomain()"
+        },
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Persistence/Eloquent/RecipeMapper.php",
+          "line": 76,
+          "end_line": 131,
+          "label": "a filas"
+        }
+      ]
+    },
+    {
+      "id": "recipe",
+      "type": "security",
+      "label": "Recipe",
+      "sublabel": "dominio: invariantes",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/Recipe.php",
+          "line": 89,
+          "end_line": 106,
+          "label": "create()"
+        }
+      ]
+    },
+    {
+      "id": "database",
+      "type": "database",
+      "label": "PostgreSQL",
+      "sublabel": "vía modelos Eloquent",
+      "sources": [
+        {
+          "path": "app-laravel/database/migrations/2026_11_01_000000_create_recipes_tables.php",
+          "line": 32,
+          "end_line": 101,
+          "label": "tablas"
+        },
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Persistence/Eloquent/RecipeModel.php",
+          "line": 50,
+          "end_line": 61,
+          "label": "relaciones"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 140,
+      "to": 480,
+      "label": "save(): todo o nada"
+    },
+    {
+      "from": 495,
+      "to": 630,
+      "label": "Si algo falla a mitad"
+    },
+    {
+      "from": 645,
+      "to": 956,
+      "label": "find(): reconstitución"
+    }
+  ],
+  "messages": [
+    {
+      "id": "save",
+      "from": "caller",
+      "to": "repository",
+      "y": 160,
+      "label": "save(recipe)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "begin",
+      "from": "repository",
+      "to": "database",
+      "y": 196,
+      "label": "BEGIN",
+      "variant": "emphasis",
+      "note": "transaction() en la conexión del propio modelo"
+    },
+    {
+      "id": "to_rows",
+      "from": "repository",
+      "to": "mapper",
+      "y": 260,
+      "label": "toRecipeRow / toIngredientRows / toStepRows",
+      "variant": "default"
+    },
+    {
+      "id": "rows_back",
+      "from": "mapper",
+      "to": "repository",
+      "y": 290,
+      "label": "filas: ½ → 1 / 2 / jar",
+      "variant": "return"
+    },
+    {
+      "id": "upsert",
+      "from": "repository",
+      "to": "database",
+      "y": 322,
+      "label": "updateOrCreate en recipes",
+      "variant": "default"
+    },
+    {
+      "id": "delete",
+      "from": "repository",
+      "to": "database",
+      "y": 354,
+      "label": "DELETE ingredientes y pasos",
+      "variant": "default"
+    },
+    {
+      "id": "insert",
+      "from": "repository",
+      "to": "database",
+      "y": 386,
+      "label": "INSERT en bloque",
+      "variant": "default",
+      "note": "reemplazo completo: son value objects sin identidad"
+    },
+    {
+      "id": "commit",
+      "from": "repository",
+      "to": "database",
+      "y": 440,
+      "label": "COMMIT",
+      "variant": "emphasis"
+    },
+    {
+      "id": "saved",
+      "from": "repository",
+      "to": "caller",
+      "y": 470,
+      "label": "void",
+      "variant": "return"
+    },
+    {
+      "id": "error",
+      "from": "database",
+      "to": "repository",
+      "y": 510,
+      "label": "error en un INSERT",
+      "variant": "security"
+    },
+    {
+      "id": "rollback",
+      "from": "repository",
+      "to": "database",
+      "y": 542,
+      "label": "ROLLBACK",
+      "variant": "security",
+      "note": "la versión anterior queda intacta; una receta nueva no deja filas"
+    },
+    {
+      "id": "rethrow",
+      "from": "repository",
+      "to": "caller",
+      "y": 606,
+      "label": "la excepción sube",
+      "variant": "security"
+    },
+    {
+      "id": "find",
+      "from": "caller",
+      "to": "repository",
+      "y": 665,
+      "label": "find(id)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "select",
+      "from": "repository",
+      "to": "database",
+      "y": 700,
+      "label": "SELECT con with(ingredients, steps)",
+      "variant": "default",
+      "note": "3 consultas; hijos ordenados por position"
+    },
+    {
+      "id": "rows",
+      "from": "database",
+      "to": "repository",
+      "y": 755,
+      "label": "RecipeModel o null",
+      "variant": "return"
+    },
+    {
+      "id": "to_domain",
+      "from": "repository",
+      "to": "mapper",
+      "y": 787,
+      "label": "toDomain(model)",
+      "variant": "default"
+    },
+    {
+      "id": "create",
+      "from": "mapper",
+      "to": "recipe",
+      "y": 819,
+      "label": "Recipe::create(...)",
+      "variant": "emphasis",
+      "note": "Quantity::fraction, Ingredient::toTaste…: las invariantes se vuelven a comprobar"
+    },
+    {
+      "id": "valid",
+      "from": "recipe",
+      "to": "mapper",
+      "y": 896,
+      "label": "Recipe válida",
+      "variant": "return"
+    },
+    {
+      "id": "domain_back",
+      "from": "mapper",
+      "to": "repository",
+      "y": 922,
+      "label": "Recipe",
+      "variant": "return"
+    },
+    {
+      "id": "found",
+      "from": "repository",
+      "to": "caller",
+      "y": 948,
+      "label": "Recipe o null",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "repository",
+      "from": 160,
+      "to": 470,
+      "type": "backend"
+    },
+    {
+      "participant": "database",
+      "from": 196,
+      "to": 446,
+      "type": "database"
+    },
+    {
+      "participant": "mapper",
+      "from": 255,
+      "to": 295,
+      "type": "backend"
+    },
+    {
+      "participant": "repository",
+      "from": 510,
+      "to": 606,
+      "type": "backend"
+    },
+    {
+      "participant": "repository",
+      "from": 665,
+      "to": 948,
+      "type": "backend"
+    },
+    {
+      "participant": "mapper",
+      "from": 787,
+      "to": 922,
+      "type": "backend"
+    },
+    {
+      "participant": "recipe",
+      "from": 814,
+      "to": 901,
+      "type": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Transacción por agregado",
+      "items": [
+        "Una receta son filas en tres tablas: sin transacción, un fallo dejaría una receta a medias.",
+        "Lo demuestran los tests 'keeps the previous version intact…' y 'stores nothing…'."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Reconstitución con Recipe::create()",
+      "items": [
+        "Cargar usa los mismos constructores que crear: datos inválidos en la base de datos fallan al leer.",
+        "Cuando create() emita un evento RecipeCreated hará falta Recipe::reconstitute() (ADR 0006)."
+      ]
+    }
+  ]
+}

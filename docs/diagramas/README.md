@@ -29,7 +29,7 @@ Después se abre `docs/diagramas/HEXM-NNNN/<slug>.html` en el navegador. Requier
 | Una regla de negocio o una validación con sus ramas de error | `workflow` | [De texto a cantidad exacta](HEXM-0005/de-texto-a-cantidad-exacta.workflow.json) |
 | Entidades, value objects y sus relaciones (agregados) | `class` | [Agregado Recipe](HEXM-0006/agregado-recipe.class.json) |
 | Estados y transiciones (un plan vigente, una importación…) | `lifecycle` | — |
-| Tablas, claves y relaciones de la base de datos (nivel 2 en adelante) | `erd` | — |
+| Tablas, claves y relaciones de la base de datos (nivel 2 en adelante) | `erd` | [Tablas del recetario](HEXM-0009/tablas-del-recetario.erd.json) |
 | Datos que fluyen entre servicios (Laravel ↔ FastAPI, embeddings…) | `dataflow` | — |
 
 Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración), su Explicación lo dice en la sección "Diagramas".
@@ -44,6 +44,13 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 | HEXM-0006 | [Agregado Recipe](HEXM-0006/agregado-recipe.class.json) (`class`) | La entidad raíz, sus value objects, la composición, las invariantes y la jerarquía de excepciones. |
 | HEXM-0007 | [CreateRecipe paso a paso](HEXM-0007/create-recipe-paso-a-paso.sequence.json) (`sequence`) | El recorrido de los datos de un alta, tanto válida como inválida. |
 | HEXM-0007 | [Hexágono del recetario](HEXM-0007/hexagono-recetario.architecture.json) (`architecture`) | Las capas, el puerto, el adaptador y la inversión de dependencias al cerrar el nivel 1. |
+
+### Nivel 2: Recetario (adaptadores)
+
+| Tarea | Diagrama | Qué muestra |
+|---|---|---|
+| HEXM-0009 | [Tablas del recetario](HEXM-0009/tablas-del-recetario.erd.json) (`erd`) | El agregado `Recipe` repartido en tres tablas: el uuid de la raíz, la clave compuesta `(recipe_id, position)` de los value objects y la cantidad exacta en tres columnas. |
+| HEXM-0009 | [Guardar y cargar una receta](HEXM-0009/guardar-y-cargar-una-receta.sequence.json) (`sequence`) | `save()` dentro de una transacción (con el ROLLBACK si falla a mitad) y `find()` reconstruyendo la receta con `Recipe::create()`. |
 
 ### Transversal
 

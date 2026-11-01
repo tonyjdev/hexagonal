@@ -13,9 +13,12 @@ use Recipes\Domain\RecipeRepository;
  *
  * CONCEPTO: Adaptador (driven adapter)
  * Implementa el puerto RecipeRepository. Es un adaptador "de verdad", tan
- * válido como el de Eloquent que llegará en el nivel 2: el caso de uso no
- * nota la diferencia. Por eso vive en Infrastructure, aunque no use Laravel
- * ni base de datos: es un DETALLE de cómo se guardan las recetas.
+ * válido como EloquentRecipeRepository (HEXM-0009): el caso de uso no nota
+ * la diferencia, y los tests de contrato del puerto
+ * (tests/Feature/Recipes/Infrastructure/RecipeRepositoryContractTest.php)
+ * comprueban que los dos se comportan igual. Vive en Infrastructure, aunque
+ * no use Laravel ni base de datos, porque es un DETALLE de cómo se guardan
+ * las recetas.
  *
  * CONCEPTO: doble de test en memoria (fake) frente a mock
  * En los tests del caso de uso podríamos usar un MOCK: "espera que se llame a
@@ -23,7 +26,7 @@ use Recipes\Domain\RecipeRepository;
  * (sus llamadas), y el test se rompe si se reorganiza el código aunque el
  * resultado sea el mismo. Con este FAKE comprobamos el RESULTADO: después de
  * crear la receta, ¿está guardada y es correcta? Además, el fake se reutiliza
- * en todos los tests y sirve de referencia para el adaptador de Eloquent.
+ * en todos los tests de los casos de uso.
  *
  * DECISIÓN: guarda y devuelve COPIAS (clone)
  * Recipe es mutable (rename()). Si guardáramos el mismo objeto, un
