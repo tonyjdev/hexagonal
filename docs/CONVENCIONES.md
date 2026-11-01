@@ -84,6 +84,7 @@ Además de los comentarios, el asistente:
 - **Un commit por paso lógico**, con mensaje en español que explique el porqué.
 - **Una etiqueta git por nivel terminado** (`nivel-01`, `nivel-02`…), para poder volver atrás y ver la evolución.
 - **Tareas**: el trabajo se organiza en tareas `HEXM` gestionadas en Workspace; cada una se cierra con los documentos Resultado, Pruebas y Explicación. Ver [`TAREAS.md`](TAREAS.md).
+- **Diagramas**: cada tarea se acompaña, siempre que tenga algo que dibujar, de diagramas Archify (flujo, lógica de negocio, arquitectura) respaldados por el código. Se versiona su JSON y el HTML se regenera con `composer docs:diagrams`. Ver [`diagramas/README.md`](diagramas/README.md).
 - **Diario del proyecto**: al terminar cada nivel se escribe `docs/diario/NN-titulo.md` con lo hecho, los conceptos aprendidos, las decisiones tomadas y las dudas pendientes.
 - **Decisiones de arquitectura importantes** se registran como ADR en `docs/adr/NNNN-titulo.md` (contexto → decisión → consecuencias).
 
@@ -100,6 +101,7 @@ hexagonal/
 │   ├── DOMINIO.md            # glosario y modelo de dominio
 │   ├── TAREAS.md             # gestión de tareas con Workspace (HEXM)
 │   ├── explicaciones/        # el porqué de cada tarea (copia de Workspace)
+│   ├── diagramas/            # diagramas Archify de cada tarea (fuente JSON)
 │   ├── diario/               # una entrada por nivel terminado
 │   └── adr/                  # decisiones de arquitectura
 ├── app-laravel/              # núcleo hexagonal (PHP 8.5 / Laravel 13)
@@ -114,6 +116,7 @@ hexagonal/
 │       │   └── Infrastructure/
 │       └── Shared/           #   piezas comunes mínimas
 ├── services/                 # servicios Python / FastAPI (a partir del nivel 7)
+├── scripts/                  # utilidades del repo (diagramas.sh regenera los diagramas)
 └── docker-compose.yml        # PostgreSQL (+ pgvector más adelante)
 ```
 

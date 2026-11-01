@@ -91,3 +91,4 @@ El roadmap tiene tres bloques:
 | 2026-11-01 | 1 | HEXM-0005: value objects del recetario (`RecipeId`, `Quantity`, `Unit`, `Servings`, `Step`) y excepción de dominio base; UUID v7 generado en el dominio (ADR 0005). |
 | 2026-11-01 | 1 | HEXM-0006: entidad `Recipe` (raíz de agregado) e `Ingredient`; invariantes: nombre, al menos un ingrediente, sin ingredientes repetidos, pasos opcionales. |
 | 2026-11-01 | 1 | HEXM-0007: caso de uso `CreateRecipe`, puerto `RecipeRepository` y adaptador `InMemoryRecipeRepository`. **Nivel 1 terminado** (`nivel-01`, diario `01-recetario-dominio.md`). |
+| 2026-11-01 | – | HEXM-0008: diagramas Archify en las tareas (transversal). `/close-task` genera diagramas respaldados por el código que acompañan a cada Explicación; diagramas del nivel 1 en `docs/diagramas/`. |

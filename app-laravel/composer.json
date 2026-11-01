@@ -89,7 +89,8 @@
         ],
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
-        ]
+        ],
+        "docs:diagrams": "bash ../scripts/diagramas.sh"
     },
     "extra": {
         "laravel": {
@@ -112,6 +113,7 @@
         "lint": "Corrige el formato del código con Pint (escribe en los ficheros).",
         "format:check": "Comprueba el formato con Pint sin modificar nada.",
         "types:check": "Análisis estático con PHPStan + Larastan al nivel máximo.",
-        "ci:check": "Gate de calidad completo: formato, análisis estático y tests. Debe pasar antes de cerrar cada tarea."
+        "ci:check": "Gate de calidad completo: formato, análisis estático y tests. Debe pasar antes de cerrar cada tarea.",
+        "docs:diagrams": "Regenera los HTML de los diagramas Archify de docs/diagramas desde su fuente JSON (los HTML no se versionan)."
     }
 }

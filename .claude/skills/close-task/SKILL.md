@@ -1,6 +1,6 @@
 ---
 name: close-task
-description: "Cierra la tarea HEXM actual: gate de calidad, documentos de cierre en Workspace (Resultado, Pruebas con pasos manuales y Explicación arquitectónica y de negocio), actualización de la documentación del repo, comentario de resultado, commit, PR, merge y transición a completed. Usar cuando una tarea de este repositorio esté terminada."
+description: "Cierra la tarea HEXM actual: gate de calidad, documentos de cierre en Workspace (Resultado, Pruebas con pasos manuales y Explicación arquitectónica y de negocio), diagramas Archify que acompañan a la Explicación, actualización de la documentación del repo, comentario de resultado, commit, PR, merge y transición a completed. Usar cuando una tarea de este repositorio esté terminada."
 ---
 
 # Close Task
@@ -37,7 +37,36 @@ En la misma rama:
 - Si es **la última tarea del nivel**, escribe `docs/diario/NN-titulo.md` con la plantilla de `docs/diario/README.md`.
 - Si se tomó una decisión de arquitectura relevante, escribe un ADR en `docs/adr/`.
 
-### 4. Documentos de cierre en Workspace (tres obligatorios)
+### 4. Commit del trabajo (local, sin push)
+
+Los diagramas del paso 5 citan el código en un commit fijo, así que primero se confirma el trabajo de la tarea:
+
+```bash
+git add -A                       # sin .env, credenciales ni datos personales
+git commit -m "Done {TASK_KEY}: {descripción en español}"
+```
+
+### 5. Diagramas (Archify)
+
+Cada tarea deja, **siempre que tenga algo que dibujar**, entre uno y tres diagramas que acompañan a la Explicación (flujo de datos, lógica de negocio, arquitectura, estructura). Convenciones, tipos y el índice, en `docs/diagramas/README.md`.
+
+1. **Elige qué dibujar** a partir de las preguntas que responde la Explicación, con la tabla "Qué tipo de diagrama usar" de `docs/diagramas/README.md`. No repitas un diagrama de una tarea anterior: dibuja lo que esta tarea añade o cambia. Si no hay nada que dibujar (configuración, documentación…), dilo y explica por qué en la sección "Diagramas" de la Explicación, y salta al paso 6.
+2. **Carga la skill `archify`** y sigue su camino de *native diagram* respaldado por repositorio (`references/repository-authoring.md`), con estas reglas del proyecto:
+   - Fuente en `docs/diagramas/{TASK_KEY}/<slug>.<tipo>.json` y `meta.output` = `docs/diagramas/{TASK_KEY}/<slug>.html` (en vez de la carpeta `.archify/` por defecto). El `<slug>` en español, en minúsculas y con guiones.
+   - `meta.locale: "es"`, textos en español y nombres de código tal cual.
+   - `meta.repository`: `url` = `https://github.com/tonyjdev/hexagonal.git` (la HTTPS: con la SSH, Archify no genera enlaces), `provider: "github"` y `revision` = `git rev-parse HEAD` (el commit "Done" del paso 4).
+   - `sources` con rutas relativas a la raíz del repo (`app-laravel/src/...`) y líneas comprobadas con `nl -ba`.
+   - Reetiqueta la leyenda con el vocabulario del proyecto (`meta.legend.entries`), no dejes las etiquetas genéricas de Archify.
+3. **Genera y valida** desde la raíz del repositorio:
+   ```bash
+   node {ARCHIFY_CLI} finalize <tipo> docs/diagramas/{TASK_KEY}/<slug>.<tipo>.json docs/diagramas/{TASK_KEY}/<slug>.html --repo-root . --quality showcase --json
+   ```
+   Si falla, repara según la skill y repite. Las ejecuciones posteriores a un `browser-check` llevan `--out-dir <scratchpad>/review-<n>`.
+4. **Revísalo con tus ojos:** `node {ARCHIFY_CLI} visual-check <html> --summary --require-provenance --out-dir <scratchpad>/vc-<slug>` y mira la captura `2048x1320.light.png`. Corrige lo que no se lea bien (leyenda, solapes, etiquetas) antes de darlo por bueno.
+5. Añade cada diagrama al **índice** de `docs/diagramas/README.md` y a su tabla de ejemplos, si es el primero de su tipo.
+6. Solo se versiona el JSON: los HTML y los recibos los ignora `.gitignore` y se regeneran con `composer docs:diagrams`.
+
+### 6. Documentos de cierre en Workspace (tres obligatorios)
 
 Escribe cada documento en un fichero del scratchpad y súbelo:
 
@@ -50,8 +79,8 @@ Usa como base la plantilla de cada tipo (`{WORKSPACE_PATH}/resources/task-docume
 
 **a) `result`: `Resultado {TASK_KEY}: {título}`**
 - Qué se ha completado y las decisiones de implementación importantes.
-- Los ficheros o módulos cambiados, con un nivel de detalle útil.
-- Los comandos de verificación exactos y su resultado.
+- Los ficheros o módulos cambiados, con un nivel de detalle útil (incluidos los diagramas).
+- Los comandos de verificación exactos y su resultado (también el `finalize` de cada diagrama).
 - El PR (o la nota de que se añadirá en el informe final) y los documentos o tareas de seguimiento, o «Ninguno».
 
 **b) `test`: `Pruebas {TASK_KEY}: {título}`**
@@ -71,35 +100,36 @@ No describe lo que se ha hecho, sino **por qué se ha hecho así**:
 - *Decisiones de arquitectura*: por qué cada clase está en su capa, qué puertos y adaptadores intervienen, el sentido de las dependencias y el recorrido de una petición de principio a fin (con un diagrama ASCII si ayuda).
 - *Alternativas descartadas*: sobre todo "cómo se haría en un Laravel clásico" y por qué aquí no.
 - *Conceptos aplicados*: el concepto, una definición breve y el fichero donde verlo.
+- *Diagramas* (sección añadida a la plantilla, al final): una línea por diagrama del paso 5 con su enlace relativo a la fuente (`../diagramas/{TASK_KEY}/<slug>.<tipo>.json`), el tipo y qué pregunta responde, más cómo verlo: `cd app-laravel && composer docs:diagrams` y abrir `docs/diagramas/{TASK_KEY}/<slug>.html`. Si no hay diagramas, el motivo.
 
 **Copia en el repositorio (obligatoria):** guarda la misma Explicación en `docs/explicaciones/{TASK_KEY}-{slug}.md` (con el `slug` de la rama) y añade su línea al índice `docs/explicaciones/README.md`, bajo el nivel correspondiente. Debe tener exactamente el mismo contenido que el documento de Workspace. Usa el mismo fichero para el `create-document`, para que no puedan divergir. Pasa siempre **rutas absolutas** a `--document-file` y `--comment-file`: el script se ejecuta desde Workspace y no resuelve rutas relativas a este repositorio.
 
 **Opcionales**, solo si aplican: `tech_debt`, `domain_issue`, `watchlist`, `backlog`, `suggested`. Si no aplica ninguno, dilo en el resultado.
 
-Si falla la creación de algún documento, PARA: no se hace commit ni se cierra una tarea con la documentación incompleta.
+Si falla la creación de algún documento, PARA: no se hace push ni se cierra una tarea con la documentación incompleta.
 
-### 5. Comentario de resultado
+### 7. Comentario de resultado
 
 ```bash
 {WORKSPACE_CLI} comment --workspace {WORKSPACE_PATH} --user-email {WORKSPACE_USER_EMAIL} --key {TASK_KEY} --comment-file <fichero>
 ```
 
-Con estas secciones: **Resumen**, **Verificación** (los comandos y su resultado), **Documentos** (los ID de result, test y explanation, más los opcionales) y **Seguimiento** (tareas o documentos de seguimiento, o «Ninguno»).
+Con estas secciones: **Resumen**, **Verificación** (los comandos y su resultado), **Documentos** (los ID de result, test y explanation, más los opcionales), **Diagramas** (ruta de cada fuente y qué muestra, o «Ninguno» con el motivo) y **Seguimiento** (tareas o documentos de seguimiento, o «Ninguno»).
 
-### 6. Commit, PR y merge
+### 8. Commit de documentación, PR y merge
 
 ```bash
-git add -A                       # sin .env, credenciales ni datos personales
-git commit -m "Done {TASK_KEY}: {descripción en español}"
+git add -A
+git commit -m "Docs {TASK_KEY}: diagramas y explicación"    # si hay cambios
 git push -u origin HEAD
-gh pr create --base {BRANCH_DEVELOP} --title "feat({TASK_KEY}): {Título}" --body "<Resumen, Cambios y Verificación>"
-gh pr merge --merge --delete-branch
+gh pr create --base {BRANCH_DEVELOP} --title "feat({TASK_KEY}): {Título}" --body "<Resumen, Cambios (incluidos los diagramas) y Verificación>"
+gh pr merge --merge --delete-branch     # --merge conserva el commit "Done" que citan los diagramas
 git switch {BRANCH_DEVELOP} && git pull --ff-only
 ```
 
 Si es la última tarea del nivel, crea y sube la etiqueta: `git tag -a nivel-NN -m "Nivel NN: título" && git push origin nivel-NN`.
 
-### 7. Cerrar la tarea en Workspace
+### 9. Cerrar la tarea en Workspace
 
 ```bash
 {WORKSPACE_CLI} close --workspace {WORKSPACE_PATH} --user-email {WORKSPACE_USER_EMAIL} --key {TASK_KEY}
@@ -107,10 +137,10 @@ Si es la última tarea del nivel, crea y sube la etiqueta: `git tag -a nivel-NN 
 
 Pasa por `in_review` → `approved` → `completed`. Si Workspace rechaza alguna transición, PARA e informa.
 
-### 8. Dejar lista la siguiente tarea
+### 10. Dejar lista la siguiente tarea
 
 Si la siguiente tarea del roadmap no está en `open`, transiciónala. Si todavía no existe, propón crearla con `/create-task`.
 
-### 9. Informe final (en español)
+### 11. Informe final (en español)
 
-Incluye el PR y el merge, el estado de la tarea en Workspace, el gate y su resultado, los ID de los documentos y la etiqueta de nivel, si la hubo. Termina con un **resumen didáctico** breve: qué conceptos se han aprendido en esta tarea y dónde repasarlos (el documento `explanation` y los `CONCEPTO:` del código).
+Incluye el PR y el merge, el estado de la tarea en Workspace, el gate y su resultado, los ID de los documentos, **los diagramas generados** (enlace clicable a cada HTML con su ruta absoluta y una línea de qué muestra) y la etiqueta de nivel, si la hubo. Termina con un **resumen didáctico** breve: qué conceptos se han aprendido en esta tarea y dónde repasarlos (el documento `explanation`, los diagramas y los `CONCEPTO:` del código).

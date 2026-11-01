@@ -1,0 +1,168 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Cierre de una tarea con diagramas (/close-task)",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0008/cierre-de-tarea-con-diagramas.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "ccbb5168148e2c525b92fe33a0d7e3d74e2c5318"
+    },
+    "legend": {
+      "entries": {
+        "backend": { "label": "Paso en git" },
+        "security": { "label": "Comprobación" },
+        "cloud": { "label": "Archify" },
+        "database": { "label": "Documentación" },
+        "messagebus": { "label": "Publicación" }
+      }
+    }
+  },
+  "lanes": [
+    { "id": "git", "label": "Rama de la tarea (git)" },
+    { "id": "archify", "label": "Diagramas (Archify)" },
+    { "id": "repair", "label": "Reparación", "variant": "exception" },
+    { "id": "docs", "label": "Documentación y Workspace" }
+  ],
+  "phases": [
+    { "id": "confirm", "label": "Confirmar el código", "fromCol": 0, "toCol": 1 },
+    { "id": "draw", "label": "Dibujar y validar", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "publish", "label": "Documentar y publicar", "fromCol": 4, "toCol": 5 }
+  ],
+  "mainPath": ["gate", "done_commit", "author", "finalize", "visual", "explanation", "docs_commit"],
+  "nodes": [
+    {
+      "id": "gate",
+      "lane": "git",
+      "col": 0,
+      "type": "security",
+      "label": "Gate de calidad",
+      "sublabel": "composer ci:check",
+      "sources": [
+        { "path": ".claude/skills/close-task/SKILL.md", "line": 27, "end_line": 29 }
+      ]
+    },
+    {
+      "id": "done_commit",
+      "lane": "git",
+      "col": 1,
+      "type": "backend",
+      "label": "Commit «Done»",
+      "sublabel": "fija la revisión citada",
+      "sources": [
+        { "path": ".claude/skills/close-task/SKILL.md", "line": 40, "end_line": 47 }
+      ]
+    },
+    {
+      "id": "author",
+      "lane": "archify",
+      "col": 2,
+      "type": "cloud",
+      "label": "Fuente <slug>.<tipo>.json",
+      "sublabel": "sources en esa revisión",
+      "sources": [
+        { "path": ".claude/skills/close-task/SKILL.md", "line": 49, "end_line": 59 }
+      ]
+    },
+    {
+      "id": "finalize",
+      "lane": "archify",
+      "col": 3,
+      "type": "security",
+      "label": "finalize showcase",
+      "sublabel": "esquema, render, navegador",
+      "sources": [
+        { "path": ".claude/skills/close-task/SKILL.md", "line": 60, "end_line": 64 }
+      ]
+    },
+    {
+      "id": "repair",
+      "lane": "repair",
+      "col": 3,
+      "type": "cloud",
+      "label": "Reparar candidato",
+      "sublabel": "según el diagnóstico",
+      "sources": [
+        { "path": ".claude/skills/close-task/SKILL.md", "line": 64, "end_line": 64 }
+      ]
+    },
+    {
+      "id": "visual",
+      "lane": "archify",
+      "col": 4,
+      "type": "security",
+      "label": "Revisión visual",
+      "sublabel": "visual-check + captura",
+      "sources": [
+        { "path": ".claude/skills/close-task/SKILL.md", "line": 65, "end_line": 65 }
+      ]
+    },
+    {
+      "id": "explanation",
+      "lane": "docs",
+      "col": 4,
+      "type": "database",
+      "label": "Explicación + índice",
+      "sublabel": "sección «Diagramas»",
+      "sources": [
+        { "path": ".claude/skills/close-task/SKILL.md", "line": 66, "end_line": 67 },
+        { "path": "docs/diagramas/README.md", "line": 1, "end_line": 20, "label": "convenciones" }
+      ]
+    },
+    {
+      "id": "docs_commit",
+      "lane": "git",
+      "col": 5,
+      "type": "messagebus",
+      "label": "Commit «Docs» + PR",
+      "sublabel": "merge con --merge",
+      "sources": [
+        { "path": ".claude/skills/close-task/SKILL.md", "line": 119, "end_line": 128 }
+      ]
+    },
+    {
+      "id": "regenerate",
+      "lane": "docs",
+      "col": 5,
+      "type": "database",
+      "label": "composer docs:diagrams",
+      "sublabel": "HTML en local, no en git",
+      "sources": [
+        { "path": "scripts/diagramas.sh", "line": 35, "end_line": 51 },
+        { "path": ".gitignore", "line": 15, "end_line": 26, "label": "HTML ignorados" }
+      ]
+    }
+  ],
+  "edges": [
+    { "id": "gate_ok", "from": "gate", "to": "done_commit", "label": "en verde", "variant": "emphasis" },
+    { "id": "pin_revision", "from": "done_commit", "to": "author", "label": "git rev-parse HEAD", "variant": "default" },
+    { "id": "validate", "from": "author", "to": "finalize", "variant": "default" },
+    { "id": "passes", "from": "finalize", "to": "visual", "label": "pasa", "variant": "emphasis" },
+    { "id": "fails", "from": "finalize", "to": "repair", "label": "falla", "variant": "security", "role": "error" },
+    { "id": "retry", "from": "repair", "to": "author", "label": "repetir", "variant": "dashed", "role": "return" },
+    { "id": "link", "from": "visual", "to": "explanation", "label": "enlazar", "variant": "default" },
+    { "id": "commit_docs", "from": "explanation", "to": "docs_commit", "label": "JSON + docs", "variant": "emphasis" },
+    { "id": "read_locally", "from": "docs_commit", "to": "regenerate", "label": "al clonar", "variant": "dashed" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Por qué dos commits",
+      "items": [
+        "Archify verifica las líneas citadas contra un commit concreto: el código tiene que estar confirmado antes de dibujarlo.",
+        "El merge con --merge conserva ese commit en develop, así que los enlaces a GitHub siguen funcionando."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Diagramas como código",
+      "items": [
+        "Se versiona la fuente JSON (pocos KB, revisable en el diff); el HTML de ~850 KB se genera.",
+        "Una tarea sin nada que dibujar lo dice en la sección «Diagramas» de su Explicación."
+      ]
+    }
+  ]
+}
