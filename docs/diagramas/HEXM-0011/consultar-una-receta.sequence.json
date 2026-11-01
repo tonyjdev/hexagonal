@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Consultar una receta: GET /api/recipes/{id}",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0011/consultar-una-receta.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "8acb7844e05ea71ee88b336e7bb581c766f06585"
+    },
+    "legend": {
+      "entries": {
+        "default": { "label": "Llamada" },
+        "emphasis": { "label": "Camino principal" },
+        "security": { "label": "No existe (404) o no puede existir (422)" },
+        "return": { "label": "Respuesta" }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Cliente HTTP",
+      "sublabel": "curl, tests de feature",
+      "sources": [
+        { "path": "app-laravel/tests/Feature/Recipes/Infrastructure/Http/GetRecipeEndpointTest.php", "line": 47, "end_line": 75, "label": "ida y vuelta" },
+        { "path": "app-laravel/routes/api.php", "line": 46, "end_line": 46, "label": "ruta recipes.show" }
+      ]
+    },
+    {
+      "id": "controller",
+      "type": "backend",
+      "label": "Controlador HTTP",
+      "sublabel": "GetRecipeController",
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Infrastructure/Http/GetRecipeController.php", "line": 31, "end_line": 39 }
+      ]
+    },
+    {
+      "id": "usecase",
+      "type": "backend",
+      "label": "GetRecipe",
+      "sublabel": "consulta (CQS)",
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Application/GetRecipe.php", "line": 43, "end_line": 52, "label": "__invoke()" },
+        { "path": "app-laravel/src/Recipes/Domain/RecipeId.php", "line": 93, "end_line": 102, "label": "RecipeId::fromString()" },
+        { "path": "app-laravel/src/Recipes/Application/RecipeNotFound.php", "line": 18, "end_line": 24 }
+      ]
+    },
+    {
+      "id": "repository",
+      "type": "database",
+      "label": "Repositorio",
+      "sublabel": "EloquentRecipeRepository",
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Infrastructure/Persistence/Eloquent/EloquentRecipeRepository.php", "line": 92, "end_line": 102, "label": "find()" }
+      ]
+    },
+    {
+      "id": "view",
+      "type": "security",
+      "label": "Vista de lectura",
+      "sublabel": "RecipeView",
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Application/RecipeView.php", "line": 56, "end_line": 65, "label": "fromRecipe()" },
+        { "path": "app-laravel/src/Recipes/Application/IngredientView.php", "line": 27, "end_line": 49 },
+        { "path": "app-laravel/src/Recipes/Domain/Quantity.php", "line": 196, "end_line": 211, "label": "amountAsText()" }
+      ]
+    },
+    {
+      "id": "resource",
+      "type": "backend",
+      "label": "API Resource",
+      "sublabel": "RecipeResource",
+      "sources": [
+        { "path": "app-laravel/src/Recipes/Infrastructure/Http/RecipeResource.php", "line": 50, "end_line": 88 }
+      ]
+    },
+    {
+      "id": "handler",
+      "type": "security",
+      "label": "Manejador global",
+      "sublabel": "404 · 422",
+      "sources": [
+        { "path": "app-laravel/bootstrap/app.php", "line": 90, "end_line": 99, "label": "NotFound → 404" },
+        { "path": "app-laravel/bootstrap/app.php", "line": 60, "end_line": 73, "label": "DomainException → 422" }
+      ]
+    }
+  ],
+  "segments": [
+    { "from": 140, "to": 640, "label": "1. La receta existe → 200" },
+    { "from": 660, "to": 900, "label": "2. No existe → 404" },
+    { "from": 920, "to": 1110, "label": "3. El id no puede existir → 422" }
+  ],
+  "messages": [
+    { "id": "get", "from": "client", "to": "controller", "y": 165, "label": "GET /api/recipes/{id}", "variant": "emphasis", "note": "sin FormRequest: no hay cuerpo que validar" },
+    { "id": "invoke", "from": "controller", "to": "usecase", "y": 230, "label": "__invoke(id)", "variant": "emphasis", "note": "RecipeId::fromString(id) valida la forma" },
+    { "id": "find", "from": "usecase", "to": "repository", "y": 295, "label": "find(recipeId)", "variant": "default", "note": "SELECT y reconstitución con Recipe::create()" },
+    { "id": "recipe", "from": "repository", "to": "usecase", "y": 360, "label": "Recipe", "variant": "return" },
+    { "id": "to_view", "from": "usecase", "to": "view", "y": 390, "label": "RecipeView::fromRecipe(recipe)", "variant": "emphasis", "note": "amountAsText(): 3/2 → \"1 ½\"; Unit::label(): \"bote\"" },
+    { "id": "view_back", "from": "view", "to": "usecase", "y": 455, "label": "RecipeView (solo primitivos)", "variant": "return" },
+    { "id": "view_out", "from": "usecase", "to": "controller", "y": 485, "label": "RecipeView", "variant": "return", "note": "la entidad Recipe no sale de la aplicación" },
+    { "id": "format", "from": "controller", "to": "resource", "y": 550, "label": "new RecipeResource(view)", "variant": "default", "note": "el formato JSON es cosa del adaptador" },
+    { "id": "ok", "from": "resource", "to": "client", "y": 615, "label": "200 {\"data\": {...}}", "variant": "return" },
+    { "id": "get_missing", "from": "client", "to": "controller", "y": 690, "label": "GET con un UUID inexistente", "variant": "default" },
+    { "id": "invoke_missing", "from": "controller", "to": "usecase", "y": 720, "label": "__invoke(id)", "variant": "default" },
+    { "id": "find_missing", "from": "usecase", "to": "repository", "y": 750, "label": "find(recipeId)", "variant": "default" },
+    { "id": "null", "from": "repository", "to": "usecase", "y": 780, "label": "null", "variant": "return" },
+    { "id": "not_found", "from": "usecase", "to": "handler", "y": 810, "label": "throw RecipeNotFound", "variant": "security", "note": "un NotFound, no una DomainException" },
+    { "id": "response_404", "from": "handler", "to": "client", "y": 875, "label": "404 {\"message\": \"No existe ninguna receta…\"}", "variant": "security" },
+    { "id": "get_malformed", "from": "client", "to": "controller", "y": 950, "label": "GET /api/recipes/abc", "variant": "default", "note": "sin whereUuid(): llega al controlador" },
+    { "id": "invoke_malformed", "from": "controller", "to": "usecase", "y": 1015, "label": "__invoke(\"abc\")", "variant": "default" },
+    { "id": "invalid_id", "from": "usecase", "to": "handler", "y": 1045, "label": "throw InvalidRecipeId", "variant": "security" },
+    { "id": "response_422", "from": "handler", "to": "client", "y": 1080, "label": "422 {\"message\": \"\\\"abc\\\" no es un identificador…\"}", "variant": "security" }
+  ],
+  "activations": [
+    { "participant": "controller", "from": 165, "to": 615, "type": "backend" },
+    { "participant": "usecase", "from": 230, "to": 485, "type": "backend" },
+    { "participant": "repository", "from": 295, "to": 360, "type": "database" },
+    { "participant": "view", "from": 390, "to": 455, "type": "security" },
+    { "participant": "resource", "from": 550, "to": 615, "type": "backend" },
+    { "participant": "usecase", "from": 720, "to": 810, "type": "backend" },
+    { "participant": "repository", "from": 750, "to": 780, "type": "database" },
+    { "participant": "handler", "from": 810, "to": 875, "type": "security" },
+    { "participant": "usecase", "from": 1015, "to": 1045, "type": "backend" },
+    { "participant": "handler", "from": 1045, "to": 1080, "type": "security" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Consulta (CQS) con DTO de lectura",
+      "items": [
+        "GetRecipe no cambia nada: se puede repetir sin efectos secundarios.",
+        "Devuelve un RecipeView con primitivos; la entidad Recipe nunca llega al controlador."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "404 frente a 422",
+      "items": [
+        "404: el id es válido pero no hay receta (RecipeNotFound, un resultado normal).",
+        "422: \"abc\" no puede ser una receta (InvalidRecipeId, del dominio). Decisión del ADR 0008."
+      ]
+    }
+  ]
+}
