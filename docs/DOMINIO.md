@@ -51,13 +51,15 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 | Español | Código | Tipo DDD | Notas |
 |---|---|---|---|
 | Receta | `Recipe` | Entidad / raíz de agregado | |
-| Identificador de receta | `RecipeId` | Value object | Lo único que conoce `MealPlanning` de una receta. |
-| Ingrediente | `Ingredient` | Value object | Nombre + cantidad. |
-| Cantidad | `Quantity` | Value object | Valor + unidad. Admite fracciones (½, ⅓, ¾). |
-| Unidad | `Unit` | Enum | gramo, unidad, cucharada sopera, cucharadita, vaso, loncha, filete, lata, bote… |
-| Paso de preparación | `Step` | Value object | |
-| Raciones | `Servings` | Value object | |
+| Identificador de receta | `RecipeId` | Value object | UUID v7 generado por el dominio ([ADR 0005](adr/0005-identificadores-uuid-v7-en-el-dominio.md)). Lo único que conoce `MealPlanning` de una receta. |
+| Ingrediente | `Ingredient` | Value object | Nombre + cantidad opcional (sin cantidad = "al gusto"). |
+| Cantidad | `Quantity` | Value object | Número positivo + unidad. El número es una fracción exacta (numerador/denominador): ½, ⅓, ¾, 1 ½, 1,5… |
+| Unidad | `Unit` | Enum | gramo `Gram`, mililitro `Millilitre`, unidad `Piece`, cucharada sopera `Tablespoon`, cucharadita `Teaspoon`, vaso `Glass`, loncha `Slice`, filete `Fillet`, lata `Can`, bote `Jar`. |
+| Paso de preparación | `Step` | Value object | Texto no vacío. El orden lo da su posición en la receta. |
+| Raciones | `Servings` | Value object | Al menos 1. |
 | Receta eliminada | `RecipeDeleted` | Evento de dominio | |
+| Al gusto / una pizca | — | Concepto | Cantidad sin número: no es una `Quantity`, sino la ausencia de cantidad del ingrediente. |
+| Error de dominio | `DomainException` | Excepción (`Shared\Domain`) | Base de los errores de negocio, con mensaje en español para el usuario: `InvalidQuantity`, `InvalidServings`, `InvalidStep`, `InvalidRecipeId`. |
 
 ### Planes y calendario (`MealPlanning`)
 
@@ -101,5 +103,7 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 5. Solo hay **un plan vigente** en cada fecha; un plan nuevo cierra la vigencia del anterior.
 6. Un plato puede ser **texto libre** o **referenciar una receta** del recetario, y esa receta debe existir.
 7. Intercambio de grasa: **solo en la comida o en la cena, no en ambas** (validable cuando el usuario elabore su semana 2).
+8. Una cantidad siempre es **mayor que cero** y se guarda de forma exacta (½ es exactamente ½). "Al gusto" o "una pizca" no son cantidades.
+9. Una receta da **al menos una ración**, y un paso de preparación **no puede estar vacío**.
 
 Esta lista crecerá a medida que avance el proyecto.

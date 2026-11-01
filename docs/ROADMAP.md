@@ -2,7 +2,7 @@
 
 Hoja de ruta del proyecto organizada en **niveles**. Cada nivel es pequeño, termina con tests en verde y una etiqueta git (`nivel-NN`), y añade **un concepto nuevo** cada vez.
 
-**Estado actual:** ⬜ Nivel 1 (Recetario: dominio), siguiente. Nivel 0 terminado (`nivel-00`).
+**Estado actual:** 🟡 Nivel 1 (Recetario: dominio), en curso: HEXM-0005 terminada, siguen HEXM-0006 y HEXM-0007. Nivel 0 terminado (`nivel-00`).
 
 Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado
 
@@ -41,7 +41,7 @@ El roadmap tiene tres bloques:
 | | Nivel | Qué se construye | Conceptos |
 |---|---|---|---|
 | ✅ | **0. Esqueleto** (HEXM-0001 a 0004) | Laravel 13 en `app-laravel/`, PostgreSQL con Docker Compose, Pest, autoload de `src/`, PHPStan y los primeros **tests de arquitectura** (el dominio no puede usar `Illuminate\*`). | Estructura hexagonal, regla de dependencias, tests de arquitectura |
-| ⬜ | **1. Recetario: dominio** | `Recipe`, `RecipeId`, `Ingredient`, `Quantity`, `Unit`, `Step`, `Servings` y el caso de uso `CreateRecipe` con repositorio **en memoria**. Solo tests, sin base de datos ni HTTP. | Entidad, value object, invariantes, puerto de salida, caso de uso, adaptador en memoria |
+| 🟡 | **1. Recetario: dominio** (HEXM-0005 a 0007) | `Recipe`, `RecipeId`, `Ingredient`, `Quantity`, `Unit`, `Step`, `Servings` y el caso de uso `CreateRecipe` con repositorio **en memoria**. Solo tests, sin base de datos ni HTTP. | Entidad, value object, invariantes, puerto de salida, caso de uso, adaptador en memoria |
 | ⬜ | **2. Recetario: adaptadores** | Repositorio con Eloquent/PostgreSQL (con su *mapper* dominio ↔ modelo), API REST (`/api/recipes`) y binding de puertos en un *service provider*. | Adaptadores *driven* y *driving*, inyección de dependencias, mapeo de persistencia |
 | ⬜ | **3. Planes: dominio** | `NutritionPlan`, `MenuWeek`, `MenuDay`, `Dish`, `FixedMeal`, `OptionGroup`, `ExchangeTable`. Reglas: dos semanas, 6 días con menú, comida + cena. | Agregados y sus límites, enums, colecciones inmutables |
 | ⬜ | **4. Calendario** | `MealCalendar` y el caso de uso `GetMenuForDate` ("¿qué me toca hoy?"): alternancia de semanas, sábado libre y plan vigente. Puerto `Clock`. | Servicio de dominio, tiempo testeable, casos de uso de consulta |
@@ -88,3 +88,4 @@ El roadmap tiene tres bloques:
 | 2026-10-31 | 0 | HEXM-0002: gate `composer ci:check` (Pint, Larastan `max`, Pest) y tests sobre PostgreSQL (ADR 0002). |
 | 2026-10-31 | 0 | HEXM-0003: estructura hexagonal en `src/` y tests de arquitectura (ADR 0003). **Nivel 0 terminado** (`nivel-00`, diario `00-esqueleto.md`). |
 | 2026-10-31 | 0 | HEXM-0004: lista blanca de dependencias en el núcleo (ADR 0004). Refuerzo posterior a `nivel-00`. |
+| 2026-11-01 | 1 | HEXM-0005: value objects del recetario (`RecipeId`, `Quantity`, `Unit`, `Servings`, `Step`) y excepción de dominio base; UUID v7 generado en el dominio (ADR 0005). |
