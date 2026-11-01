@@ -219,3 +219,46 @@ arch('Eloquent is only used in infrastructure', function () {
         ...array_map(fn (string $context) => "{$context}\\Infrastructure", [...businessContexts(), 'Shared']),
     ]);
 });
+
+// ---------------------------------------------------------------------------
+// Adaptadores de Laravel: HTTP y service providers
+// ---------------------------------------------------------------------------
+
+/**
+ * Dónde puede aparecer una pieza de Laravel dentro del código propio: en la
+ * capa Infrastructure de cada contexto y en app/ (la aplicación Laravel).
+ *
+ * @return list<string>
+ */
+function laravelAdapterNamespaces(): array
+{
+    return [
+        'App',
+        ...array_map(fn (string $context) => "{$context}\\Infrastructure", [...businessContexts(), 'Shared']),
+    ];
+}
+
+arch('HTTP is only used in infrastructure', function (string $http) {
+    // CONCEPTO: HTTP es un adaptador driving (de entrada)
+    // Los controladores (Illuminate\Http: Request, JsonResponse), las Form
+    // Requests (Illuminate\Foundation\Http) y las rutas (Illuminate\Routing)
+    // son la "puerta" HTTP de la aplicación. Viven en la capa Infrastructure
+    // de su contexto (Recipes\Infrastructure\Http, HEXM-0010) y traducen la
+    // petición a un comando del caso de uso. El núcleo no sabe que existe
+    // HTTP: el mismo CreateRecipe lo podría llamar un comando de Artisan.
+    //
+    // Como la regla de Eloquent: la lista blanca del núcleo ya lo impide en
+    // Domain y Application, pero aquí se dice en positivo, en un solo sitio
+    // y con un mensaje claro. Una expectativa por namespace (en Pest 5 un
+    // array como objetivo de expect() puede dar falsos negativos).
+    expect($http)->toOnlyBeUsedIn(laravelAdapterNamespaces());
+})->with(['Illuminate\Http', 'Illuminate\Foundation\Http', 'Illuminate\Routing']);
+
+arch('service providers only live in infrastructure', function () {
+    // CONCEPTO: el service provider es la raíz de composición
+    // Es donde se enchufa cada puerto a su adaptador (RecipesServiceProvider,
+    // HEXM-0010), así que conoce a los dos y tiene que estar FUERA del núcleo.
+    // Un provider en Domain o Application metería el contenedor de Laravel
+    // en el corazón de la aplicación.
+    expect('Illuminate\Support\ServiceProvider')->toOnlyBeUsedIn(laravelAdapterNamespaces());
+});
