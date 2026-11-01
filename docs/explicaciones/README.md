@@ -16,3 +16,4 @@ Fichero: `HEXM-NNNN-slug.md`. Secciones: Explicación · Lógica de negocio · D
 ### Nivel 1: Recetario (dominio)
 
 - [HEXM-0005: Value objects del recetario](HEXM-0005-value-objects-del-recetario.md): por qué cantidades, raciones, pasos e identificadores son tipos propios que no pueden ser inválidos, por qué las fracciones son exactas y por qué el dominio genera la identidad.
+- [HEXM-0006: Entidad Recipe e ingredientes](HEXM-0006-entidad-recipe-e-ingredientes.md): por qué una receta es una entidad y un ingrediente no, qué protege un agregado y por qué no hay setters.
