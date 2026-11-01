@@ -20,3 +20,7 @@ Los diagramas Archify de cada tarea están en [`../diagramas/`](../diagramas/REA
 - [HEXM-0005: Value objects del recetario](HEXM-0005-value-objects-del-recetario.md): por qué cantidades, raciones, pasos e identificadores son tipos propios que no pueden ser inválidos, por qué las fracciones son exactas y por qué el dominio genera la identidad. Diagrama: [de texto a cantidad exacta](../diagramas/HEXM-0005/de-texto-a-cantidad-exacta.workflow.json).
 - [HEXM-0006: Entidad Recipe e ingredientes](HEXM-0006-entidad-recipe-e-ingredientes.md): por qué una receta es una entidad y un ingrediente no, qué protege un agregado y por qué no hay setters. Diagrama: [agregado Recipe](../diagramas/HEXM-0006/agregado-recipe.class.json).
 - [HEXM-0007: Caso de uso CreateRecipe con repositorio en memoria](HEXM-0007-caso-de-uso-createrecipe-con-repositorio-en-memoria.md): por qué el caso de uso orquesta sin decidir, por qué el repositorio es un puerto del dominio y por qué un fake en memoria en vez de un mock. Diagramas: [CreateRecipe paso a paso](../diagramas/HEXM-0007/create-recipe-paso-a-paso.sequence.json) y [hexágono del recetario](../diagramas/HEXM-0007/hexagono-recetario.architecture.json).
+
+### Transversal
+
+- [HEXM-0008: Diagramas Archify en las tareas](HEXM-0008-diagramas-archify-en-las-tareas.md): por qué los diagramas se generan desde una fuente versionada, respaldados por el código en un commit fijo, y por qué el cierre de una tarea tiene dos commits.

@@ -44,3 +44,9 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 | HEXM-0006 | [Agregado Recipe](HEXM-0006/agregado-recipe.class.json) (`class`) | La entidad raíz, sus value objects, la composición, las invariantes y la jerarquía de excepciones. |
 | HEXM-0007 | [CreateRecipe paso a paso](HEXM-0007/create-recipe-paso-a-paso.sequence.json) (`sequence`) | El recorrido de los datos de un alta, tanto válida como inválida. |
 | HEXM-0007 | [Hexágono del recetario](HEXM-0007/hexagono-recetario.architecture.json) (`architecture`) | Las capas, el puerto, el adaptador y la inversión de dependencias al cerrar el nivel 1. |
+
+### Transversal
+
+| Tarea | Diagrama | Qué muestra |
+|---|---|---|
+| HEXM-0008 | [Cierre de una tarea con diagramas](HEXM-0008/cierre-de-tarea-con-diagramas.workflow.json) (`workflow`) | El flujo de `/close-task` con los dos commits, el bucle de validación y reparación de Archify y la regeneración local de los HTML. |
