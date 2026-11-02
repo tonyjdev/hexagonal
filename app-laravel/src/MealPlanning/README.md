@@ -9,3 +9,5 @@ Contexto que gestiona los **planes nutricionales**: pautas fijas (desayuno, medi
 | `Infrastructure/` | Persistencia con Eloquent, la API HTTP, el adaptador de `PlanReader` hacia el importador de FastAPI y el adaptador que consulta el recetario. |
 
 **Relación con Recipes:** un `Dish` puede referenciar una receta **solo por su `RecipeId`**. Si este contexto necesita datos de una receta, los pide a través de un puerto propio, cuyo adaptador (en `Infrastructure/`) llama a la capa de aplicación de `Recipes`. Nunca se importan clases del dominio de `Recipes`.
+
+**Estado (HEXM-0012):** existen los value objects y enums básicos: `NutritionPlanId`, `PlanNumber`, `MealType`, `WeekSource`, `ExchangeCategory`, `Dish` y `DishIngredient`. Los ingredientes de un plato llevan la cantidad **en texto**, no con el `Quantity` del recetario, para no cruzar la frontera entre contextos (ver el comentario de `DishIngredient`).

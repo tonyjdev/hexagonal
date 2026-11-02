@@ -2,7 +2,7 @@
 
 Hoja de ruta del proyecto organizada en **niveles**. Cada nivel es pequeño, termina con tests en verde y una etiqueta git (`nivel-NN`), y añade **un concepto nuevo** cada vez.
 
-**Estado actual:** ✅ Nivel 2 (Recetario: adaptadores) terminado (`nivel-02`): el recetario se guarda en PostgreSQL y tiene API de alta y consulta. Siguiente: ⬜ Nivel 3 (Planes: dominio).
+**Estado actual:** 🟡 Nivel 3 (Planes: dominio) en curso: ya existen los value objects y enums de `MealPlanning` (HEXM-0012). Siguiente: días y semanas del plan (HEXM-0013).
 
 Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado
 
@@ -43,7 +43,7 @@ El roadmap tiene tres bloques:
 | ✅ | **0. Esqueleto** (HEXM-0001 a 0004) | Laravel 13 en `app-laravel/`, PostgreSQL con Docker Compose, Pest, autoload de `src/`, PHPStan y los primeros **tests de arquitectura** (el dominio no puede usar `Illuminate\*`). | Estructura hexagonal, regla de dependencias, tests de arquitectura |
 | ✅ | **1. Recetario: dominio** (HEXM-0005 a 0007) | `Recipe`, `RecipeId`, `Ingredient`, `Quantity`, `Unit`, `Step`, `Servings` y el caso de uso `CreateRecipe` con repositorio **en memoria**. Solo tests, sin base de datos ni HTTP. | Entidad, value object, invariantes, puerto de salida, caso de uso, adaptador en memoria |
 | ✅ | **2. Recetario: adaptadores** (HEXM-0009 a 0011) | Repositorio con Eloquent/PostgreSQL (con su *mapper* dominio ↔ modelo), API REST (`/api/recipes`) y binding de puertos en un *service provider*. | Adaptadores *driven* y *driving*, inyección de dependencias, mapeo de persistencia |
-| ⬜ | **3. Planes: dominio** | `NutritionPlan`, `MenuWeek`, `MenuDay`, `Dish`, `FixedMeal`, `OptionGroup`, `ExchangeTable`. Reglas: dos semanas, 6 días con menú, comida + cena. | Agregados y sus límites, enums, colecciones inmutables |
+| 🟡 | **3. Planes: dominio** (HEXM-0012 a 0015) | `NutritionPlan`, `MenuWeek`, `MenuDay`, `Dish`, `FixedMeal`, `OptionGroup`, `ExchangeTable`. Reglas: dos semanas, 6 días con menú, comida + cena. | Agregados y sus límites, enums, colecciones inmutables |
 | ⬜ | **4. Calendario** | `MealCalendar` y el caso de uso `GetMenuForDate` ("¿qué me toca hoy?"): alternancia de semanas, sábado libre y plan vigente. Puerto `Clock`. | Servicio de dominio, tiempo testeable, casos de uso de consulta |
 | ⬜ | **5. Planes: adaptadores** | Persistencia de planes, histórico de planes, API REST y alta manual de un plan. | Repositorio de agregados complejos, transacciones |
 | ⬜ | **6. Relación con recetas** | Un `Dish` puede referenciar un `RecipeId`; validación entre contextos a través de un puerto propio de `MealPlanning`; evento `RecipeDeleted` y cómo reacciona `MealPlanning`. | Comunicación entre *bounded contexts*, capa anticorrupción, eventos de dominio |
@@ -96,3 +96,4 @@ El roadmap tiene tres bloques:
 | 2026-11-01 | 2 | HEXM-0010: `POST /api/recipes`, primer adaptador *driving*: `CreateRecipeController` + `CreateRecipeRequest` (validación de forma), `RecipesServiceProvider` (*binding* del puerto a Eloquent) y traducción global de `DomainException` a HTTP 422; tests de arquitectura para HTTP y service providers (ADR 0007). |
 | 2026-11-01 | 2 | HEXM-0011: `GET /api/recipes/{id}`, primer caso de uso de consulta (`GetRecipe`) con DTO de lectura (`RecipeView`), `Quantity::amountAsText()` ("1 ½"), `RecipeNotFound` → 404 e id mal formado → 422; JSON con un *API Resource* (ADR 0008). **Nivel 2 terminado** (`nivel-02`, diario `02-recetario-adaptadores.md`). |
 | 2026-11-01 | 2 | HEXM-0016: primera pantalla web, `GET /recipes/{id}` con Blade: segundo adaptador de entrada sobre `GetRecipe` y `RecipeView` sin tocar el núcleo, vistas en el contexto (`recipes::`), página 404 en español y errores según el canal (ADR 0009). Refuerzo posterior a `nivel-02`. |
+| 2026-11-02 | 3 | HEXM-0012: value objects y enums de `MealPlanning` (`NutritionPlanId`, `PlanNumber`, `MealType`, `WeekSource`, `ExchangeCategory`, `Dish`, `DishIngredient`); UUID v7 extraído a `Shared\Domain\Uuid` (actualización del ADR 0005); ingredientes de un plato con cantidad en texto, sin cruzar la frontera con `Recipes`. |

@@ -27,3 +27,11 @@
   - Dos UUID creados en el mismo milisegundo no tienen un orden garantizado entre sí. Para recetas que crea una persona a mano es irrelevante.
   - Un UUID ocupa más que un entero (16 bytes en el tipo `uuid` de PostgreSQL).
 - **Pendiente:** cuando `MealPlanning` necesite sus propios identificadores (nivel 3), el generador se podrá extraer a un tipo común en `Shared\Domain`. No se hace ahora para no crear una abstracción compartida con un solo uso.
+
+## Actualización (2026-11-02, HEXM-0012)
+
+Resuelto el punto pendiente: `MealPlanning` necesita `NutritionPlanId`, así que la generación y la lectura del UUID se han extraído a `Shared\Domain\Uuid` (`Uuid::v7()` y `Uuid::tryFromString()`). Las decisiones de este ADR no cambian (dominio, versión 7, PHP nativo, cualquier versión al leer).
+
+- Los identificadores de negocio **envuelven** un `Uuid` (composición), no heredan de él: `RecipeId` y `NutritionPlanId` siguen siendo tipos distintos que PHPStan no deja confundir.
+- `Uuid` no lanza excepciones: `tryFromString()` devuelve `null`, y cada identificador lanza su propio error de dominio (`InvalidRecipeId`, `InvalidNutritionPlanId`) con un mensaje que habla del negocio.
+- `RecipeId` conserva su API y sus tests sin cambios.
