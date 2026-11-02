@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Shared kernel entre dos contextos: qué se comparte y qué no",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0012/shared-kernel-entre-contextos.html",
+    "quality_profile": "showcase",
+    "repository": { "url": "https://github.com/tonyjdev/hexagonal.git", "provider": "github", "revision": "7a7c8aa75e4b740ac27222dc3f994f957c5cc4f7" },
+    "legend": {
+      "entries": {
+        "backend": { "label": "Value object de un contexto" },
+        "security": { "label": "Shared kernel (Shared\\Domain)" }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "recipe_id", "type": "backend", "label": "RecipeId", "sublabel": "lanza InvalidRecipeId",
+      "pos": [40, 60], "size": [190, 64],
+      "sources": [ { "path": "app-laravel/src/Recipes/Domain/RecipeId.php", "line": 35, "end_line": 69 } ]
+    },
+    {
+      "id": "quantity", "type": "backend", "label": "Quantity", "sublabel": "fracción exacta + Unit · no se comparte",
+      "pos": [40, 260], "size": [190, 64],
+      "sources": [ { "path": "app-laravel/src/Recipes/Domain/Quantity.php", "line": 50, "end_line": 253 } ]
+    },
+    {
+      "id": "uuid", "type": "security", "label": "Uuid", "sublabel": "v7() · tryFromString()",
+      "pos": [420, 60], "size": [190, 64],
+      "sources": [ { "path": "app-laravel/src/Shared/Domain/Uuid.php", "line": 40, "end_line": 124 } ]
+    },
+    {
+      "id": "domain_exception", "type": "security", "label": "DomainException", "sublabel": "base de errores → HTTP 422",
+      "pos": [420, 260], "size": [190, 64],
+      "sources": [ { "path": "app-laravel/src/Shared/Domain/DomainException.php", "line": 33, "end_line": 33 } ]
+    },
+    {
+      "id": "plan_id", "type": "backend", "label": "NutritionPlanId", "sublabel": "lanza InvalidNutritionPlanId",
+      "pos": [800, 60], "size": [190, 64],
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/NutritionPlanId.php", "line": 28, "end_line": 55 } ]
+    },
+    {
+      "id": "dish_ingredient", "type": "backend", "label": "DishIngredient", "sublabel": "cantidad en texto (\"80 g\")",
+      "pos": [800, 260], "size": [190, 64],
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/DishIngredient.php", "line": 38, "end_line": 94 } ]
+    }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Recipes\\Domain", "wraps": ["recipe_id", "quantity"] },
+    { "kind": "region", "label": "Shared\\Domain", "wraps": ["uuid", "domain_exception"] },
+    { "kind": "region", "label": "MealPlanning\\Domain", "wraps": ["plan_id", "dish_ingredient"] }
+  ],
+  "connections": [
+    { "id": "recipe_wraps", "from": "recipe_id", "to": "uuid", "label": "envuelve", "variant": "emphasis" },
+    { "id": "plan_wraps", "from": "plan_id", "to": "uuid", "label": "envuelve", "variant": "emphasis" },
+    { "id": "quantity_error", "from": "quantity", "to": "domain_exception", "label": "InvalidQuantity hereda" },
+    { "id": "dish_error", "from": "dish_ingredient", "to": "domain_exception", "label": "InvalidDish hereda" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Se comparte: técnica sin significado de negocio",
+      "items": [
+        "Uuid: el mismo código de bits en los dos contextos; se extrae al segundo uso (ADR 0005).",
+        "Composición: RecipeId y NutritionPlanId tienen un Uuid, no lo son; PHPStan no deja confundirlos.",
+        "Shared no conoce ningún contexto: lo comprueba HexagonalLayersTest."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "No se comparte: conceptos del negocio",
+      "items": [
+        "Quantity se queda en el recetario; DishIngredient guarda la cantidad como texto.",
+        "No hay ninguna flecha entre Recipes y MealPlanning: el test de fronteras lo prohíbe.",
+        "Si la lista de la compra (nivel 9) necesita sumar cantidades, se decidirá con requisitos reales."
+      ]
+    }
+  ]
+}

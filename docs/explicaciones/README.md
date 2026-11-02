@@ -28,6 +28,10 @@ Los diagramas Archify de cada tarea están en [`../diagramas/`](../diagramas/REA
 - [HEXM-0011: Consulta de recetas por API](HEXM-0011-consulta-de-recetas-por-api.md): por qué una consulta devuelve un DTO de lectura y no la entidad (CQS), por qué "1 ½" lo escribe el dominio, por qué "no encontrado" es un 404 de la capa de aplicación y un id imposible un 422. Diagramas: [consultar una receta](../diagramas/HEXM-0011/consultar-una-receta.sequence.json) y [hexágono del recetario al cerrar el nivel 2](../diagramas/HEXM-0011/hexagono-recetario-nivel-2.architecture.json).
 - [HEXM-0016: Pantalla web de una receta](HEXM-0016-pantalla-web-de-una-receta.md) (refuerzo posterior a `nivel-02`): por qué la primera pantalla es solo otro adaptador sobre el mismo caso de uso, por qué las vistas viven en el contexto y por qué el mismo error se muestra distinto según el canal. Diagramas: [dos canales, un caso de uso](../diagramas/HEXM-0016/dos-canales-un-caso-de-uso.architecture.json) y [errores según el canal](../diagramas/HEXM-0016/errores-segun-el-canal.workflow.json).
 
+### Nivel 3: Planes (dominio)
+
+- [HEXM-0012: Value objects de los planes](HEXM-0012-value-objects-de-los-planes.md): por qué el UUID pasa al *shared kernel* y la cantidad no, por qué los identificadores envuelven un `Uuid` en vez de heredar de él y cómo un mismo `Dish` admite los formatos de la semana 1 y de la semana 2. Diagramas: [piezas del plan](../diagramas/HEXM-0012/piezas-del-plan.class.json) y [shared kernel entre dos contextos](../diagramas/HEXM-0012/shared-kernel-entre-contextos.architecture.json).
+
 ### Transversal
 
 - [HEXM-0008: Diagramas Archify en las tareas](HEXM-0008-diagramas-archify-en-las-tareas.md): por qué los diagramas se generan desde una fuente versionada, respaldados por el código en un commit fijo, y por qué el cierre de una tarea tiene dos commits.

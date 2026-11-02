@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "diagram_type": "class",
+  "meta": {
+    "title": "Piezas del plan: value objects y enums de MealPlanning",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0012/piezas-del-plan.html",
+    "quality_profile": "showcase",
+    "repository": { "url": "https://github.com/tonyjdev/hexagonal.git", "provider": "github", "revision": "7a7c8aa75e4b740ac27222dc3f994f957c5cc4f7" }
+  },
+  "layout": { "mode": "grid" },
+  "types": [
+    {
+      "id": "plan_id", "label": "NutritionPlanId", "kind": "class", "sublabel": "Value object · identidad del plan",
+      "row": 0, "col": 0,
+      "methods": [
+        { "name": "generate", "returns": "NutritionPlanId", "visibility": "public", "static": true },
+        { "name": "fromString", "parameters": "value: string", "returns": "NutritionPlanId", "visibility": "public", "static": true },
+        { "name": "equals", "parameters": "other: NutritionPlanId", "returns": "bool", "visibility": "public" }
+      ],
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/NutritionPlanId.php", "line": 28, "end_line": 55 } ]
+    },
+    {
+      "id": "uuid", "label": "Uuid", "kind": "class", "sublabel": "Shared\\Domain · UUID v7, sin excepciones",
+      "row": 0, "col": 1,
+      "methods": [
+        { "name": "v7", "returns": "Uuid", "visibility": "public", "static": true },
+        { "name": "tryFromString", "parameters": "value: string", "returns": "?Uuid", "visibility": "public", "static": true },
+        { "name": "equals", "parameters": "other: Uuid", "returns": "bool", "visibility": "public" }
+      ],
+      "sources": [ { "path": "app-laravel/src/Shared/Domain/Uuid.php", "line": 40, "end_line": 124 } ]
+    },
+    {
+      "id": "plan_number", "label": "PlanNumber", "kind": "class", "sublabel": "Value object · \"plan 27\", > 0",
+      "row": 0, "col": 2,
+      "methods": [
+        { "name": "of", "parameters": "value: int", "returns": "PlanNumber", "visibility": "public", "static": true },
+        { "name": "equals", "parameters": "other: PlanNumber", "returns": "bool", "visibility": "public" }
+      ],
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/PlanNumber.php", "line": 25, "end_line": 47 } ]
+    },
+    {
+      "id": "invalid_plan_number", "label": "InvalidPlanNumber", "kind": "class", "sublabel": "Número cero o negativo",
+      "row": 0, "col": 3,
+      "methods": [ { "name": "notPositive", "parameters": "value: int", "returns": "self", "visibility": "public", "static": true } ],
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/InvalidPlanNumber.php", "line": 14, "end_line": 20 } ]
+    },
+    {
+      "id": "dish", "label": "Dish", "kind": "class", "sublabel": "Value object · dos formatos, nunca vacío",
+      "row": 1, "col": 0,
+      "attributes": [
+        { "name": "name", "type": "?string", "visibility": "private" },
+        { "name": "description", "type": "?string", "visibility": "private" },
+        { "name": "ingredients", "type": "list<DishIngredient>", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "described", "parameters": "description: string", "returns": "Dish", "visibility": "public", "static": true },
+        { "name": "named", "parameters": "name, ingredients = []", "returns": "Dish", "visibility": "public", "static": true },
+        { "name": "equals", "parameters": "other: Dish", "returns": "bool", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/Dish.php", "line": 58, "end_line": 84, "label": "described() y named()" },
+        { "path": "app-laravel/src/MealPlanning/Domain/Dish.php", "line": 113, "end_line": 128, "label": "equals()" }
+      ]
+    },
+    {
+      "id": "dish_ingredient", "label": "DishIngredient", "kind": "class", "sublabel": "Value object · nombre + cantidad en texto",
+      "row": 1, "col": 1,
+      "attributes": [
+        { "name": "name", "type": "string", "visibility": "private" },
+        { "name": "quantity", "type": "?string", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "of", "parameters": "name, quantity = null", "returns": "DishIngredient", "visibility": "public", "static": true },
+        { "name": "equals", "parameters": "other: DishIngredient", "returns": "bool", "visibility": "public" }
+      ],
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/DishIngredient.php", "line": 38, "end_line": 94 } ]
+    },
+    {
+      "id": "invalid_dish", "label": "InvalidDish", "kind": "class", "sublabel": "Plato vacío o ingrediente sin nombre",
+      "row": 1, "col": 2,
+      "methods": [
+        { "name": "empty", "returns": "self", "visibility": "public", "static": true },
+        { "name": "ingredientWithoutName", "returns": "self", "visibility": "public", "static": true }
+      ],
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/InvalidDish.php", "line": 14, "end_line": 25 } ]
+    },
+    {
+      "id": "domain_exception", "label": "DomainException", "kind": "abstract", "sublabel": "Shared\\Domain · base de errores de negocio",
+      "row": 1, "col": 3,
+      "sources": [ { "path": "app-laravel/src/Shared/Domain/DomainException.php", "line": 33, "end_line": 33 } ]
+    },
+    {
+      "id": "meal_type", "label": "MealType", "kind": "enum", "sublabel": "desayuno … comida, media tarde, cena",
+      "row": 2, "col": 0,
+      "methods": [ { "name": "label", "returns": "string", "visibility": "public" } ],
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/MealType.php", "line": 28, "end_line": 54 } ]
+    },
+    {
+      "id": "week_source", "label": "WeekSource", "kind": "enum", "sublabel": "Nutritionist (sem. 1) · Self (sem. 2)",
+      "row": 2, "col": 1,
+      "methods": [ { "name": "label", "returns": "string", "visibility": "public" } ],
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/WeekSource.php", "line": 27, "end_line": 42 } ]
+    },
+    {
+      "id": "exchange_category", "label": "ExchangeCategory", "kind": "enum", "sublabel": "hidratos, proteínas, vegetales, grasas",
+      "row": 2, "col": 2,
+      "methods": [ { "name": "label", "returns": "string", "visibility": "public" } ],
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/ExchangeCategory.php", "line": 19, "end_line": 39 } ]
+    }
+  ],
+  "relationships": [
+    { "id": "wraps_uuid", "from": "plan_id", "to": "uuid", "kind": "composition", "label": "envuelve" },
+    { "id": "number_throws", "from": "plan_number", "to": "invalid_plan_number", "kind": "dependency", "label": "lanza" },
+    { "id": "owns_ingredients", "from": "dish", "to": "dish_ingredient", "kind": "composition", "label": "0..* en orden" },
+    { "id": "ingredient_throws", "from": "dish_ingredient", "to": "invalid_dish", "kind": "dependency", "label": "lanza" },
+    { "id": "number_error_extends", "from": "invalid_plan_number", "to": "domain_exception", "kind": "inheritance" },
+    { "id": "dish_error_extends", "from": "invalid_dish", "to": "domain_exception", "kind": "inheritance" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Un plato, dos formatos",
+      "items": [
+        "Semana 1: Dish::described('Lentejas (½ bote) con pisto…'), solo texto libre.",
+        "Semana 2: Dish::named('Pasta con salmón y pesto', [pasta 80 g, salmón 100 g]).",
+        "Invariante: nunca vacío (descripción o nombre); Dish también lanza InvalidDish.",
+        "El WeekSource es de la semana (MenuWeek), no del plato."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Fronteras y vocabulario",
+      "items": [
+        "DishIngredient no usa el Quantity del recetario: la cantidad es texto hasta el nivel 9.",
+        "NutritionPlanId comparte con RecipeId solo la técnica (Uuid) y lanza su InvalidNutritionPlanId.",
+        "Los enums dan label() en español con match sin default: un caso nuevo sin etiqueta lo detecta PHPStan."
+      ]
+    }
+  ]
+}

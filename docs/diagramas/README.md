@@ -58,6 +58,13 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 | HEXM-0016 | [Dos canales, un caso de uso](HEXM-0016/dos-canales-un-caso-de-uso.architecture.json) (`architecture`) | La API y la web entran por controladores distintos, comparten `GetRecipe` y `RecipeView` sin cambios, y se separan en la presentación (`RecipeResource` o la vista Blade). |
 | HEXM-0016 | [Errores según el canal](HEXM-0016/errores-segun-el-canal.workflow.json) (`workflow`) | Qué ve el cliente al pedir una receta en cada canal: página 404 en español en la web (también para `abc`, por `whereUuid`) y 404/422 en JSON en la API. |
 
+### Nivel 3: Planes (dominio)
+
+| Tarea | Diagrama | Qué muestra |
+|---|---|---|
+| HEXM-0012 | [Piezas del plan](HEXM-0012/piezas-del-plan.class.json) (`class`) | Los value objects y enums con que arranca `MealPlanning`: `Dish` con sus dos formatos y sus `DishIngredient`, `NutritionPlanId` sobre `Uuid`, `PlanNumber` y las excepciones de dominio. |
+| HEXM-0012 | [Shared kernel entre dos contextos](HEXM-0012/shared-kernel-entre-contextos.architecture.json) (`architecture`) | Qué comparten `Recipes` y `MealPlanning` (`Uuid` y `DomainException`, en `Shared\Domain`) y qué no (`Quantity`), sin ninguna flecha entre los dos contextos. |
+
 ### Transversal
 
 | Tarea | Diagrama | Qué muestra |
