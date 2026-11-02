@@ -51,7 +51,7 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 | Español | Código | Tipo DDD | Notas |
 |---|---|---|---|
 | Receta | `Recipe` | Entidad / raíz de agregado | Nombre, raciones, ingredientes y pasos ordenados. Se compara por su `RecipeId`; cambia con métodos de negocio (`rename()`), no con setters. |
-| Identificador de receta | `RecipeId` | Value object | UUID v7 generado por el dominio ([ADR 0005](adr/0005-identificadores-uuid-v7-en-el-dominio.md)). Lo único que conoce `MealPlanning` de una receta. |
+| Identificador de receta | `RecipeId` | Value object | UUID v7 generado por el dominio ([ADR 0005](adr/0005-identificadores-uuid-v7-en-el-dominio.md)), sobre el `Uuid` del *shared kernel*. Lo único que conoce `MealPlanning` de una receta. |
 | Ingrediente | `Ingredient` | Value object | Nombre + cantidad opcional: `Ingredient::of()` con cantidad, `Ingredient::toTaste()` "al gusto". El nombre se compara sin distinguir mayúsculas. |
 | Cantidad | `Quantity` | Value object | Número positivo + unidad. El número es una fracción exacta (numerador/denominador): ½, ⅓, ¾, 1 ½, 1,5… Se lee con `fromString()` y se escribe como en los planes con `amountAsText()` (3/2 → "1 ½"). |
 | Unidad | `Unit` | Enum | gramo `Gram`, mililitro `Millilitre`, unidad `Piece`, cucharada sopera `Tablespoon`, cucharadita `Teaspoon`, vaso `Glass`, loncha `Slice`, filete `Fillet`, lata `Can`, bote `Jar`. |
@@ -65,25 +65,27 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 | Receta no encontrada | `RecipeNotFound` | Excepción (`Recipes\Application`) | No existe ninguna receta con ese id. Hereda de `NotFound`, no de `DomainException`. |
 | No encontrado | `NotFound` | Excepción (`Shared\Application`) | Base de "lo que buscas no existe", para todos los contextos. En la API llega como HTTP 404 `{"message": "…"}`. |
 | Al gusto / una pizca | — | Concepto | Cantidad sin número: no es una `Quantity`, sino la ausencia de cantidad del ingrediente. |
-| Error de dominio | `DomainException` | Excepción (`Shared\Domain`) | Base de los errores de negocio, con mensaje en español para el usuario: `InvalidQuantity`, `InvalidServings`, `InvalidStep`, `InvalidRecipeId`, `InvalidIngredient`, `InvalidRecipe`. En la API llegan como HTTP 422 `{"message": "…"}`, traducidos en un único manejador ([ADR 0007](adr/0007-adaptador-http-validacion-de-forma-y-errores-de-dominio.md)). |
+| Error de dominio | `DomainException` | Excepción (`Shared\Domain`) | Base de los errores de negocio, con mensaje en español para el usuario: `InvalidQuantity`, `InvalidServings`, `InvalidStep`, `InvalidRecipeId`, `InvalidIngredient`, `InvalidRecipe` y, en `MealPlanning`, `InvalidNutritionPlanId`, `InvalidPlanNumber`, `InvalidDish`. En la API llegan como HTTP 422 `{"message": "…"}`, traducidos en un único manejador ([ADR 0007](adr/0007-adaptador-http-validacion-de-forma-y-errores-de-dominio.md)). |
 
 ### Planes y calendario (`MealPlanning`)
 
 | Español | Código | Tipo DDD | Notas |
 |---|---|---|---|
 | Plan nutricional | `NutritionPlan` | Entidad / raíz de agregado | Número (27), fecha de inicio, vigencia. |
-| Número de plan | `PlanNumber` | Value object | |
-| Tipo de comida | `MealType` | Enum | `Breakfast` (desayuno), `MidMorning` (media mañana), `Lunch` (comida), `AfternoonSnack` (media tarde), `Dinner` (cena). |
+| Identificador de plan | `NutritionPlanId` | Value object | UUID v7 generado por el dominio, sobre el `Uuid` del *shared kernel* (como `RecipeId`). |
+| Número de plan | `PlanNumber` | Value object | Entero positivo que asigna la nutricionista ("plan 27"). Es un dato del negocio, no la identidad del plan. |
+| Tipo de comida | `MealType` | Enum | `Breakfast` (desayuno), `MidMorning` (media mañana), `Lunch` (comida), `AfternoonSnack` (media tarde), `Dinner` (cena), en el orden del día. Etiqueta en español con `label()`. |
 | Pauta fija | `FixedMeal` | Value object | Desayuno, media mañana y media tarde: iguales todos los días. |
 | Grupo de opciones | `OptionGroup` | Value object | "Elegir N de las siguientes". |
 | Opción | `MealOption` | Value object | |
 | Intercambio | `Exchange` | Value object | Una equivalencia: alimento + ración. |
-| Categoría de intercambio | `ExchangeCategory` | Enum | `Carbohydrates`, `Protein`, `Vegetables`, `Fat`. |
+| Categoría de intercambio | `ExchangeCategory` | Enum | `Carbohydrates` (hidratos), `Protein` (proteínas), `Vegetables` (vegetales), `Fat` (grasas). |
 | Tabla de intercambios | `ExchangeTable` | Value object | Conjunto de intercambios y reglas de un plan. |
 | Semana de menú | `MenuWeek` | Entidad | Semana 1 o 2 de un plan. |
-| Origen de la semana | `WeekSource` | Enum | `Nutritionist` (semana 1), `Self` (semana 2). |
+| Origen de la semana | `WeekSource` | Enum | `Nutritionist` (semana 1, "nutricionista"), `Self` (semana 2, "elaboración propia"). |
 | Día de menú | `MenuDay` | Entidad | Contiene la comida y la cena de un día. |
-| Plato | `Dish` | Value object | Nombre, descripción y/o ingredientes, y opcionalmente un `RecipeId`. |
+| Plato | `Dish` | Value object | Dos formatos: semana 1 `Dish::described()` (texto libre) y semana 2 `Dish::named()` (nombre corto + ingredientes opcionales). Nunca vacío. Opcionalmente un `RecipeId` (nivel 6). |
+| Ingrediente de un plato | `DishIngredient` | Value object | Nombre + cantidad opcional **en texto** ("80 g", "½ bote"). No usa el `Quantity` del recetario (frontera entre contextos); si la lista de la compra necesita sumar cantidades, se decidirá en el nivel 9 (HEXM-0012). |
 | Día libre | `FreeDay` | Concepto | El sábado. |
 | Calendario de comidas | `MealCalendar` | Servicio de dominio | Calcula qué semana y qué día de menú corresponde a una fecha. |
 | Reloj | `Clock` | Puerto | Abstracción de "la fecha de hoy", para poder testear. |
@@ -114,5 +116,7 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 10. Una receta tiene **nombre** y **al menos un ingrediente**. Un ingrediente "al gusto" también cuenta.
 11. Una receta **no repite ingredientes**: dos ingredientes con el mismo nombre (sin distinguir mayúsculas ni espacios) son el mismo, aunque lleven cantidades distintas.
 12. Los **pasos de preparación son opcionales** y su orden es el de la lista: algunas recetas de los planes solo detallan ingredientes y raciones.
+13. Un **plato nunca está vacío**: en la semana 1 tiene una descripción en texto libre; en la semana 2, un nombre corto (los ingredientes son opcionales). Cada ingrediente de un plato tiene nombre; la cantidad es opcional y se guarda tal como se escribió.
+14. El **número de plan** es un entero positivo. Lo asigna la nutricionista y no es la identidad del plan.
 
 Esta lista crecerá a medida que avance el proyecto.
