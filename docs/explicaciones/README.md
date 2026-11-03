@@ -38,6 +38,7 @@ Los diagramas Archify de cada tarea están en [`../diagramas/`](../diagramas/REA
 ### Nivel 4: Calendario
 
 - [HEXM-0017: Servicio de dominio MealCalendar](HEXM-0017-servicio-de-dominio-mealcalendar.md): por qué «qué toca el día X» es un servicio de dominio sin estado y no un método del plan, por qué el resultado es un value object con dos constructores y por qué se cuentan fechas del calendario y no segundos (zona horaria y horario de verano). Diagramas: [¿qué toca el día X?](../diagramas/HEXM-0017/que-toca-el-dia-x.workflow.json) y [alternancia de semanas](../diagramas/HEXM-0017/alternancia-de-semanas.timeline.json).
+- [HEXM-0018: Repositorio de planes y plan vigente](HEXM-0018-repositorio-de-planes-y-plan-vigente.md): por qué la vigencia y «dos planes no pueden empezar el mismo día» son reglas entre agregados que forman parte del contrato del puerto, por qué el rechazo se hace al guardar y no en un caso de uso, y por qué un repositorio de objetos inmutables no necesita copias. Diagramas: [repositorio de planes](../diagramas/HEXM-0018/repositorio-de-planes.architecture.json) y [vigencia de los planes 26 y 27](../diagramas/HEXM-0018/vigencia-de-los-planes.timeline.json).
 
 ### Transversal
 

@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Repositorio de planes: un puerto con reglas entre planes",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0018/repositorio-de-planes.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "753b3cf132d7970a0042e56e6fa439645be191e4"
+    },
+    "legend": {
+      "entries": {
+        "external": { "label": "Cliente del puerto (hoy, los tests de contrato)" },
+        "security": { "label": "Dominio: agregado y error de negocio" },
+        "messagebus": { "label": "Puerto (interfaz con contrato)" },
+        "database": { "label": "Adaptador de salida" }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "contract_tests",
+      "type": "external",
+      "label": "Tests de contrato",
+      "sublabel": "dataset de adaptadores · HEXM-0019: GetMenuForDate",
+      "pos": [40, 200],
+      "size": [200, 72],
+      "sources": [
+        { "path": "app-laravel/tests/Unit/MealPlanning/Infrastructure/NutritionPlanRepositoryContractTest.php", "line": 30, "end_line": 32, "label": "dataset" },
+        { "path": "app-laravel/tests/Unit/MealPlanning/Infrastructure/NutritionPlanRepositoryContractTest.php", "line": 85, "end_line": 95, "label": "plan vigente" }
+      ]
+    },
+    {
+      "id": "plan",
+      "type": "security",
+      "label": "NutritionPlan",
+      "sublabel": "raíz del agregado · readonly",
+      "pos": [400, 40],
+      "size": [190, 64],
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/NutritionPlan.php", "line": 74, "end_line": 126 }
+      ]
+    },
+    {
+      "id": "port",
+      "type": "messagebus",
+      "label": "NutritionPlanRepository",
+      "sublabel": "save · find · inForceOn",
+      "tag": "contrato",
+      "pos": [400, 200],
+      "size": [190, 72],
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/NutritionPlanRepository.php", "line": 37, "end_line": 66 }
+      ]
+    },
+    {
+      "id": "duplicated",
+      "type": "security",
+      "label": "DuplicatedPlanStart",
+      "sublabel": "otro plan ya empieza ese día",
+      "pos": [400, 370],
+      "size": [190, 64],
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/DuplicatedPlanStart.php", "line": 25, "end_line": 36 }
+      ]
+    },
+    {
+      "id": "eloquent",
+      "type": "database",
+      "label": "Eloquent (nivel 5)",
+      "sublabel": "ORDER BY starts_on · índice único",
+      "pos": [760, 40],
+      "size": [210, 64]
+    },
+    {
+      "id": "in_memory",
+      "type": "database",
+      "label": "InMemoryNutritionPlanRepository",
+      "sublabel": "array · sin clone (inmutable)",
+      "pos": [760, 200],
+      "size": [230, 72],
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Infrastructure/InMemoryNutritionPlanRepository.php", "line": 43, "end_line": 52, "label": "save(): rechaza el mismo inicio" },
+        { "path": "app-laravel/src/MealPlanning/Infrastructure/InMemoryNutritionPlanRepository.php", "line": 65, "end_line": 79, "label": "inForceOn()" }
+      ]
+    }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "tests (cliente)", "wraps": ["contract_tests"] },
+    { "kind": "region", "label": "MealPlanning\\Domain", "wraps": ["plan", "port", "duplicated"] },
+    { "kind": "region", "label": "MealPlanning\\Infrastructure", "wraps": ["eloquent", "in_memory"] }
+  ],
+  "connections": [
+    { "id": "ask", "from": "contract_tests", "to": "port", "label": "inForceOn(fecha)", "variant": "emphasis" },
+    { "id": "returns", "from": "port", "to": "plan", "label": "devuelve el plan vigente" },
+    { "id": "implements", "from": "in_memory", "to": "port", "label": "implementa", "variant": "dashed" },
+    { "id": "implements_later", "from": "eloquent", "to": "port", "label": "implementará", "variant": "dashed" },
+    { "id": "throws", "from": "in_memory", "to": "duplicated", "label": "lanza", "variant": "security" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Reglas entre planes en el contrato (ADR 0011)",
+      "items": [
+        "Vigente el día X: el plan de inicio más reciente que no pasa de X, por fechas del calendario.",
+        "Dos planes distintos no pueden empezar el mismo día: save() lanza DuplicatedPlanStart.",
+        "Ningún NutritionPlan puede vigilarlas solo: las responde quien ve todos los planes."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Un contrato, varios adaptadores",
+      "items": [
+        "Los mismos tests de contrato se ejecutarán contra Eloquent en el nivel 5: una línea más en el dataset.",
+        "El adaptador en memoria no clona: el plan es inmutable y compartirlo es seguro."
+      ]
+    }
+  ]
+}
