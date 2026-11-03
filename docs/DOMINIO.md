@@ -65,7 +65,7 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 | Receta no encontrada | `RecipeNotFound` | Excepción (`Recipes\Application`) | No existe ninguna receta con ese id. Hereda de `NotFound`, no de `DomainException`. |
 | No encontrado | `NotFound` | Excepción (`Shared\Application`) | Base de "lo que buscas no existe", para todos los contextos. En la API llega como HTTP 404 `{"message": "…"}`. |
 | Al gusto / una pizca | — | Concepto | Cantidad sin número: no es una `Quantity`, sino la ausencia de cantidad del ingrediente. |
-| Error de dominio | `DomainException` | Excepción (`Shared\Domain`) | Base de los errores de negocio, con mensaje en español para el usuario: `InvalidQuantity`, `InvalidServings`, `InvalidStep`, `InvalidRecipeId`, `InvalidIngredient`, `InvalidRecipe` y, en `MealPlanning`, `InvalidNutritionPlanId`, `InvalidPlanNumber`, `InvalidDish`, `InvalidMenuDay`, `InvalidMenuWeek`, `InvalidFixedMeal`, `InvalidOptionGroup`, `InvalidExchangeTable`, `InvalidNutritionPlan`. En la API llegan como HTTP 422 `{"message": "…"}`, traducidos en un único manejador ([ADR 0007](adr/0007-adaptador-http-validacion-de-forma-y-errores-de-dominio.md)). |
+| Error de dominio | `DomainException` | Excepción (`Shared\Domain`) | Base de los errores de negocio, con mensaje en español para el usuario: `InvalidQuantity`, `InvalidServings`, `InvalidStep`, `InvalidRecipeId`, `InvalidIngredient`, `InvalidRecipe` y, en `MealPlanning`, `InvalidNutritionPlanId`, `InvalidPlanNumber`, `InvalidDish`, `InvalidMenuDay`, `InvalidMenuWeek`, `InvalidFixedMeal`, `InvalidOptionGroup`, `InvalidExchangeTable`, `InvalidNutritionPlan`, `InvalidScheduledDay`. En la API llegan como HTTP 422 `{"message": "…"}`, traducidos en un único manejador ([ADR 0007](adr/0007-adaptador-http-validacion-de-forma-y-errores-de-dominio.md)). |
 
 ### Planes y calendario (`MealPlanning`)
 
@@ -92,7 +92,8 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 | Plato | `Dish` | Value object | Dos formatos: semana 1 `Dish::described()` (texto libre) y semana 2 `Dish::named()` (nombre corto + ingredientes opcionales). Nunca vacío. Opcionalmente un `RecipeId` (nivel 6). |
 | Ingrediente de un plato | `DishIngredient` | Value object | Nombre + cantidad opcional **en texto** ("80 g", "½ bote"). No usa el `Quantity` del recetario (frontera entre contextos); si la lista de la compra necesita sumar cantidades, se decidirá en el nivel 9 (HEXM-0012). |
 | Día libre | `FreeDay` | Concepto | El sábado: `Weekday::Saturday->isFreeDay()`. No puede tener menú. |
-| Calendario de comidas | `MealCalendar` | Servicio de dominio | Calcula qué semana y qué día de menú corresponde a una fecha. |
+| Calendario de comidas | `MealCalendar` | Servicio de dominio | `dayOn(plan, fecha)`: qué semana toca (se alternan desde el lunes de inicio: semanas completas pares → la 1, impares → la 2) y su menú, o que es el día libre. Sin estado; recibe el plan y la fecha, no busca ninguno de los dos. Cuenta días del calendario, no horas: ni la hora, ni la zona horaria, ni el horario de verano cambian el resultado (HEXM-0017). |
+| Día del calendario | `ScheduledDay` | Value object | Lo que devuelve `MealCalendar`: la fecha, la semana que toca (1 o 2), el día de la semana y su `MenuDay`, o día libre (`isFreeDay()`). Se crea con `withMenu()` o `freeDay()`. |
 | Reloj | `Clock` | Puerto | Abstracción de "la fecha de hoy", para poder testear. |
 | Importación de plan | `PlanImport` | Caso de uso | Leer un plan desde un fichero externo. |
 | Lector de planes | `PlanReader` | Puerto | Implementado por adaptadores (Excel vía FastAPI, PDF…). |
@@ -128,5 +129,6 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 17. Un **intercambio** indica siempre su alimento y su ración. Las **reglas de los intercambios** se conservan con su texto y su orden; se harán cumplir en el nivel 8.
 18. Un plan **empieza siempre en lunes** (el de su semana 1) y tiene **como mucho una pauta fija de cada tipo** (un solo desayuno, una media mañana, una media tarde); ninguna es obligatoria.
 19. La **vigencia** de un plan va desde su fecha de inicio hasta la del plan siguiente: no se guarda una fecha de fin.
+20. Un plan **no tiene menú antes de su fecha de inicio**. Desde ese lunes, las semanas se alternan cada 7 días del calendario (1, 2, 1, 2…), y el sábado de cualquiera de las dos es libre. Lo que cuenta es la fecha tal como la ve quien pregunta, no la hora.
 
 Esta lista crecerá a medida que avance el proyecto.
