@@ -3,6 +3,7 @@
 use App\Providers\AppServiceProvider;
 use MealPlanning\Infrastructure\MealPlanningServiceProvider;
 use Recipes\Infrastructure\RecipesServiceProvider;
+use Shared\Infrastructure\SharedServiceProvider;
 
 /*
 | Service providers de la aplicación.
@@ -13,6 +14,7 @@ use Recipes\Infrastructure\RecipesServiceProvider;
 */
 return [
     AppServiceProvider::class,
+    SharedServiceProvider::class,
     RecipesServiceProvider::class,
     MealPlanningServiceProvider::class,
 ];

@@ -92,6 +92,8 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 | HEXM-0020 | [Guardar un plan en un día ocupado](HEXM-0020/guardar-en-un-dia-ocupado.sequence.json) (`sequence`) | `save()` de un plan ya guardado movido al inicio de otro: `SAVEPOINT`, violación del índice único, `ROLLBACK TO SAVEPOINT`, consulta del plan que ocupa el día y `DuplicatedPlanStart`. |
 | HEXM-0021 | [Del papel a la base de datos](HEXM-0021/del-papel-a-la-base-de-datos.dataflow.json) (`dataflow`) | Las tres formas del mismo plan al cruzar las capas: menús 1-6 y días 8-14 en el JSON, días de la semana en el dominio (`MenuWeek`) y documentos `jsonb` en `nutrition_plans`; y dónde se rechaza cada error (422 de forma o del dominio). |
 | HEXM-0021 | [Hexágono de MealPlanning](HEXM-0021/hexagono-mealplanning.architecture.json) (`architecture`) | El primer recorrido completo del contexto: controlador y *Form Request*, caso de uso, agregado y puerto en el dominio, Eloquent y el `MealPlanningServiceProvider` que los enchufa. |
+| HEXM-0022 | [¿Qué me toca hoy? por HTTP](HEXM-0022/menu-de-hoy-por-http.sequence.json) (`sequence`) | `GET /api/menu` en sus tres caminos: hoy según el reloj real (`SystemClock` en Europe/Madrid, martes de la semana 1), un día concreto sin consultar el reloj (sábado libre) y el 404 sin plan vigente. |
+| HEXM-0022 | [Tres raíces de composición](HEXM-0022/raices-de-composicion.architecture.json) (`architecture`) | Quién enchufa cada puerto: `SharedServiceProvider` (el reloj, con la zona de `config/clock.php`), `MealPlanningServiceProvider` y `RecipesServiceProvider`, y cómo los tests sustituyen el reloj en el contenedor. |
 
 ### Transversal
 

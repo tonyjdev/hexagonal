@@ -29,6 +29,7 @@
 */
 
 use Illuminate\Support\Facades\Route;
+use MealPlanning\Infrastructure\Http\GetMenuForDateController;
 use MealPlanning\Infrastructure\Http\RegisterNutritionPlanController;
 use Recipes\Infrastructure\Http\CreateRecipeController;
 use Recipes\Infrastructure\Http\GetRecipeController;
@@ -49,3 +50,7 @@ Route::get('/recipes/{id}', GetRecipeController::class)->name('recipes.show');
 // Planes nutricionales: alta manual de un plan completo (HEXM-0021). La
 // consulta (nutrition-plans.show) llegará con el histórico en HEXM-0023.
 Route::post('/nutrition-plans', RegisterNutritionPlanController::class)->name('nutrition-plans.store');
+
+// "¿Qué me toca comer hoy?" (HEXM-0022): sin parámetros, hoy según el reloj
+// (Clock → SystemClock en la zona del usuario); con ?date=AAAA-MM-DD, ese día.
+Route::get('/menu', GetMenuForDateController::class)->name('menu.show');

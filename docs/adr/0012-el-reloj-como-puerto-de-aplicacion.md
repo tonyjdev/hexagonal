@@ -44,3 +44,12 @@ Por eso "hoy" llega a través de un puerto `Clock`. HEXM-0019 dejaba tres pregun
 - **Revisar cuando:**
   - un caso de uso necesite instantes y no solo fechas;
   - el usuario pueda elegir su propia zona horaria: entonces quizá llegue como argumento de cada consulta y no del adaptador.
+
+## Actualización (2026-11-04, HEXM-0022): el reloj conectado a la aplicación
+
+`GET /api/menu` es el primer adaptador que usa el reloj real. Se concretan tres puntos que este ADR dejaba para el nivel 5:
+
+1. **El *binding* `Clock` → `SystemClock` vive en un `SharedServiceProvider`** (`Shared\Infrastructure`), y no en `MealPlanningServiceProvider`. Es la misma razón por la que el puerto está en `Shared\Application`: el tiempo no es de ningún contexto, y si lo registrara `MealPlanning`, el recetario dependería de él para saber qué día es. Se registra como `singleton`. `SystemClock` no guarda la fecha y calcula «hoy» en cada llamada, así que compartir la instancia no la deja anticuada.
+2. **La zona horaria se lee de `config/clock.php`** (`timezone`, por defecto `Europe/Madrid`, sobrescribible con `APP_USER_TIMEZONE`). Es una clave propia y no `app.timezone`, que sigue en UTC. Una zona que no existe hace fallar la resolución del reloj, en lugar de calcular «hoy» en una zona equivocada.
+3. **En los tests de *feature*, «hoy» se controla sustituyendo el puerto en el contenedor** (`$this->app->instance(Clock::class, FrozenClock::on('2026-11-11'))`), y no con `travelTo()` ni `Carbon::setTestNow()`. El caso de uso recibe el reloj del test exactamente como en producción recibe `SystemClock`, y no hay ningún reloj global que restaurar.
+

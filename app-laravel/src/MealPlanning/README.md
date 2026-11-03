@@ -21,3 +21,5 @@ Contexto que gestiona los **planes nutricionales**: pautas fijas (desayuno, medi
 **Estado (HEXM-0020):** los planes se guardan en PostgreSQL con `EloquentNutritionPlanRepository` (en `Infrastructure/Persistence/Eloquent`): una fila por plan en `nutrition_plans`, con el contenido del agregado en tres documentos `jsonb` que traduce `NutritionPlanMapper` (ADR 0013). Pasa los mismos tests de contrato que el adaptador en memoria. El dominio y la aplicación no han cambiado.
 
 **Estado (HEXM-0021):** el primer comando, `RegisterNutritionPlan`, y su adaptador HTTP `POST /api/nutrition-plans` (`RegisterNutritionPlanController` y `RegisterNutritionPlanRequest`, que solo valida la forma). El JSON sigue el formato de los documentos (ADR 0014). `MealPlanningServiceProvider` enchufa el puerto de planes al adaptador de Eloquent.
+
+**Estado (HEXM-0022):** «¿qué me toca hoy?» por HTTP: `GET /api/menu[?date=AAAA-MM-DD]` (`GetMenuForDateController`, `GetMenuForDateRequest` y `ScheduledDayResource`) sobre el `GetMenuForDate` de HEXM-0019, sin tocar el núcleo. «Hoy» lo da el reloj real (`SystemClock` en la zona del usuario), que enchufa `SharedServiceProvider`.
