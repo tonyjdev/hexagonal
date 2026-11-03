@@ -1,0 +1,97 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "¿Qué toca el día X? MealCalendar::dayOn() paso a paso",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0017/que-toca-el-dia-x.html",
+    "quality_profile": "showcase",
+    "repository": { "url": "https://github.com/tonyjdev/hexagonal.git", "provider": "github", "revision": "969511c7f4f89d4e689aee864edd178cc8e75730" },
+    "legend": {
+      "entries": {
+        "external": { "label": "Lo que recibe (plan y fecha)" },
+        "backend": { "label": "Cálculo del calendario" },
+        "security": { "label": "Regla de negocio o error" },
+        "database": { "label": "Día del calendario (ScheduledDay)" }
+      }
+    }
+  },
+  "lanes": [
+    { "id": "input", "label": "Argumentos (sin reloj ni repositorio)" },
+    { "id": "calendar", "label": "MealCalendar::dayOn()" },
+    { "id": "result", "label": "Resultado: ScheduledDay" },
+    { "id": "errors", "label": "Error en español (InvalidScheduledDay)", "variant": "exception" }
+  ],
+  "mainPath": ["plan_and_date", "count_days", "before_check", "which_week", "saturday_check", "with_menu"],
+  "nodes": [
+    {
+      "id": "plan_and_date", "lane": "input", "col": 0, "type": "external",
+      "label": "Plan 27 + fecha", "sublabel": "inicio lun 02/11/2026 · mié 11/11"
+    },
+    {
+      "id": "count_days", "lane": "calendar", "col": 1, "type": "backend",
+      "label": "Días del calendario", "sublabel": "Y-m-d en UTC · 9 días",
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/MealCalendar.php", "line": 102, "end_line": 115 } ]
+    },
+    {
+      "id": "before_check", "lane": "calendar", "col": 2, "type": "security",
+      "label": "¿Antes del inicio?", "sublabel": "días < 0",
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/MealCalendar.php", "line": 61, "end_line": 65 } ]
+    },
+    {
+      "id": "which_week", "lane": "calendar", "col": 3, "type": "backend",
+      "label": "¿Qué semana?", "sublabel": "intdiv(días, 7) % 2 · par → 1, impar → 2",
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/MealCalendar.php", "line": 70, "end_line": 70 } ]
+    },
+    {
+      "id": "saturday_check", "lane": "calendar", "col": 4, "type": "security",
+      "label": "¿Es sábado?", "sublabel": "Weekday::isFreeDay()",
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/MealCalendar.php", "line": 72, "end_line": 74 } ]
+    },
+    {
+      "id": "with_menu", "lane": "result", "col": 5, "type": "database",
+      "label": "Día con menú", "sublabel": "semana 2 · miércoles · día 10",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/MealCalendar.php", "line": 79, "end_line": 82 },
+        { "path": "app-laravel/src/MealPlanning/Domain/ScheduledDay.php", "line": 47, "end_line": 50 }
+      ]
+    },
+    {
+      "id": "free_day", "lane": "result", "col": 4, "type": "database",
+      "label": "Día libre", "sublabel": "sábado, sin menú",
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/ScheduledDay.php", "line": 58, "end_line": 67 } ]
+    },
+    {
+      "id": "err_before", "lane": "errors", "col": 2, "type": "security",
+      "label": "Antes del inicio", "sublabel": "\"el 01/11/2026 no tiene menú\"",
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/InvalidScheduledDay.php", "line": 18, "end_line": 26 } ]
+    }
+  ],
+  "edges": [
+    { "id": "read", "from": "plan_and_date", "to": "count_days", "label": "startsOn, fecha", "variant": "emphasis" },
+    { "id": "to_before", "from": "count_days", "to": "before_check", "variant": "emphasis" },
+    { "id": "not_before", "from": "before_check", "to": "which_week", "label": "no", "variant": "emphasis" },
+    { "id": "to_saturday", "from": "which_week", "to": "saturday_check", "variant": "emphasis" },
+    { "id": "weekday", "from": "saturday_check", "to": "with_menu", "label": "no", "variant": "emphasis" },
+    { "id": "saturday", "from": "saturday_check", "to": "free_day", "label": "sí" },
+    { "id": "before", "from": "before_check", "to": "err_before", "label": "sí", "variant": "security", "role": "error" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Un servicio de dominio sin estado",
+      "items": [
+        "Recibe el plan y la fecha; no busca el plan vigente ni sabe qué día es hoy (HEXM-0018 y 0019).",
+        "Las semanas cuentan desde el lunes de inicio: días 0-6 → semana 1, 7-13 → semana 2, 14-20 → semana 1…"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Fechas del calendario, no instantes",
+      "items": [
+        "Se compara el año-mes-día de cada fecha en su zona horaria, llevado a UTC: la hora no cuenta.",
+        "Segundos / 86400 fallaría: la semana del cambio de hora de marzo tiene 6,96 días."
+      ]
+    }
+  ]
+}
