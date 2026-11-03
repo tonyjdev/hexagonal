@@ -1,0 +1,429 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Reaccionar al borrado: el plan 27 desvincula sus platos",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0027/reaccion-al-borrado.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "d3165fe27b9fb8bfcf0bf035d397cc7418b5a3bb"
+    },
+    "legend": {
+      "entries": {
+        "default": {
+          "label": "Llamada"
+        },
+        "emphasis": {
+          "label": "Camino principal"
+        },
+        "security": {
+          "label": "Fallo de la reacción (se registra)"
+        },
+        "return": {
+          "label": "Respuesta"
+        }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Cliente",
+      "sublabel": "tests · curl",
+      "sources": [
+        {
+          "path": "app-laravel/tests/Feature/MealPlanning/Infrastructure/Recipes/RecipeDeletedListenerTest.php",
+          "line": 73,
+          "end_line": 148,
+          "label": "tres caminos"
+        }
+      ]
+    },
+    {
+      "id": "recipes",
+      "type": "frontend",
+      "label": "Recetario",
+      "sublabel": "DeleteRecipe",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Application/DeleteRecipe.php",
+          "line": 43,
+          "end_line": 70
+        }
+      ]
+    },
+    {
+      "id": "bus",
+      "type": "cloud",
+      "label": "EventBus",
+      "sublabel": "LaravelEventBus",
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Infrastructure/LaravelEventBus.php",
+          "line": 44,
+          "end_line": 85
+        }
+      ]
+    },
+    {
+      "id": "listener",
+      "type": "messagebus",
+      "label": "Oyente",
+      "sublabel": "RecipeDeletedListener",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Recipes/RecipeDeletedListener.php",
+          "line": 53,
+          "end_line": 72
+        }
+      ]
+    },
+    {
+      "id": "unlink",
+      "type": "backend",
+      "label": "Desvincular",
+      "sublabel": "UnlinkDeletedRecipe",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/UnlinkDeletedRecipe.php",
+          "line": 44,
+          "end_line": 62
+        }
+      ]
+    },
+    {
+      "id": "repo",
+      "type": "database",
+      "label": "Planes",
+      "sublabel": "usingRecipe · save",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlanRepository.php",
+          "line": 100,
+          "end_line": 100,
+          "label": "usingRecipe()"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/EloquentNutritionPlanRepository.php",
+          "line": 156,
+          "end_line": 167,
+          "label": "SQL/JSON"
+        }
+      ]
+    },
+    {
+      "id": "plan",
+      "type": "security",
+      "label": "NutritionPlan",
+      "sublabel": "agregado (dominio)",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlan.php",
+          "line": 160,
+          "end_line": 170,
+          "label": "withoutRecipe()"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/Dish.php",
+          "line": 113,
+          "end_line": 120,
+          "label": "Dish::withoutRecipe()"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 140,
+      "to": 740,
+      "label": "1. Se borra el guiso, que usa el plan 27 → sus platos se desvinculan"
+    },
+    {
+      "from": 775,
+      "to": 1140,
+      "label": "2. Se borra una receta que no usa ningún plan → no cambia nada"
+    },
+    {
+      "from": 1175,
+      "to": 1590,
+      "label": "3. La reacción falla → el borrado se mantiene y el error se registra"
+    }
+  ],
+  "messages": [
+    {
+      "id": "del",
+      "from": "client",
+      "to": "recipes",
+      "y": 165,
+      "label": "DELETE /api/recipes/guiso",
+      "variant": "emphasis"
+    },
+    {
+      "id": "pub",
+      "from": "recipes",
+      "to": "bus",
+      "y": 210,
+      "label": "publish(RecipeDeleted)",
+      "variant": "emphasis",
+      "note": "la receta ya está borrada"
+    },
+    {
+      "id": "handle",
+      "from": "bus",
+      "to": "listener",
+      "y": 280,
+      "label": "handle(RecipeDeleted)",
+      "variant": "emphasis",
+      "note": "tras el commit"
+    },
+    {
+      "id": "inv",
+      "from": "listener",
+      "to": "unlink",
+      "y": 350,
+      "label": "__invoke('0190a…')",
+      "variant": "emphasis",
+      "note": "solo el id, como texto"
+    },
+    {
+      "id": "using",
+      "from": "unlink",
+      "to": "repo",
+      "y": 420,
+      "label": "usingRecipe(guiso)",
+      "variant": "default",
+      "note": "SQL/JSON sobre weeks"
+    },
+    {
+      "id": "found",
+      "from": "repo",
+      "to": "unlink",
+      "y": 490,
+      "label": "[plan 27]",
+      "variant": "return"
+    },
+    {
+      "id": "without",
+      "from": "unlink",
+      "to": "plan",
+      "y": 535,
+      "label": "withoutRecipe(guiso)",
+      "variant": "emphasis",
+      "note": "solo esos platos"
+    },
+    {
+      "id": "newplan",
+      "from": "plan",
+      "to": "unlink",
+      "y": 605,
+      "label": "plan 27 (versión nueva)",
+      "variant": "return"
+    },
+    {
+      "id": "save",
+      "from": "unlink",
+      "to": "repo",
+      "y": 650,
+      "label": "save(plan 27)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "ok",
+      "from": "recipes",
+      "to": "client",
+      "y": 695,
+      "label": "204 No Content",
+      "variant": "return"
+    },
+    {
+      "id": "del2",
+      "from": "client",
+      "to": "recipes",
+      "y": 800,
+      "label": "DELETE /api/recipes/otra",
+      "variant": "default"
+    },
+    {
+      "id": "pub2",
+      "from": "recipes",
+      "to": "bus",
+      "y": 845,
+      "label": "publish(RecipeDeleted)",
+      "variant": "default"
+    },
+    {
+      "id": "handle2",
+      "from": "bus",
+      "to": "listener",
+      "y": 890,
+      "label": "handle(RecipeDeleted)",
+      "variant": "default"
+    },
+    {
+      "id": "inv2",
+      "from": "listener",
+      "to": "unlink",
+      "y": 935,
+      "label": "__invoke(id)",
+      "variant": "default"
+    },
+    {
+      "id": "using2",
+      "from": "unlink",
+      "to": "repo",
+      "y": 980,
+      "label": "usingRecipe(otra)",
+      "variant": "default"
+    },
+    {
+      "id": "none",
+      "from": "repo",
+      "to": "unlink",
+      "y": 1025,
+      "label": "[]",
+      "variant": "return",
+      "note": "ningún plan: no se guarda nada"
+    },
+    {
+      "id": "ok2",
+      "from": "recipes",
+      "to": "client",
+      "y": 1095,
+      "label": "204 No Content",
+      "variant": "return"
+    },
+    {
+      "id": "del3",
+      "from": "client",
+      "to": "recipes",
+      "y": 1200,
+      "label": "DELETE /api/recipes/guiso",
+      "variant": "default"
+    },
+    {
+      "id": "pub3",
+      "from": "recipes",
+      "to": "bus",
+      "y": 1245,
+      "label": "publish(RecipeDeleted)",
+      "variant": "default"
+    },
+    {
+      "id": "handle3",
+      "from": "bus",
+      "to": "listener",
+      "y": 1290,
+      "label": "handle(RecipeDeleted)",
+      "variant": "default"
+    },
+    {
+      "id": "inv3",
+      "from": "listener",
+      "to": "unlink",
+      "y": 1335,
+      "label": "__invoke(id)",
+      "variant": "default"
+    },
+    {
+      "id": "using3",
+      "from": "unlink",
+      "to": "repo",
+      "y": 1380,
+      "label": "usingRecipe(guiso)",
+      "variant": "default"
+    },
+    {
+      "id": "fail",
+      "from": "repo",
+      "to": "unlink",
+      "y": 1425,
+      "label": "throw RuntimeException",
+      "variant": "security"
+    },
+    {
+      "id": "caught",
+      "from": "unlink",
+      "to": "listener",
+      "y": 1470,
+      "label": "excepción",
+      "variant": "security",
+      "note": "report(): al log, no al cliente"
+    },
+    {
+      "id": "ok3",
+      "from": "recipes",
+      "to": "client",
+      "y": 1540,
+      "label": "204 (receta borrada)",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "listener",
+      "from": 280,
+      "to": 650,
+      "type": "messagebus"
+    },
+    {
+      "participant": "unlink",
+      "from": 350,
+      "to": 650,
+      "type": "backend"
+    },
+    {
+      "participant": "listener",
+      "from": 890,
+      "to": 1025,
+      "type": "messagebus"
+    },
+    {
+      "participant": "unlink",
+      "from": 935,
+      "to": 1025,
+      "type": "backend"
+    },
+    {
+      "participant": "listener",
+      "from": 1290,
+      "to": 1470,
+      "type": "messagebus"
+    },
+    {
+      "participant": "unlink",
+      "from": 1335,
+      "to": 1470,
+      "type": "backend"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Regla 24: se desvinculan",
+      "items": [
+        "Los platos del guiso conservan su texto e ingredientes y dejan de apuntar a la receta.",
+        "El resto del plan no cambia; un plan que no la usa no se toca."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "El oyente es un adaptador de entrada",
+      "items": [
+        "Traduce el evento del recetario a un caso de uso propio, con solo el id.",
+        "El núcleo de MealPlanning sigue sin conocer Recipes (ADR 0019)."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Consistencia eventual",
+      "items": [
+        "El borrado y la desvinculación son dos transacciones.",
+        "Si la reacción falla, la receta sigue borrada (204) y repetir UnlinkDeletedRecipe lo arregla: es idempotente."
+      ]
+    }
+  ]
+}

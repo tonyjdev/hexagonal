@@ -1,0 +1,412 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Dos contextos, dos direcciones: preguntar y reaccionar",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0027/dos-contextos-dos-direcciones.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "d3165fe27b9fb8bfcf0bf035d397cc7418b5a3bb"
+    },
+    "legend": {
+      "entries": {
+        "backend": {
+          "label": "Caso de uso (aplicación)"
+        },
+        "messagebus": {
+          "label": "Puerto (interfaz)"
+        },
+        "database": {
+          "label": "Adaptador de salida (capa anticorrupción)"
+        },
+        "frontend": {
+          "label": "Adaptador de entrada (oyente)"
+        },
+        "cloud": {
+          "label": "Bus de eventos (Shared)"
+        },
+        "security": {
+          "label": "Evento de dominio (contrato público)"
+        },
+        "external": {
+          "label": "Test de arquitectura (guardián)"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "register",
+      "type": "backend",
+      "label": "RegisterNutritionPlan",
+      "sublabel": "¿existe la receta del plato?",
+      "pos": [
+        40,
+        100
+      ],
+      "size": [
+        240,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/RegisterNutritionPlan.php",
+          "line": 115,
+          "end_line": 138,
+          "label": "ensureRecipesExist()"
+        }
+      ]
+    },
+    {
+      "id": "catalog",
+      "type": "messagebus",
+      "label": "RecipeCatalog",
+      "sublabel": "exists(RecipeReference): bool",
+      "pos": [
+        40,
+        260
+      ],
+      "size": [
+        240,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/RecipeCatalog.php",
+          "line": 45,
+          "end_line": 52
+        }
+      ],
+      "tag": "puerto propio"
+    },
+    {
+      "id": "unlink",
+      "type": "backend",
+      "label": "UnlinkDeletedRecipe",
+      "sublabel": "usingRecipe → withoutRecipe → save",
+      "pos": [
+        40,
+        470
+      ],
+      "size": [
+        240,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/UnlinkDeletedRecipe.php",
+          "line": 44,
+          "end_line": 62
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlan.php",
+          "line": 160,
+          "end_line": 171,
+          "label": "withoutRecipe()"
+        }
+      ]
+    },
+    {
+      "id": "acl",
+      "type": "database",
+      "label": "RecipesContextRecipeCatalog",
+      "sublabel": "RecipeView → true · NotFound → false",
+      "pos": [
+        400,
+        260
+      ],
+      "size": [
+        260,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Recipes/RecipesContextRecipeCatalog.php",
+          "line": 54,
+          "end_line": 70
+        }
+      ]
+    },
+    {
+      "id": "listener",
+      "type": "frontend",
+      "label": "RecipeDeletedListener",
+      "sublabel": "evento ajeno → caso de uso propio",
+      "pos": [
+        400,
+        470
+      ],
+      "size": [
+        260,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Recipes/RecipeDeletedListener.php",
+          "line": 53,
+          "end_line": 72
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/MealPlanningServiceProvider.php",
+          "line": 66,
+          "end_line": 69,
+          "label": "Event listen"
+        }
+      ]
+    },
+    {
+      "id": "archtest",
+      "type": "external",
+      "label": "Test de arquitectura",
+      "sublabel": "publicEvents(): solo RecipeDeleted",
+      "pos": [
+        400,
+        660
+      ],
+      "size": [
+        260,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/tests/Architecture/HexagonalLayersTest.php",
+          "line": 207,
+          "end_line": 258
+        }
+      ]
+    },
+    {
+      "id": "bus",
+      "type": "cloud",
+      "label": "LaravelEventBus",
+      "sublabel": "EventBus · afterCommit()",
+      "pos": [
+        800,
+        470
+      ],
+      "size": [
+        240,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Application/EventBus.php",
+          "line": 35,
+          "end_line": 42,
+          "label": "puerto"
+        },
+        {
+          "path": "app-laravel/src/Shared/Infrastructure/LaravelEventBus.php",
+          "line": 44,
+          "end_line": 85
+        }
+      ]
+    },
+    {
+      "id": "event",
+      "type": "security",
+      "label": "RecipeDeleted",
+      "sublabel": "recipeId (texto) · occurredOn",
+      "pos": [
+        800,
+        660
+      ],
+      "size": [
+        240,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/RecipeDeleted.php",
+          "line": 37,
+          "end_line": 65
+        }
+      ]
+    },
+    {
+      "id": "getrecipe",
+      "type": "backend",
+      "label": "GetRecipe",
+      "sublabel": "consulta del recetario",
+      "pos": [
+        1200,
+        260
+      ],
+      "size": [
+        240,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Application/GetRecipe.php",
+          "line": 39,
+          "end_line": 53
+        }
+      ]
+    },
+    {
+      "id": "delete",
+      "type": "backend",
+      "label": "DeleteRecipe",
+      "sublabel": "borra y después publica",
+      "pos": [
+        1200,
+        470
+      ],
+      "size": [
+        240,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Application/DeleteRecipe.php",
+          "line": 43,
+          "end_line": 70
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "MealPlanning\\Application",
+      "wraps": [
+        "register",
+        "catalog",
+        "unlink"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "MealPlanning\\Infrastructure\\Recipes",
+      "wraps": [
+        "acl",
+        "listener"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "tests",
+      "wraps": [
+        "archtest"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Shared",
+      "wraps": [
+        "bus"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Recipes\\Domain",
+      "wraps": [
+        "event"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Recipes\\Application",
+      "wraps": [
+        "getrecipe",
+        "delete"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ask",
+      "from": "register",
+      "to": "catalog",
+      "label": "exists()",
+      "variant": "emphasis"
+    },
+    {
+      "id": "impl",
+      "from": "acl",
+      "to": "catalog",
+      "label": "implementa",
+      "variant": "dashed"
+    },
+    {
+      "id": "query",
+      "from": "acl",
+      "to": "getrecipe",
+      "label": "__invoke(id)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "publish",
+      "from": "delete",
+      "to": "bus",
+      "label": "publish()",
+      "variant": "emphasis"
+    },
+    {
+      "id": "dispatch",
+      "from": "bus",
+      "to": "listener",
+      "label": "tras el commit",
+      "variant": "emphasis"
+    },
+    {
+      "id": "react",
+      "from": "listener",
+      "to": "unlink",
+      "label": "__invoke(id)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "records",
+      "from": "delete",
+      "to": "event",
+      "label": "la receta lo registra",
+      "variant": "dashed"
+    },
+    {
+      "id": "uses",
+      "from": "listener",
+      "to": "event",
+      "label": "handle(RecipeDeleted)",
+      "variant": "dashed"
+    },
+    {
+      "id": "guards",
+      "from": "archtest",
+      "to": "event",
+      "label": "autoriza solo este",
+      "variant": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Preguntar (HEXM-0025, ADR 0017)",
+      "items": [
+        "MealPlanning define su puerto RecipeCatalog; el adaptador traduce la pregunta a GetRecipe.",
+        "Síncrono: el alta espera la respuesta antes de guardar."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Reaccionar (HEXM-0026 y 0027, ADR 0018 y 0019)",
+      "items": [
+        "Recipes publica RecipeDeleted sin saber quién escucha.",
+        "El oyente lo traduce a UnlinkDeletedRecipe: los platos se desvinculan (regla 24).",
+        "Consistencia eventual: si la reacción falla, el borrado se mantiene y el error se registra."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "La frontera, comprobada",
+      "items": [
+        "Recipes no conoce MealPlanning; el núcleo de MealPlanning no conoce Recipes.",
+        "La infraestructura de un contexto entra en otro por su capa de aplicación o por sus eventos públicos, y nada más."
+      ]
+    }
+  ]
+}
