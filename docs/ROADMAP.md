@@ -2,7 +2,7 @@
 
 Hoja de ruta del proyecto organizada en **niveles**. Cada nivel es pequeño, termina con tests en verde y una etiqueta git (`nivel-NN`), y añade **un concepto nuevo** cada vez.
 
-**Estado actual:** 🟡 Nivel 3 (Planes: dominio) en curso: ya existen los value objects y enums de `MealPlanning` (HEXM-0012) las dos semanas de menú con sus días (HEXM-0013) y las pautas fijas e intercambios (HEXM-0014). Siguiente: el agregado `NutritionPlan` (HEXM-0015), que cierra el nivel.
+**Estado actual:** ✅ Nivel 3 (Planes: dominio) terminado (`nivel-03`): el agregado `NutritionPlan` reúne las pautas fijas, los intercambios y las dos semanas de menú (HEXM-0012 a 0015). Siguiente: ⬜ Nivel 4 (Calendario), "¿qué me toca hoy?".
 
 Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado
 
@@ -43,7 +43,7 @@ El roadmap tiene tres bloques:
 | ✅ | **0. Esqueleto** (HEXM-0001 a 0004) | Laravel 13 en `app-laravel/`, PostgreSQL con Docker Compose, Pest, autoload de `src/`, PHPStan y los primeros **tests de arquitectura** (el dominio no puede usar `Illuminate\*`). | Estructura hexagonal, regla de dependencias, tests de arquitectura |
 | ✅ | **1. Recetario: dominio** (HEXM-0005 a 0007) | `Recipe`, `RecipeId`, `Ingredient`, `Quantity`, `Unit`, `Step`, `Servings` y el caso de uso `CreateRecipe` con repositorio **en memoria**. Solo tests, sin base de datos ni HTTP. | Entidad, value object, invariantes, puerto de salida, caso de uso, adaptador en memoria |
 | ✅ | **2. Recetario: adaptadores** (HEXM-0009 a 0011) | Repositorio con Eloquent/PostgreSQL (con su *mapper* dominio ↔ modelo), API REST (`/api/recipes`) y binding de puertos en un *service provider*. | Adaptadores *driven* y *driving*, inyección de dependencias, mapeo de persistencia |
-| 🟡 | **3. Planes: dominio** (HEXM-0012 a 0015) | `NutritionPlan`, `MenuWeek`, `MenuDay`, `Dish`, `FixedMeal`, `OptionGroup`, `ExchangeTable`. Reglas: dos semanas, 6 días con menú, comida + cena. | Agregados y sus límites, enums, colecciones inmutables |
+| ✅ | **3. Planes: dominio** (HEXM-0012 a 0015) | `NutritionPlan`, `MenuWeek`, `MenuDay`, `Dish`, `FixedMeal`, `OptionGroup`, `ExchangeTable`. Reglas: dos semanas, 6 días con menú, comida + cena. | Agregados y sus límites, enums, colecciones inmutables |
 | ⬜ | **4. Calendario** | `MealCalendar` y el caso de uso `GetMenuForDate` ("¿qué me toca hoy?"): alternancia de semanas, sábado libre y plan vigente. Puerto `Clock`. | Servicio de dominio, tiempo testeable, casos de uso de consulta |
 | ⬜ | **5. Planes: adaptadores** | Persistencia de planes, histórico de planes, API REST y alta manual de un plan. | Repositorio de agregados complejos, transacciones |
 | ⬜ | **6. Relación con recetas** | Un `Dish` puede referenciar un `RecipeId`; validación entre contextos a través de un puerto propio de `MealPlanning`; evento `RecipeDeleted` y cómo reacciona `MealPlanning`. | Comunicación entre *bounded contexts*, capa anticorrupción, eventos de dominio |
@@ -99,3 +99,4 @@ El roadmap tiene tres bloques:
 | 2026-11-02 | 3 | HEXM-0012: value objects y enums de `MealPlanning` (`NutritionPlanId`, `PlanNumber`, `MealType`, `WeekSource`, `ExchangeCategory`, `Dish`, `DishIngredient`); UUID v7 extraído a `Shared\Domain\Uuid` (actualización del ADR 0005); ingredientes de un plato con cantidad en texto, sin cruzar la frontera con `Recipes`. |
 | 2026-11-03 | 3 | HEXM-0013: `Weekday` (enum ISO, sábado libre), `MenuDay` (value object: comida y cena obligatorias, nunca en sábado) y `MenuWeek` (entidad local: 6 días sin repetir); traducción de los formatos de origen (menús 1-6 y días 8-14) en constructores con nombre. |
 | 2026-11-03 | 3 | HEXM-0014: pautas fijas (`FixedMeal` con parte fija en texto y grupos "elige N" `OptionGroup`/`MealOption`) y tabla de intercambios (`Exchange`, `ExchangeTable` agrupada por categoría con las reglas guardadas en texto, sin ejecutarlas hasta el nivel 8); `MealType::isFixed()`. |
+| 2026-11-03 | 3 | HEXM-0015: agregado `NutritionPlan` (raíz): exactamente la semana 1 y la 2, inicio en lunes (`DateTimeImmutable` nativo, `Weekday::fromDate()`), como mucho una pauta fija por tipo; un único agregado con semanas y días, vigencia derivada sin fecha de fin (ADR 0010). **Nivel 3 terminado** (`nivel-03`, diario `03-planes-dominio.md`). |

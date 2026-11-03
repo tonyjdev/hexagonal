@@ -65,13 +65,15 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 | Receta no encontrada | `RecipeNotFound` | Excepción (`Recipes\Application`) | No existe ninguna receta con ese id. Hereda de `NotFound`, no de `DomainException`. |
 | No encontrado | `NotFound` | Excepción (`Shared\Application`) | Base de "lo que buscas no existe", para todos los contextos. En la API llega como HTTP 404 `{"message": "…"}`. |
 | Al gusto / una pizca | — | Concepto | Cantidad sin número: no es una `Quantity`, sino la ausencia de cantidad del ingrediente. |
-| Error de dominio | `DomainException` | Excepción (`Shared\Domain`) | Base de los errores de negocio, con mensaje en español para el usuario: `InvalidQuantity`, `InvalidServings`, `InvalidStep`, `InvalidRecipeId`, `InvalidIngredient`, `InvalidRecipe` y, en `MealPlanning`, `InvalidNutritionPlanId`, `InvalidPlanNumber`, `InvalidDish`, `InvalidMenuDay`, `InvalidMenuWeek`, `InvalidFixedMeal`, `InvalidOptionGroup`, `InvalidExchangeTable`. En la API llegan como HTTP 422 `{"message": "…"}`, traducidos en un único manejador ([ADR 0007](adr/0007-adaptador-http-validacion-de-forma-y-errores-de-dominio.md)). |
+| Error de dominio | `DomainException` | Excepción (`Shared\Domain`) | Base de los errores de negocio, con mensaje en español para el usuario: `InvalidQuantity`, `InvalidServings`, `InvalidStep`, `InvalidRecipeId`, `InvalidIngredient`, `InvalidRecipe` y, en `MealPlanning`, `InvalidNutritionPlanId`, `InvalidPlanNumber`, `InvalidDish`, `InvalidMenuDay`, `InvalidMenuWeek`, `InvalidFixedMeal`, `InvalidOptionGroup`, `InvalidExchangeTable`, `InvalidNutritionPlan`. En la API llegan como HTTP 422 `{"message": "…"}`, traducidos en un único manejador ([ADR 0007](adr/0007-adaptador-http-validacion-de-forma-y-errores-de-dominio.md)). |
 
 ### Planes y calendario (`MealPlanning`)
 
 | Español | Código | Tipo DDD | Notas |
 |---|---|---|---|
-| Plan nutricional | `NutritionPlan` | Entidad / raíz de agregado | Número (27), fecha de inicio, vigencia. |
+| Plan nutricional | `NutritionPlan` | Entidad / raíz de agregado | Id, número (27), fecha de inicio (`startsOn`, siempre un lunes), pautas fijas (como mucho una por tipo), tabla de intercambios y exactamente dos semanas (la 1 y la 2). Un único agregado con sus semanas y días; las recetas y los demás planes quedan fuera ([ADR 0010](adr/0010-limites-del-agregado-nutritionplan-y-vigencia.md)). Hoy inmutable: solo se lee (HEXM-0015). |
+| Fecha de inicio | `startsOn` | Atributo de `NutritionPlan` | El lunes en que empieza el plan y su semana 1. `DateTimeImmutable` nativo, a medianoche. |
+| Vigencia | — | Concepto (derivado) | No se guarda fecha de fin: un plan está vigente desde su `startsOn` hasta que empieza el siguiente. El vigente en una fecha es el de inicio más reciente que no la pasa; esa consulta llega en el nivel 5 ([ADR 0010](adr/0010-limites-del-agregado-nutritionplan-y-vigencia.md)). |
 | Identificador de plan | `NutritionPlanId` | Value object | UUID v7 generado por el dominio, sobre el `Uuid` del *shared kernel* (como `RecipeId`). |
 | Número de plan | `PlanNumber` | Value object | Entero positivo que asigna la nutricionista ("plan 27"). Es un dato del negocio, no la identidad del plan. |
 | Tipo de comida | `MealType` | Enum | `Breakfast` (desayuno), `MidMorning` (media mañana), `Lunch` (comida), `AfternoonSnack` (media tarde), `Dinner` (cena), en el orden del día. Etiqueta en español con `label()`; `isFixed()` dice si es una pauta fija (desayuno, media mañana, media tarde). |
@@ -86,7 +88,7 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 | Semana de menú | `MenuWeek` | Entidad (local) | Semana 1 o 2 de un plan: su número es su identidad dentro del plan. Exactamente 6 días con menú, sin repetir ninguno, ordenados de lunes a domingo. Se construye desde los dos formatos de origen: `fromNutritionistMenus()` (menús 1-6, el 6 cae en domingo) y `fromSelfDays()` (días 8-14, el 13 vacío); o con `create()` a partir de sus días (HEXM-0013). |
 | Origen de la semana | `WeekSource` | Enum | `Nutritionist` (semana 1, "nutricionista"), `Self` (semana 2, "elaboración propia"). |
 | Día de menú | `MenuDay` | Value object | Día de la semana + comida + cena, ambas obligatorias. Nunca en sábado. Es value object y no entidad: su día de la semana es una clave dentro de su semana, no una identidad con ciclo de vida; cambiar un plato es sustituir el día entero (HEXM-0013). |
-| Día de la semana | `Weekday` | Enum | `Monday` (1) … `Sunday` (7), con la numeración ISO de PHP (`$date->format('N')`). Etiqueta en español con `label()`; `isFreeDay()` dice si es el día libre. |
+| Día de la semana | `Weekday` | Enum | `Monday` (1) … `Sunday` (7), con la numeración ISO de PHP. `Weekday::fromDate()` da el día de una fecha. Etiqueta en español con `label()`; `isFreeDay()` dice si es el día libre. |
 | Plato | `Dish` | Value object | Dos formatos: semana 1 `Dish::described()` (texto libre) y semana 2 `Dish::named()` (nombre corto + ingredientes opcionales). Nunca vacío. Opcionalmente un `RecipeId` (nivel 6). |
 | Ingrediente de un plato | `DishIngredient` | Value object | Nombre + cantidad opcional **en texto** ("80 g", "½ bote"). No usa el `Quantity` del recetario (frontera entre contextos); si la lista de la compra necesita sumar cantidades, se decidirá en el nivel 9 (HEXM-0012). |
 | Día libre | `FreeDay` | Concepto | El sábado: `Weekday::Saturday->isFreeDay()`. No puede tener menú. |
@@ -124,5 +126,7 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 15. Las **pautas fijas** son solo desayuno, media mañana y media tarde, y nunca están vacías: tienen una parte fija, opciones a elegir o ambas.
 16. En un grupo **"elige N"**, N es al menos 1 y no mayor que el número de opciones, y ninguna opción se repite.
 17. Un **intercambio** indica siempre su alimento y su ración. Las **reglas de los intercambios** se conservan con su texto y su orden; se harán cumplir en el nivel 8.
+18. Un plan **empieza siempre en lunes** (el de su semana 1) y tiene **como mucho una pauta fija de cada tipo** (un solo desayuno, una media mañana, una media tarde); ninguna es obligatoria.
+19. La **vigencia** de un plan va desde su fecha de inicio hasta la del plan siguiente: no se guarda una fecha de fin.
 
 Esta lista crecerá a medida que avance el proyecto.

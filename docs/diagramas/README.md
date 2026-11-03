@@ -68,6 +68,8 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 | HEXM-0013 | [De los documentos a la semana](HEXM-0013/de-los-documentos-a-la-semana.workflow.json) (`workflow`) | Cómo los menús 1-6 y los días 8-14 se traducen a días de la semana y pasan por las mismas reglas (sábado, comida y cena, semana 1 o 2, repetidos, 6 días) hasta un `MenuWeek`. |
 | HEXM-0014 | [Pautas fijas e intercambios](HEXM-0014/pautas-fijas-e-intercambios.class.json) (`class`) | `FixedMeal` compuesta por grupos `OptionGroup` de `MealOption`, ligada a `MealType::isFixed()`, y `ExchangeTable` agrupando `Exchange` por `ExchangeCategory`, con la excepción que lanza cada pieza. |
 | HEXM-0014 | [¿Es válida esta pauta fija?](HEXM-0014/es-valida-esta-pauta-fija.workflow.json) (`workflow`) | Las reglas de un grupo "elige N" (rango de N, opciones repetidas) y de la pauta (comida fija, nunca vacía) hasta un `FixedMeal`, con cada error. |
+| HEXM-0015 | [Agregado NutritionPlan](HEXM-0015/agregado-nutritionplan.class.json) (`class`) | La raíz `NutritionPlan` y lo que contiene su frontera de consistencia (2 `MenuWeek` con 6 `MenuDay`, 0..3 `FixedMeal`, una `ExchangeTable`), los value objects que usa (`NutritionPlanId`, `PlanNumber`, `Weekday::fromDate()`) y lo que queda fuera (recetas, otros planes). |
+| HEXM-0015 | [¿Es válido este plan?](HEXM-0015/es-valido-este-plan.workflow.json) (`workflow`) | Las invariantes de `NutritionPlan::create()` en su orden real (lunes, pautas sin repetir, semana repetida, semana que falta) con el error en español de cada una. |
 
 ### Transversal
 

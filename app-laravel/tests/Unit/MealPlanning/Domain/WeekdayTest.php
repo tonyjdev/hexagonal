@@ -15,6 +15,12 @@ it('uses the ISO-8601 numbering, so it can be read from a PHP date', function ()
         ->and(Weekday::Monday->value)->toBe(1);
 });
 
+it('tells the weekday a date falls on', function () {
+    // 2026-11-02 fue lunes y 2026-11-07, sábado. La hora no importa.
+    expect(Weekday::fromDate(new DateTimeImmutable('2026-11-02 23:59')))->toBe(Weekday::Monday)
+        ->and(Weekday::fromDate(new DateTimeImmutable('2026-11-07')))->toBe(Weekday::Saturday);
+});
+
 it('starts the week on Monday and has a Spanish label for every day', function () {
     expect(array_map(fn (Weekday $day) => $day->label(), Weekday::cases()))
         ->toBe(['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']);
