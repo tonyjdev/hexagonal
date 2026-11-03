@@ -31,6 +31,7 @@ Después se abre `docs/diagramas/HEXM-NNNN/<slug>.html` en el navegador. Requier
 | Estados y transiciones (un plan vigente, una importación…) | `lifecycle` | — |
 | Tablas, claves y relaciones de la base de datos (nivel 2 en adelante) | `erd` | [Tablas del recetario](HEXM-0009/tablas-del-recetario.erd.json) |
 | Datos que fluyen entre servicios (Laravel ↔ FastAPI, embeddings…) | `dataflow` | — |
+| Qué pasa en cada fecha, sobre un eje de tiempo proporcional (calendario, historial) | `timeline` | [Alternancia de semanas](HEXM-0017/alternancia-de-semanas.timeline.json) |
 
 Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración), su Explicación lo dice en la sección "Diagramas".
 
@@ -70,6 +71,13 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 | HEXM-0014 | [¿Es válida esta pauta fija?](HEXM-0014/es-valida-esta-pauta-fija.workflow.json) (`workflow`) | Las reglas de un grupo "elige N" (rango de N, opciones repetidas) y de la pauta (comida fija, nunca vacía) hasta un `FixedMeal`, con cada error. |
 | HEXM-0015 | [Agregado NutritionPlan](HEXM-0015/agregado-nutritionplan.class.json) (`class`) | La raíz `NutritionPlan` y lo que contiene su frontera de consistencia (2 `MenuWeek` con 6 `MenuDay`, 0..3 `FixedMeal`, una `ExchangeTable`), los value objects que usa (`NutritionPlanId`, `PlanNumber`, `Weekday::fromDate()`) y lo que queda fuera (recetas, otros planes). |
 | HEXM-0015 | [¿Es válido este plan?](HEXM-0015/es-valido-este-plan.workflow.json) (`workflow`) | Las invariantes de `NutritionPlan::create()` en su orden real (lunes, pautas sin repetir, semana repetida, semana que falta) con el error en español de cada una. |
+
+### Nivel 4: Calendario
+
+| Tarea | Diagrama | Qué muestra |
+|---|---|---|
+| HEXM-0017 | [¿Qué toca el día X?](HEXM-0017/que-toca-el-dia-x.workflow.json) (`workflow`) | `MealCalendar::dayOn()` paso a paso: días del calendario en UTC, fecha anterior al inicio (error), semana que toca por paridad y sábado libre o día con menú (`ScheduledDay`). |
+| HEXM-0017 | [Alternancia de semanas](HEXM-0017/alternancia-de-semanas.timeline.json) (`timeline`) | Las fechas de los tests del plan 27 sobre el tiempo: semanas 1 y 2 alternándose, sábados libres, la fecha anterior al inicio y el cambio de hora de marzo de 2027. La leyenda genérica de Archify se explica en la tarjeta "Cómo leerlo" (el tipo `timeline` no admite `meta.legend`). |
 
 ### Transversal
 

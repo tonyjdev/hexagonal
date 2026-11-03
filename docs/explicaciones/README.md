@@ -35,6 +35,10 @@ Los diagramas Archify de cada tarea están en [`../diagramas/`](../diagramas/REA
 - [HEXM-0014: Pautas fijas e intercambios](HEXM-0014-pautas-fijas-e-intercambios.md): por qué un grupo "elige N" es un value object compuesto con su propia invariante, por qué las reglas de los intercambios se guardan en texto sin ejecutarlas todavía y cómo se agrupa una colección por un enum. Diagramas: [pautas fijas e intercambios](../diagramas/HEXM-0014/pautas-fijas-e-intercambios.class.json) y [¿es válida esta pauta fija?](../diagramas/HEXM-0014/es-valida-esta-pauta-fija.workflow.json).
 - [HEXM-0015: Agregado NutritionPlan](HEXM-0015-agregado-nutritionplan.md): por qué el plan es un único agregado con sus semanas y días, qué queda fuera de la frontera (recetas, otros planes), por qué la vigencia se deriva en lugar de guardarse y cómo un agregado `readonly` se lee entero sin poder cambiarse. Diagramas: [agregado NutritionPlan](../diagramas/HEXM-0015/agregado-nutritionplan.class.json) y [¿es válido este plan?](../diagramas/HEXM-0015/es-valido-este-plan.workflow.json).
 
+### Nivel 4: Calendario
+
+- [HEXM-0017: Servicio de dominio MealCalendar](HEXM-0017-servicio-de-dominio-mealcalendar.md): por qué «qué toca el día X» es un servicio de dominio sin estado y no un método del plan, por qué el resultado es un value object con dos constructores y por qué se cuentan fechas del calendario y no segundos (zona horaria y horario de verano). Diagramas: [¿qué toca el día X?](../diagramas/HEXM-0017/que-toca-el-dia-x.workflow.json) y [alternancia de semanas](../diagramas/HEXM-0017/alternancia-de-semanas.timeline.json).
+
 ### Transversal
 
 - [HEXM-0008: Diagramas Archify en las tareas](HEXM-0008-diagramas-archify-en-las-tareas.md): por qué los diagramas se generan desde una fuente versionada, respaldados por el código en un commit fijo, y por qué el cierre de una tarea tiene dos commits.

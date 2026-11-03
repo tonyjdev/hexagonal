@@ -2,7 +2,7 @@
 
 Hoja de ruta del proyecto organizada en **niveles**. Cada nivel es pequeño, termina con tests en verde y una etiqueta git (`nivel-NN`), y añade **un concepto nuevo** cada vez.
 
-**Estado actual:** ✅ Nivel 3 (Planes: dominio) terminado (`nivel-03`): el agregado `NutritionPlan` reúne las pautas fijas, los intercambios y las dos semanas de menú (HEXM-0012 a 0015). Siguiente: ⬜ Nivel 4 (Calendario), "¿qué me toca hoy?".
+**Estado actual:** 🟡 Nivel 4 (Calendario) en curso: ya existe el servicio de dominio `MealCalendar`, que dice qué toca en una fecha con un plan (HEXM-0017). Siguiente: el repositorio de planes y el plan vigente (HEXM-0018), y después el caso de uso `GetMenuForDate` con el puerto `Clock` (HEXM-0019), que cierra el nivel.
 
 Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado
 
@@ -44,7 +44,7 @@ El roadmap tiene tres bloques:
 | ✅ | **1. Recetario: dominio** (HEXM-0005 a 0007) | `Recipe`, `RecipeId`, `Ingredient`, `Quantity`, `Unit`, `Step`, `Servings` y el caso de uso `CreateRecipe` con repositorio **en memoria**. Solo tests, sin base de datos ni HTTP. | Entidad, value object, invariantes, puerto de salida, caso de uso, adaptador en memoria |
 | ✅ | **2. Recetario: adaptadores** (HEXM-0009 a 0011) | Repositorio con Eloquent/PostgreSQL (con su *mapper* dominio ↔ modelo), API REST (`/api/recipes`) y binding de puertos en un *service provider*. | Adaptadores *driven* y *driving*, inyección de dependencias, mapeo de persistencia |
 | ✅ | **3. Planes: dominio** (HEXM-0012 a 0015) | `NutritionPlan`, `MenuWeek`, `MenuDay`, `Dish`, `FixedMeal`, `OptionGroup`, `ExchangeTable`. Reglas: dos semanas, 6 días con menú, comida + cena. | Agregados y sus límites, enums, colecciones inmutables |
-| ⬜ | **4. Calendario** | `MealCalendar` y el caso de uso `GetMenuForDate` ("¿qué me toca hoy?"): alternancia de semanas, sábado libre y plan vigente. Puerto `Clock`. | Servicio de dominio, tiempo testeable, casos de uso de consulta |
+| 🟡 | **4. Calendario** (HEXM-0017 a 0019) | `MealCalendar` y el caso de uso `GetMenuForDate` ("¿qué me toca hoy?"): alternancia de semanas, sábado libre y plan vigente. Puerto `Clock`. | Servicio de dominio, tiempo testeable, casos de uso de consulta |
 | ⬜ | **5. Planes: adaptadores** | Persistencia de planes, histórico de planes, API REST y alta manual de un plan. | Repositorio de agregados complejos, transacciones |
 | ⬜ | **6. Relación con recetas** | Un `Dish` puede referenciar un `RecipeId`; validación entre contextos a través de un puerto propio de `MealPlanning`; evento `RecipeDeleted` y cómo reacciona `MealPlanning`. | Comunicación entre *bounded contexts*, capa anticorrupción, eventos de dominio |
 
@@ -100,3 +100,4 @@ El roadmap tiene tres bloques:
 | 2026-11-03 | 3 | HEXM-0013: `Weekday` (enum ISO, sábado libre), `MenuDay` (value object: comida y cena obligatorias, nunca en sábado) y `MenuWeek` (entidad local: 6 días sin repetir); traducción de los formatos de origen (menús 1-6 y días 8-14) en constructores con nombre. |
 | 2026-11-03 | 3 | HEXM-0014: pautas fijas (`FixedMeal` con parte fija en texto y grupos "elige N" `OptionGroup`/`MealOption`) y tabla de intercambios (`Exchange`, `ExchangeTable` agrupada por categoría con las reglas guardadas en texto, sin ejecutarlas hasta el nivel 8); `MealType::isFixed()`. |
 | 2026-11-03 | 3 | HEXM-0015: agregado `NutritionPlan` (raíz): exactamente la semana 1 y la 2, inicio en lunes (`DateTimeImmutable` nativo, `Weekday::fromDate()`), como mucho una pauta fija por tipo; un único agregado con semanas y días, vigencia derivada sin fecha de fin (ADR 0010). **Nivel 3 terminado** (`nivel-03`, diario `03-planes-dominio.md`). |
+| 2026-11-03 | 4 | HEXM-0017: servicio de dominio `MealCalendar` (`dayOn(plan, fecha)`) y value object `ScheduledDay`: alternancia de semanas desde el lunes de inicio, sábado libre y sin menú antes del inicio; cuenta días del calendario (ni la hora, ni la zona horaria, ni el horario de verano cambian el resultado). |

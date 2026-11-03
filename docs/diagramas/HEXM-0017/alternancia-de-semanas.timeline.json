@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "diagram_type": "timeline",
+  "meta": {
+    "title": "Alternancia de semanas del plan 27",
+    "subtitle": "Fechas de ejemplo de los tests: qué devuelve MealCalendar::dayOn() en cada una.",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0017/alternancia-de-semanas.html",
+    "evidence": "illustrative",
+    "timezone": "Europe/Madrid",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "969511c7f4f89d4e689aee864edd178cc8e75730"
+    }
+  },
+  "layout": {
+    "breaks": "auto"
+  },
+  "lanes": [
+    {
+      "id": "outside",
+      "label": "Fuera del plan"
+    },
+    {
+      "id": "week1",
+      "label": "Semana 1 (menús 1-6)"
+    },
+    {
+      "id": "week2",
+      "label": "Semana 2 (días 8-14)"
+    },
+    {
+      "id": "free",
+      "label": "Sábado libre"
+    }
+  ],
+  "events": [
+    {
+      "id": "before_start",
+      "at": "2026-11-01T12:00:00+01:00",
+      "lane": "outside",
+      "kind": "alert",
+      "title": "Dom 01/11: sin menú",
+      "detail": "Antes del inicio: InvalidScheduledDay.",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MealCalendar.php",
+          "line": 63,
+          "end_line": 65
+        }
+      ]
+    },
+    {
+      "id": "plan_starts",
+      "at": "2026-11-02T12:00:00+01:00",
+      "lane": "week1",
+      "kind": "action",
+      "title": "Lun 02/11: menú 1",
+      "detail": "Día 0 del plan: empieza la semana 1."
+    },
+    {
+      "id": "first_saturday",
+      "at": "2026-11-07T12:00:00+01:00",
+      "lane": "free",
+      "kind": "default",
+      "title": "Sáb 07/11: libre",
+      "detail": "Sábado de la semana 1, sin menú.",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MealCalendar.php",
+          "line": 72,
+          "end_line": 74
+        }
+      ]
+    },
+    {
+      "id": "first_sunday",
+      "at": "2026-11-08T12:00:00+01:00",
+      "lane": "week1",
+      "kind": "default",
+      "title": "Dom 08/11: menú 6",
+      "detail": "El menú 6 cae en domingo."
+    },
+    {
+      "id": "week2_starts",
+      "at": "2026-11-09T12:00:00+01:00",
+      "lane": "week2",
+      "kind": "change",
+      "title": "Lun 09/11: día 8",
+      "detail": "Día 7: una semana completa (impar) → semana 2.",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MealCalendar.php",
+          "line": 70,
+          "end_line": 70
+        }
+      ]
+    },
+    {
+      "id": "second_saturday",
+      "at": "2026-11-14T12:00:00+01:00",
+      "lane": "free",
+      "kind": "default",
+      "title": "Sáb 14/11: libre",
+      "detail": "El día 13 de la semana 2, también libre."
+    },
+    {
+      "id": "week1_again",
+      "at": "2026-11-16T12:00:00+01:00",
+      "lane": "week1",
+      "kind": "change",
+      "title": "Lun 16/11: menú 1",
+      "detail": "Día 14: dos semanas (par) → otra vez la semana 1."
+    },
+    {
+      "id": "months_later",
+      "at": "2027-02-17T12:00:00+01:00",
+      "lane": "week2",
+      "kind": "default",
+      "title": "Mié 17/02/2027: día 10",
+      "detail": "Día 107: 15 semanas (impar) → semana 2."
+    },
+    {
+      "id": "dst_sunday",
+      "at": "2027-03-28T12:00:00+02:00",
+      "lane": "week1",
+      "kind": "default",
+      "title": "Dom 28/03/2027: menú 6",
+      "detail": "Se adelanta la hora: la semana tiene una hora menos."
+    },
+    {
+      "id": "dst_monday",
+      "at": "2027-03-29T00:00:00+02:00",
+      "lane": "week2",
+      "kind": "change",
+      "title": "Lun 29/03/2027: día 8",
+      "detail": "Día 147 por fechas del calendario; 146,96 contando segundos.",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MealCalendar.php",
+          "line": 102,
+          "end_line": 115
+        }
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Una semana de cada, empezando por la 1",
+      "items": [
+        "Semanas completas desde el lunes de inicio: par → semana 1, impar → semana 2.",
+        "El sábado es libre en las dos; antes del inicio, el plan no tiene menú."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Cómo leerlo",
+      "items": [
+        "Leyenda: «Respuesta» = inicio del plan, «Cambio» = cambia la semana que toca, «Alerta» = fecha fuera del plan, «Evento» = un día más.",
+        "Las fechas de 2027 están separadas por cortes del eje: entre ellas el patrón sigue igual.",
+        "Son fechas de ejemplo de MealCalendarTest, no un registro real."
+      ]
+    }
+  ]
+}
