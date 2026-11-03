@@ -105,6 +105,8 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 | HEXM-0024 | [Leer el recipe_id de un plato](HEXM-0024/leer-el-recipe-id.workflow.json) (`workflow`) | La lectura compatible del documento `weeks`: clave ausente o `null` (planes anteriores) → plato sin receta; UUID → plato con receta; otro valor → datos corruptos, no se carga (ADR 0016). |
 | HEXM-0025 | [Capa anticorrupción](HEXM-0025/capa-anticorrupcion.architecture.json) (`architecture`) | Cómo pregunta `MealPlanning` al recetario: el caso de uso usa su puerto propio `RecipeCatalog` (en `Application`), la capa anticorrupción `RecipesContextRecipeCatalog` lo traduce a `GetRecipe`, y el test de arquitectura prohíbe entrar en `Recipes\Domain` (ADR 0017). |
 | HEXM-0025 | [Alta de un plan con recetas](HEXM-0025/alta-con-receta.sequence.json) (`sequence`) | `POST /api/nutrition-plans` en sus tres caminos: receta existente (201), receta inexistente (`RecipeNotFound` → `false` → `UnknownRecipe`, 422 y nada guardado) e id mal formado (422 sin preguntar al recetario). |
+| HEXM-0026 | [Las piezas de un evento de dominio](HEXM-0026/piezas-del-evento.class.json) (`class`) | Quién registra y quién publica: `Recipe` usa el *trait* `RecordsEvents` y registra `RecipeDeleted` (un `DomainEvent`); `DeleteRecipe` lo publica por el puerto `EventBus`, con sus dos adaptadores (`LaravelEventBus` e `InMemoryEventBus`) (ADR 0018). |
+| HEXM-0026 | [Borrar una receta](HEXM-0026/borrar-una-receta.sequence.json) (`sequence`) | `DELETE /api/recipes/{id}` en sus tres caminos: la receta registra el evento, se borra (en cascada) y solo después se publica y llega al oyente tras el *commit* (204); y 404 o 422 sin borrar ni publicar nada. |
 
 ### Transversal
 

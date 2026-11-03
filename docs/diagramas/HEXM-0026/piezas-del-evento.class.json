@@ -1,0 +1,329 @@
+{
+  "schema_version": 1,
+  "diagram_type": "class",
+  "meta": {
+    "title": "Las piezas de un evento de dominio: quién registra, quién publica",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0026/piezas-del-evento.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "4c984322829d197c5b65883e1fcc25d54e6ad49b"
+    },
+    "legend": {
+      "entries": {
+        "realization": {
+          "label": "Implementa (interfaz)"
+        },
+        "inheritance": {
+          "label": "Usa el trait"
+        },
+        "composition": {
+          "label": "Registra (hasta que se publica)"
+        },
+        "dependency": {
+          "label": "Usa / publica"
+        }
+      }
+    }
+  },
+  "layout": {
+    "mode": "grid"
+  },
+  "types": [
+    {
+      "id": "records",
+      "label": "RecordsEvents",
+      "kind": "abstract",
+      "sublabel": "trait · Shared\\Domain",
+      "row": 0,
+      "col": 0,
+      "methods": [
+        {
+          "name": "record",
+          "returns": "void",
+          "visibility": "protected",
+          "parameters": "event"
+        },
+        {
+          "name": "releaseEvents",
+          "returns": "list<DomainEvent>",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Domain/RecordsEvents.php",
+          "line": 34,
+          "end_line": 65
+        }
+      ]
+    },
+    {
+      "id": "event",
+      "label": "DomainEvent",
+      "kind": "interface",
+      "sublabel": "Shared\\Domain · algo que ha pasado",
+      "row": 0,
+      "col": 1,
+      "methods": [
+        {
+          "name": "occurredOn",
+          "returns": "DateTimeImmutable",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Domain/DomainEvent.php",
+          "line": 35,
+          "end_line": 42
+        }
+      ]
+    },
+    {
+      "id": "bus",
+      "label": "EventBus",
+      "kind": "interface",
+      "sublabel": "Shared\\Application · puerto",
+      "row": 0,
+      "col": 2,
+      "methods": [
+        {
+          "name": "publish",
+          "returns": "void",
+          "visibility": "public",
+          "parameters": "...events"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Application/EventBus.php",
+          "line": 35,
+          "end_line": 42
+        }
+      ]
+    },
+    {
+      "id": "laravel",
+      "label": "LaravelEventBus",
+      "kind": "class",
+      "sublabel": "Shared\\Infrastructure · dispatcher + afterCommit",
+      "row": 0,
+      "col": 3,
+      "methods": [
+        {
+          "name": "publish",
+          "returns": "void",
+          "visibility": "public",
+          "parameters": "...events"
+        },
+        {
+          "name": "afterCommit",
+          "returns": "void",
+          "visibility": "private",
+          "parameters": "callback"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Infrastructure/LaravelEventBus.php",
+          "line": 44,
+          "end_line": 85
+        }
+      ]
+    },
+    {
+      "id": "recipe",
+      "label": "Recipe",
+      "kind": "class",
+      "sublabel": "Recipes\\Domain · raíz del agregado",
+      "row": 1,
+      "col": 0,
+      "methods": [
+        {
+          "name": "delete",
+          "returns": "void",
+          "visibility": "public",
+          "parameters": "on"
+        },
+        {
+          "name": "id",
+          "returns": "RecipeId",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/Recipe.php",
+          "line": 70,
+          "end_line": 147
+        }
+      ]
+    },
+    {
+      "id": "deleted",
+      "label": "RecipeDeleted",
+      "kind": "record",
+      "sublabel": "Recipes\\Domain · evento (datos simples)",
+      "row": 1,
+      "col": 1,
+      "methods": [
+        {
+          "name": "of",
+          "returns": "RecipeDeleted",
+          "visibility": "public",
+          "parameters": "recipe, on",
+          "static": true
+        },
+        {
+          "name": "recipeId",
+          "returns": "string",
+          "visibility": "public"
+        },
+        {
+          "name": "occurredOn",
+          "returns": "DateTimeImmutable",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/RecipeDeleted.php",
+          "line": 37,
+          "end_line": 65
+        }
+      ]
+    },
+    {
+      "id": "memory",
+      "label": "InMemoryEventBus",
+      "kind": "class",
+      "sublabel": "Shared\\Infrastructure · tests",
+      "row": 1,
+      "col": 3,
+      "methods": [
+        {
+          "name": "publish",
+          "returns": "void",
+          "visibility": "public",
+          "parameters": "...events"
+        },
+        {
+          "name": "published",
+          "returns": "list<DomainEvent>",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Infrastructure/InMemoryEventBus.php",
+          "line": 24,
+          "end_line": 46
+        }
+      ]
+    },
+    {
+      "id": "usecase",
+      "label": "DeleteRecipe",
+      "kind": "class",
+      "sublabel": "Recipes\\Application · caso de uso",
+      "row": 2,
+      "col": 1,
+      "methods": [
+        {
+          "name": "__invoke",
+          "returns": "void",
+          "visibility": "public",
+          "parameters": "id"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Application/DeleteRecipe.php",
+          "line": 43,
+          "end_line": 70
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "r1",
+      "from": "recipe",
+      "to": "records",
+      "kind": "inheritance",
+      "label": "use RecordsEvents"
+    },
+    {
+      "id": "r2",
+      "from": "recipe",
+      "to": "deleted",
+      "kind": "composition",
+      "label": "registra al borrarse"
+    },
+    {
+      "id": "r3",
+      "from": "deleted",
+      "to": "event",
+      "kind": "realization",
+      "label": "implementa"
+    },
+    {
+      "id": "r4",
+      "from": "laravel",
+      "to": "bus",
+      "kind": "realization",
+      "label": "implementa"
+    },
+    {
+      "id": "r5",
+      "from": "memory",
+      "to": "bus",
+      "kind": "realization",
+      "label": "implementa"
+    },
+    {
+      "id": "r6",
+      "from": "usecase",
+      "to": "recipe",
+      "kind": "dependency",
+      "label": "delete(hoy)"
+    },
+    {
+      "id": "r7",
+      "from": "usecase",
+      "to": "bus",
+      "kind": "dependency",
+      "label": "publish(...releaseEvents())"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "El agregado registra, la aplicación publica",
+      "items": [
+        "Recipe::delete() solo anota RecipeDeleted: el dominio no conoce el bus.",
+        "DeleteRecipe lo recoge con releaseEvents() después de borrar y lo publica.",
+        "releaseEvents() entrega y olvida: un evento no se publica dos veces."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Un evento es un mensaje",
+      "items": [
+        "En pasado y con nombre del negocio: RecipeDeleted, no DeleteRecipe.",
+        "Inmutable y con datos simples: el id como texto y el día del Clock."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "El contrato del bus (ADR 0018)",
+      "items": [
+        "Se publica después del commit; con un rollback, nada.",
+        "LaravelEventBus lo garantiza con afterCommit(); InMemoryEventBus apunta lo publicado para los tests."
+      ]
+    }
+  ]
+}
