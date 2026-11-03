@@ -2,7 +2,7 @@
 
 Hoja de ruta del proyecto organizada en **niveles**. Cada nivel es pequeño, termina con tests en verde y una etiqueta git (`nivel-NN`), y añade **un concepto nuevo** cada vez.
 
-**Estado actual:** 🟡 Nivel 6 (Relación con recetas) en curso: un plato puede apuntar a una receta que tiene que existir (HEXM-0024, HEXM-0025) y una receta ya se puede borrar, anunciándolo con el primer evento de dominio, `RecipeDeleted` (HEXM-0026). Siguiente: que `MealPlanning` reaccione al borrado (HEXM-0027).
+**Estado actual:** ✅ Nivel 6 (Relación con recetas) terminado (`nivel-06`): los dos contextos se comunican sin depender el uno del otro, con un puerto propio y una capa anticorrupción para preguntar, y con eventos de dominio para reaccionar. Termina el bloque A. Siguiente: nivel 7, el importador de la semana 1 con Python y FastAPI (bloque B).
 
 Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado
 
@@ -46,7 +46,7 @@ El roadmap tiene tres bloques:
 | ✅ | **3. Planes: dominio** (HEXM-0012 a 0015) | `NutritionPlan`, `MenuWeek`, `MenuDay`, `Dish`, `FixedMeal`, `OptionGroup`, `ExchangeTable`. Reglas: dos semanas, 6 días con menú, comida + cena. | Agregados y sus límites, enums, colecciones inmutables |
 | ✅ | **4. Calendario** (HEXM-0017 a 0019) | `MealCalendar` y el caso de uso `GetMenuForDate` ("¿qué me toca hoy?"): alternancia de semanas, sábado libre y plan vigente. Puerto `Clock`. | Servicio de dominio, tiempo testeable, casos de uso de consulta |
 | ✅ | **5. Planes: adaptadores** (HEXM-0020 a 0023) | Persistencia de planes, histórico de planes, API REST y alta manual de un plan. | Repositorio de agregados complejos, transacciones |
-| 🟡 | **6. Relación con recetas** (HEXM-0024 a 0027) | Un `Dish` puede referenciar un `RecipeId`; validación entre contextos a través de un puerto propio de `MealPlanning`; evento `RecipeDeleted` y cómo reacciona `MealPlanning`. | Comunicación entre *bounded contexts*, capa anticorrupción, eventos de dominio |
+| ✅ | **6. Relación con recetas** (HEXM-0024 a 0027) | Un `Dish` puede referenciar un `RecipeId`; validación entre contextos a través de un puerto propio de `MealPlanning`; evento `RecipeDeleted` y cómo reacciona `MealPlanning`. | Comunicación entre *bounded contexts*, capa anticorrupción, eventos de dominio |
 
 ## Bloque B: Python y FastAPI
 
@@ -110,3 +110,4 @@ El roadmap tiene tres bloques:
 | 2026-11-05 | 6 | HEXM-0024: un `Dish` puede apuntar a una receta del recetario con `RecipeReference`, value object propio de `MealPlanning` sobre el `Uuid` del shared kernel (no el `RecipeId` de `Recipes`: los contextos solo comparten el valor); `withRecipe()` inmutable; `recipe_id` en el documento `weeks` con lectura compatible de los planes antiguos, sin migrar datos; expuesto en la API (ADR 0016). |
 | 2026-11-05 | 6 | HEXM-0025: la receta de un plato tiene que existir (regla 6): puerto `RecipeCatalog::exists()` en `MealPlanning\Application` (como el `Clock`), `UnknownRecipe` (422) y capa anticorrupción `RecipesContextRecipeCatalog` sobre `Recipes\Application\GetRecipe`, con `InMemoryRecipeCatalog` y tests de contrato de los dos; test de arquitectura: un contexto solo entra en otro por su capa de aplicación; el alta acepta `lunch_recipe_id`/`dinner_recipe_id` (semana 1) y `recipe_id` (semana 2), compatible con el contrato anterior (ADR 0017).
 | 2026-11-05 | 6 | HEXM-0026: borrar una receta y anunciarlo: `DeleteRecipe` y `DELETE /api/recipes/{id}` (204/404/422), `RecipeRepository::delete()` idempotente (en PostgreSQL, en cascada); primer evento de dominio, `RecipeDeleted`, que registra el propio agregado (`Recipe::delete()`, *trait* `RecordsEvents`) con datos primitivos y el día del `Clock`; puerto `Shared\Application\EventBus` con `LaravelEventBus` (*dispatcher* de Laravel, publica después del *commit* con `afterCommit()`) e `InMemoryEventBus` (ADR 0018).
+| 2026-11-05 | 6 | HEXM-0027: `MealPlanning` reacciona al borrado de una receta: el oyente `RecipeDeletedListener` (adaptador de entrada) traduce `RecipeDeleted` al caso de uso `UnlinkDeletedRecipe`, que busca los planes con `usingRecipe()` (SQL/JSON sobre `jsonb`) y guarda la versión nueva de cada uno (`NutritionPlan::withoutRecipe()`, mismo id): regla 24, los platos se desvinculan. Los eventos son contrato público de un contexto (`publicEvents()` en el test de arquitectura); si la reacción falla, el borrado se mantiene y el error se registra (ADR 0019). **Nivel 6 terminado** (`nivel-06`, diario `06-relacion-con-recetas.md`). |

@@ -53,6 +53,8 @@ Se puede borrar una receta del recetario (`DELETE /api/recipes/{id}`), y los pla
     - autorizar los eventos de un contexto como parte de su contrato público;
     - que `Recipes\Application` publique un evento de integración propio;
     - que el oyente lo traduzca en una capa anticorrupción.
+
+    **Resuelto en el [ADR 0019](0019-reaccion-al-borrado-de-recetas-y-eventos-como-contrato-publico.md)**: los eventos de un contexto son su contrato público (`publicEvents()` en el test de arquitectura).
 - **Revisar cuando:**
   - perder un aviso deje de ser tolerable, o un oyente necesite trabajo lento: *outbox* y colas;
   - haga falta la hora exacta de un evento: `now()` en el `Clock` (ADR 0012).

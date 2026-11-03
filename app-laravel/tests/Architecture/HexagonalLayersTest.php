@@ -191,6 +191,25 @@ arch('a context core does not depend on other contexts', function (string $conte
 })->with(fn () => businessContexts())->with(['Domain', 'Application']);
 
 /**
+ * Los eventos de dominio que un contexto publica para los demás: su
+ * CONTRATO PÚBLICO (HEXM-0027, ADR 0019).
+ *
+ * CONCEPTO: los eventos como API pública de un contexto
+ * Un evento existe para que otros lo escuchen, así que es la única pieza del
+ * dominio de un contexto que la infraestructura de otro puede usar (sus
+ * oyentes, como MealPlanning\Infrastructure\Recipes\RecipeDeletedListener).
+ * La lista es explícita, clase a clase: publicar un evento nuevo para otros
+ * contextos es una decisión, no un efecto de crearlo. El resto del dominio
+ * (Recipe, RecipeId...) sigue prohibido.
+ *
+ * @return list<string>
+ */
+function publicEvents(): array
+{
+    return ['Recipes\\Domain\\RecipeDeleted'];
+}
+
+/**
  * Cada par (contexto, otro contexto, capa del otro) que la infraestructura
  * de un contexto NO puede usar: el dominio y la infraestructura de los demás.
  *
@@ -229,9 +248,14 @@ arch('a context enters another one only through its application layer', function
     // El núcleo (Domain y Application) ya no puede usar ningún otro contexto:
     // lo comprueba 'a context core does not depend on other contexts'.
     //
+    // Excepción: los eventos de publicEvents(), que son el contrato público
+    // del otro contexto (ADR 0019). ignoring() los descuenta de las
+    // dependencias, así que cualquier otra clase de Recipes\Domain sigue
+    // haciendo fallar el test.
+    //
     // Una expectativa por par (en Pest 5 un array como objetivo de expect()
     // puede dar falsos negativos, ver arriba).
-    expect($adapters)->not->toUse($forbidden);
+    expect($adapters)->not->toUse($forbidden)->ignoring(publicEvents());
 })->with(forbiddenCrossContextLayers());
 
 arch('the shared kernel does not depend on any context', function () {

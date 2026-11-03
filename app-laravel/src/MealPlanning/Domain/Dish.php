@@ -102,6 +102,24 @@ final readonly class Dish
     }
 
     /**
+     * El mismo plato, sin la receta, si apuntaba a esa (HEXM-0027).
+     *
+     * Regla 24: cuando se borra una receta del recetario, los platos que la
+     * usaban se DESVINCULAN: conservan su nombre, su descripción y sus
+     * ingredientes, y dejan de apuntar a ella. Un plato que apunta a otra
+     * receta, o a ninguna, se devuelve tal cual (es el mismo objeto: no hay
+     * nada que cambiar).
+     */
+    public function withoutRecipe(RecipeReference $recipe): self
+    {
+        if ($this->recipe === null || ! $this->recipe->equals($recipe)) {
+            return $this;
+        }
+
+        return new self($this->name, $this->description, $this->ingredients);
+    }
+
+    /**
      * La receta a la que apunta el plato, o null si no tiene.
      */
     public function recipe(): ?RecipeReference

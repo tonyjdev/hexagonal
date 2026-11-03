@@ -83,6 +83,17 @@ final readonly class MenuDay
     }
 
     /**
+     * El mismo día, con la comida y la cena desvinculadas de esa receta
+     * (HEXM-0027). Un wither, como Dish::withoutRecipe(): el día de la
+     * semana no cambia y los dos platos siguen ahí, así que sus invariantes
+     * se mantienen sin volver a comprobarlas.
+     */
+    public function withoutRecipe(RecipeReference $recipe): self
+    {
+        return new self($this->weekday, $this->lunch->withoutRecipe($recipe), $this->dinner->withoutRecipe($recipe));
+    }
+
+    /**
      * Igualdad por valor: mismo día de la semana y mismos platos. Delega en
      * Dish::equals() (composición de value objects).
      */

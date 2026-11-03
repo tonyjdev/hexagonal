@@ -25,6 +25,7 @@ use MealPlanning\Domain\MealType;
 use MealPlanning\Domain\NutritionPlan;
 use MealPlanning\Domain\NutritionPlanId;
 use MealPlanning\Domain\NutritionPlanRepository;
+use MealPlanning\Domain\RecipeReference;
 use MealPlanning\Domain\Weekday;
 use MealPlanning\Infrastructure\InMemoryNutritionPlanRepository;
 use MealPlanning\Infrastructure\Persistence\Eloquent\EloquentNutritionPlanRepository;
@@ -242,4 +243,58 @@ it('returns complete plans in the history', function (NutritionPlanRepository $r
     $repository->save($plan);
 
     expect($repository->history())->toEqual([$plan]);
+})->with('nutrition plan repositories');
+
+// --- usingRecipe(): los planes que usan una receta (HEXM-0027) ----------------
+
+it('finds the plans whose dishes point to a recipe', function (NutritionPlanRepository $repository) {
+    // El 26 sin recetas; el 27 con el guiso (dos platos) y la ensalada.
+    $withRecipes = NutritionPlanMother::planWithRecipes(27, '2026-11-02');
+    $repository->save(NutritionPlanMother::plan(26, '2026-09-07'));
+    $repository->save($withRecipes);
+
+    $found = $repository->usingRecipe(RecipeReference::fromString(NutritionPlanMother::STEW_RECIPE));
+
+    expect($found)->toHaveCount(1)
+        ->and($found[0]->equals($withRecipes))->toBeTrue()
+        // Planes completos, como find().
+        ->and($found[0])->toEqual($withRecipes);
+})->with('nutrition plan repositories');
+
+it('finds a recipe used in a single dish of the week 1 dinners', function (NutritionPlanRepository $repository) {
+    // La ensalada solo está en una cena: la búsqueda mira comidas y cenas.
+    $repository->save(NutritionPlanMother::planWithRecipes());
+
+    expect($repository->usingRecipe(RecipeReference::fromString(NutritionPlanMother::SALAD_RECIPE)))->toHaveCount(1);
+})->with('nutrition plan repositories');
+
+it('finds no plan for a recipe nobody uses', function (NutritionPlanRepository $repository) {
+    $repository->save(NutritionPlanMother::planWithRecipes());
+
+    expect($repository->usingRecipe(RecipeReference::fromString('0190a6e4-5b1c-7d2e-8f3a-4b5c6d7e8f90')))->toBe([]);
+})->with('nutrition plan repositories');
+
+it('lists the plans that use a recipe from the most recent to the oldest', function (NutritionPlanRepository $repository) {
+    $repository->save(NutritionPlanMother::planWithRecipes(26, '2026-09-07'));
+    $repository->save(NutritionPlanMother::planWithRecipes(28, '2027-01-04'));
+    $repository->save(NutritionPlanMother::planWithRecipes(27, '2026-11-02'));
+
+    $numbers = array_map(
+        fn (NutritionPlan $plan): int => $plan->number()->value(),
+        $repository->usingRecipe(RecipeReference::fromString(NutritionPlanMother::STEW_RECIPE)),
+    );
+
+    expect($numbers)->toBe([28, 27, 26]);
+})->with('nutrition plan repositories');
+
+it('stops finding a plan once its recipe is unlinked and saved', function (NutritionPlanRepository $repository) {
+    // La versión nueva del plan (mismo id) reemplaza a la anterior.
+    $stew = RecipeReference::fromString(NutritionPlanMother::STEW_RECIPE);
+    $plan = NutritionPlanMother::planWithRecipes();
+    $repository->save($plan);
+
+    $repository->save($plan->withoutRecipe($stew));
+
+    expect($repository->usingRecipe($stew))->toBe([])
+        ->and($repository->usingRecipe(RecipeReference::fromString(NutritionPlanMother::SALAD_RECIPE)))->toHaveCount(1);
 })->with('nutrition plan repositories');

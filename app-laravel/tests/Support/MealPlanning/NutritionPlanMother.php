@@ -62,19 +62,32 @@ final class NutritionPlanMother
     public const string STEW_RECIPE = '0190a2a0-7c1e-7000-8000-00000000abcd';
 
     /**
+     * Otra receta de ejemplo (ficticia): la ensalada de la cena del menú 1.
+     * Sirve para comprobar que desvincular una receta no toca las demás
+     * (HEXM-0027).
+     */
+    public const string SALAD_RECIPE = '0190a2a0-7c1e-7000-8000-00000000ef01';
+
+    /**
      * El plan 27 con platos enlazados a recetas (HEXM-0024): la comida del
      * menú 6 (semana 1, domingo) y la del día 10 (semana 2, miércoles)
-     * apuntan a STEW_RECIPE. El resto, sin receta.
+     * apuntan a STEW_RECIPE, y la cena del menú 1 (semana 1, lunes), a
+     * SALAD_RECIPE (HEXM-0027). El resto, sin receta.
      */
     public static function planWithRecipes(int $number = 27, string $startsOn = '2026-11-02'): NutritionPlan
     {
         $recipe = RecipeReference::fromString(self::STEW_RECIPE);
+        $salad = RecipeReference::fromString(self::SALAD_RECIPE);
 
         $menus = [];
 
         foreach (range(1, 6) as $menu) {
             $lunch = Dish::described("Comida del menú {$menu}");
-            $menus[$menu] = ['lunch' => $menu === 6 ? $lunch->withRecipe($recipe) : $lunch, 'dinner' => Dish::described("Cena del menú {$menu}")];
+            $dinner = Dish::described("Cena del menú {$menu}");
+            $menus[$menu] = [
+                'lunch' => $menu === 6 ? $lunch->withRecipe($recipe) : $lunch,
+                'dinner' => $menu === 1 ? $dinner->withRecipe($salad) : $dinner,
+            ];
         }
 
         $days = [];

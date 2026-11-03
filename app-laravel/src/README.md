@@ -38,7 +38,7 @@ El glosario completo (español ↔ código) está en [`docs/DOMINIO.md`](../../d
 |---|---|---|
 | **Domain** | Solo PHP y `Shared\Domain` | Application, Infrastructure, Laravel (`Illuminate\`, `App\`), otros contextos |
 | **Application** | Su Domain y `Shared\Domain`/`Shared\Application` | Infrastructure, Laravel, otros contextos |
-| **Infrastructure** | Todo lo anterior y Laravel. Es la única capa que puede hablar con otro contexto, y solo a través de su capa de aplicación (capa anticorrupción, [ADR 0017](../../docs/adr/0017-puerto-recipecatalog-y-capa-anticorrupcion.md)) | El `Domain` y la `Infrastructure` de otros contextos |
+| **Infrastructure** | Todo lo anterior y Laravel. Es la única capa que puede hablar con otro contexto, y solo a través de su capa de aplicación (capa anticorrupción, [ADR 0017](../../docs/adr/0017-puerto-recipecatalog-y-capa-anticorrupcion.md)) y de sus eventos públicos (`publicEvents()`, [ADR 0019](../../docs/adr/0019-reaccion-al-borrado-de-recetas-y-eventos-como-contrato-publico.md)) | El resto del `Domain` y la `Infrastructure` de otros contextos |
 
 **Estas reglas no son una convención: las comprueban los tests de arquitectura** (`tests/Architecture/`), que se ejecutan dentro de `composer ci:check`.
 

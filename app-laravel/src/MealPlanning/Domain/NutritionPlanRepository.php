@@ -83,4 +83,19 @@ interface NutritionPlanRepository
      * @return list<NutritionPlan>
      */
     public function history(): array;
+
+    /**
+     * Los planes en los que algún plato (de cualquiera de las dos semanas)
+     * apunta a esa receta, del más reciente al más antiguo (HEXM-0027).
+     *
+     * La necesita la reacción al borrado de una receta (UnlinkDeletedRecipe):
+     * de todos los planes, solo hay que tocar los que la usan. Es una
+     * pregunta del negocio ("¿qué planes usan esta receta?"), así que vive en
+     * el puerto, con el lenguaje de una colección, y cada adaptador la
+     * responde a su manera: recorriendo los platos en memoria, o con una
+     * consulta dentro del documento jsonb en PostgreSQL.
+     *
+     * @return list<NutritionPlan>
+     */
+    public function usingRecipe(RecipeReference $recipe): array;
 }

@@ -51,12 +51,17 @@ use DateTimeImmutable;
  * desde quien guarde la misma referencia; un DateTimeImmutable devuelve uno
  * nuevo en cada cambio. Solo importa el DÍA: la hora se pone a medianoche.
  *
- * CONCEPTO: entidad inmutable (por ahora)
- * Es una entidad (se compara por su NutritionPlanId), pero hoy ningún caso de
- * uso la cambia, así que la clase entera es readonly y no tiene ni un método
- * que la modifique. Cuando haga falta (editar la semana 2 en el nivel 8),
- * llegará un método de negocio que compruebe las invariantes, nunca un
- * setter. YAGNI: no se escribe hoy lo que nadie usa.
+ * CONCEPTO: entidad inmutable que cambia devolviendo una versión nueva
+ * (HEXM-0027, ADR 0019)
+ * Es una entidad (se compara por su NutritionPlanId) y la clase entera es
+ * readonly. El primer cambio que necesita el negocio (desvincular una receta
+ * borrada, withoutRecipe()) no la modifica: devuelve OTRO NutritionPlan con
+ * el MISMO id y el cambio aplicado, como DateTimeImmutable::modify(). Sigue
+ * siendo "el mismo plan" (misma identidad), en una versión nueva que el
+ * repositorio guarda en lugar de la anterior. Así nadie que tenga el plan de
+ * antes lo ve cambiar "por detrás", y el cambio es un método de negocio con
+ * nombre, nunca un setter. Editar la semana 2 (nivel 8) seguirá el mismo
+ * camino.
  *
  * CONCEPTO: el agregado no expone su interior para modificarlo
  * Los getters devuelven value objects inmutables, entidades readonly o
@@ -122,6 +127,45 @@ final readonly class NutritionPlan
             self::fixedMealsInDayOrder($fixedMeals),
             $exchangeTable,
             self::bothWeeksInOrder($weeks),
+        );
+    }
+
+    /**
+     * Si algún plato de las dos semanas apunta a esa receta.
+     */
+    public function usesRecipe(RecipeReference $recipe): bool
+    {
+        foreach ($this->weeks as $week) {
+            foreach ($week->days() as $day) {
+                foreach ([$day->lunch(), $day->dinner()] as $dish) {
+                    if ($dish->recipe()?->equals($recipe) === true) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * El mismo plan (mismo id) con los platos que apuntaban a esa receta
+     * desvinculados de ella (regla 24, HEXM-0027).
+     *
+     * Solo cambian esos platos: el número, el inicio, las pautas fijas, los
+     * intercambios y el resto de los platos quedan exactamente igual. Por eso
+     * no se vuelve a pasar por create(): ninguna invariante del plan depende
+     * de las recetas de sus platos.
+     */
+    public function withoutRecipe(RecipeReference $recipe): self
+    {
+        return new self(
+            $this->id,
+            $this->number,
+            $this->startsOn,
+            $this->fixedMeals,
+            $this->exchangeTable,
+            array_map(fn (MenuWeek $week): MenuWeek => $week->withoutRecipe($recipe), $this->weeks),
         );
     }
 
