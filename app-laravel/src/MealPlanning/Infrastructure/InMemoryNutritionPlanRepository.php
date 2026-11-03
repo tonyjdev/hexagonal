@@ -10,6 +10,7 @@ use MealPlanning\Domain\DuplicatedPlanStart;
 use MealPlanning\Domain\NutritionPlan;
 use MealPlanning\Domain\NutritionPlanId;
 use MealPlanning\Domain\NutritionPlanRepository;
+use MealPlanning\Domain\RecipeReference;
 
 /**
  * InMemoryNutritionPlanRepository: guarda los planes en un array de PHP.
@@ -100,6 +101,16 @@ final class InMemoryNutritionPlanRepository implements NutritionPlanRepository
         usort($plans, fn (NutritionPlan $a, NutritionPlan $b): int => self::calendarDate($b->startsOn()) <=> self::calendarDate($a->startsOn()));
 
         return $plans;
+    }
+
+    /**
+     * Pregunta a cada plan si la usa (NutritionPlan::usesRecipe()): la regla
+     * de "qué es usar una receta" está en el agregado, no aquí. Mismo orden
+     * que history().
+     */
+    public function usingRecipe(RecipeReference $recipe): array
+    {
+        return array_values(array_filter($this->history(), fn (NutritionPlan $plan): bool => $plan->usesRecipe($recipe)));
     }
 
     /**

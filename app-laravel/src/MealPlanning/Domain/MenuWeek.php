@@ -192,6 +192,20 @@ final readonly class MenuWeek
     }
 
     /**
+     * La misma semana, con todos sus platos desvinculados de esa receta
+     * (HEXM-0027). Mismo número, mismo origen y los mismos 6 días: las
+     * invariantes de la semana no cambian.
+     */
+    public function withoutRecipe(RecipeReference $recipe): self
+    {
+        return new self(
+            $this->number,
+            $this->source,
+            array_map(fn (MenuDay $day): MenuDay => $day->withoutRecipe($recipe), $this->days),
+        );
+    }
+
+    /**
      * El menú de un día de la semana, o null si es el día libre.
      *
      * Es la pregunta que hará el calendario (nivel 4) una vez sepa qué

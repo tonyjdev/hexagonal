@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace MealPlanning\Infrastructure;
 
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\ServiceProvider;
 use MealPlanning\Application\RecipeCatalog;
 use MealPlanning\Domain\NutritionPlanRepository;
 use MealPlanning\Infrastructure\Persistence\Eloquent\EloquentNutritionPlanRepository;
+use MealPlanning\Infrastructure\Recipes\RecipeDeletedListener;
 use MealPlanning\Infrastructure\Recipes\RecipesContextRecipeCatalog;
+use Recipes\Domain\RecipeDeleted;
 
 /**
  * MealPlanningServiceProvider: la raíz de composición del contexto de planes.
@@ -26,7 +29,9 @@ use MealPlanning\Infrastructure\Recipes\RecipesContextRecipeCatalog;
  *
  * Enchufa los dos puertos de salida del contexto: el repositorio de planes
  * y, desde HEXM-0025, el recetario (RecipeCatalog). El puerto Clock es de
- * Shared y lo enchufa SharedServiceProvider (HEXM-0022).
+ * Shared y lo enchufa SharedServiceProvider (HEXM-0022). Y, desde HEXM-0027,
+ * el adaptador de entrada que escucha eventos de otros contextos
+ * (RecipeDeletedListener).
  *
  * CAPA: Infraestructura (MealPlanning\Infrastructure). Conoce los puertos y
  * los adaptadores; el núcleo no lo conoce a él.
@@ -44,5 +49,22 @@ final class MealPlanningServiceProvider extends ServiceProvider
         // de RecipesServiceProvider: este provider no sabe cómo se guardan
         // las recetas.
         $this->app->bind(RecipeCatalog::class, RecipesContextRecipeCatalog::class);
+    }
+
+    /**
+     * CONCEPTO: registrar un oyente (HEXM-0027)
+     * Laravel solo descubre solos los listeners de app/Listeners; los de los
+     * contextos se registran aquí, a mano: "cuando se publique RecipeDeleted,
+     * llama a RecipeDeletedListener::handle()". Es el MealPlanning quien se
+     * apunta al evento del recetario, no al revés: el recetario publica sin
+     * saber quién escucha (ADR 0018).
+     *
+     * En boot() y no en register(): el dispatcher es de otro provider, y
+     * boot() se ejecuta cuando todos ya están registrados. Laravel inyecta
+     * el Dispatcher como argumento (inyección de métodos).
+     */
+    public function boot(Dispatcher $events): void
+    {
+        $events->listen(RecipeDeleted::class, RecipeDeletedListener::class);
     }
 }

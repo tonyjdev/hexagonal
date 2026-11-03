@@ -11,6 +11,7 @@ use MealPlanning\Domain\DuplicatedPlanStart;
 use MealPlanning\Domain\NutritionPlan;
 use MealPlanning\Domain\NutritionPlanId;
 use MealPlanning\Domain\NutritionPlanRepository;
+use MealPlanning\Domain\RecipeReference;
 
 /**
  * EloquentNutritionPlanRepository: guarda los planes nutricionales en
@@ -120,6 +121,45 @@ final readonly class EloquentNutritionPlanRepository implements NutritionPlanRep
     public function history(): array
     {
         return array_values(NutritionPlanModel::query()
+            ->orderByDesc('starts_on')
+            ->get()
+            ->map(fn (NutritionPlanModel $model): NutritionPlan => $this->mapper->toDomain($model))
+            ->all());
+    }
+
+    /**
+     * CONCEPTO: consultar DENTRO de un documento jsonb con SQL/JSON path
+     * (HEXM-0027)
+     * Las semanas se guardan como un documento (ADR 0013):
+     *
+     *     weeks = [ {number, source, days: [ {weekday, lunch: {…, recipe_id}, dinner: {…}} ]} ]
+     *
+     * jsonb_path_exists() recorre ese documento con una RUTA, igual que se
+     * recorrería un array anidado en PHP, y dice si algún plato cumple el
+     * filtro:
+     *
+     *     $[*]                 cada semana
+     *       .days[*]           cada día
+     *       .*                 cada valor del día (lunch, dinner… y weekday,
+     *                          que no es un objeto y el filtro descarta)
+     *       ? (@.recipe_id == $recipe)   los que apuntan a la receta
+     *
+     * El id va como VARIABLE de la ruta ($recipe, en el tercer argumento), no
+     * pegado en el texto: igual que un parámetro ? en SQL, así no hay
+     * inyección posible. Lo que se compara es exactamente lo que escribe el
+     * mapper (el UUID en minúsculas que normaliza RecipeReference).
+     *
+     * Sin índice: un usuario tiene unos pocos planes al año y PostgreSQL los
+     * recorre al momento. Si algún día pesara, un índice GIN sobre weeks con
+     * jsonb_path_ops serviría para esta misma consulta.
+     */
+    public function usingRecipe(RecipeReference $recipe): array
+    {
+        return array_values(NutritionPlanModel::query()
+            ->whereRaw(
+                'jsonb_path_exists(weeks, \'$[*].days[*].* ? (@.recipe_id == $recipe)\', jsonb_build_object(\'recipe\', ?::text))',
+                [$recipe->value()],
+            )
             ->orderByDesc('starts_on')
             ->get()
             ->map(fn (NutritionPlanModel $model): NutritionPlan => $this->mapper->toDomain($model))
