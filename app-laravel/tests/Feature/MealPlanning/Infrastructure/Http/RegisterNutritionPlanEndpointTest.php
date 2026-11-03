@@ -13,6 +13,10 @@
 |                                   caso de uso;
 |   3. incumple una regla         → 422 del DOMINIO ({"message"} en español).
 |
+| Y, desde HEXM-0025, los platos que apuntan a una receta: la petición cruza
+| los DOS contextos (MealPlanning → RecipeCatalog → capa anticorrupción →
+| Recipes\Application\GetRecipe → PostgreSQL), con los bindings reales.
+|
 | El plan de partida es tests/fixtures/nutrition-plan-27.json (ficticio):
 | el mismo fichero que se usa en las pruebas manuales con curl.
 */
@@ -24,6 +28,8 @@ use MealPlanning\Domain\MealType;
 use MealPlanning\Domain\NutritionPlanId;
 use MealPlanning\Domain\NutritionPlanRepository;
 use MealPlanning\Domain\Weekday;
+use Recipes\Domain\RecipeRepository;
+use Tests\Support\Recipes\RecipeMother;
 
 uses(RefreshDatabase::class);
 
@@ -103,6 +109,8 @@ it('rejects a malformed request before reaching the use case', function (array $
     'a dish that is not text' => [['nutritionist_week.2.lunch' => ['Lentejas']], 'nutritionist_week.2.lunch'],
     'a quantity that is not text' => [['self_week.0.lunch.ingredients.0.quantity' => 80], 'self_week.0.lunch.ingredients.0.quantity'],
     'choose is not an integer' => [['fixed_meals.0.option_groups.0.choose' => 'una'], 'fixed_meals.0.option_groups.0.choose'],
+    'a recipe id that is not text' => [['self_week.0.lunch.recipe_id' => 42], 'self_week.0.lunch.recipe_id'],
+    'a week 1 recipe id that is not text' => [['nutritionist_week.5.lunch_recipe_id' => ['0190a…']], 'nutritionist_week.5.lunch_recipe_id'],
 ]);
 
 // ---------------------------------------------------------------------------
@@ -150,4 +158,61 @@ it('rejects a plan that starts on the same day as another one', function () {
         ->assertExactJson(['message' => 'El plan 28 no puede empezar el 02/11/2026: ese día ya empieza el plan 27.']);
 
     expect(DB::table('nutrition_plans')->count())->toBe(1);
+});
+
+// ---------------------------------------------------------------------------
+// 4. Platos que apuntan a una receta del recetario (regla 6, HEXM-0025)
+// ---------------------------------------------------------------------------
+
+/**
+ * Guarda una receta en el recetario (a través de SU puerto, como haría
+ * POST /api/recipes) y devuelve su id.
+ */
+function savedRecipeId(): string
+{
+    $recipe = RecipeMother::lentilsWithPisto();
+    app(RecipeRepository::class)->save($recipe);
+
+    return $recipe->id()->value();
+}
+
+it('links dishes of both weeks to existing recipes', function () {
+    $recipe = savedRecipeId();
+
+    // Semana 1: clave hermana del texto del plato. Semana 2: dentro del plato.
+    $response = $this->postJson('/api/nutrition-plans', planPayload([
+        'nutritionist_week.5.lunch_recipe_id' => $recipe,
+        'self_week.0.lunch.recipe_id' => $recipe,
+    ]))->assertCreated();
+
+    $plan = app(NutritionPlanRepository::class)->find(NutritionPlanId::fromString($response->json('id')));
+
+    // El menú 6 es el domingo de la semana 1; el día 8, el lunes de la 2.
+    expect($plan?->week(1)->day(Weekday::Sunday)?->lunch()->recipe()?->value())->toBe($recipe)
+        ->and($plan?->week(1)->day(Weekday::Sunday)?->dinner()->recipe())->toBeNull()
+        ->and($plan?->week(2)->day(Weekday::Monday)?->lunch()->recipe()?->value())->toBe($recipe);
+
+    // Y se lee de vuelta por la API (HEXM-0024).
+    $this->getJson("/api/nutrition-plans/{$response->json('id')}")
+        ->assertJsonPath('data.weeks.0.days.5.lunch.recipe_id', $recipe);
+});
+
+it('rejects a dish that points to a recipe that does not exist, and saves nothing', function () {
+    savedRecipeId();
+    $missing = '0190a6e4-5b1c-7d2e-8f3a-4b5c6d7e8f90';
+
+    $this->postJson('/api/nutrition-plans', planPayload(['nutritionist_week.5.lunch_recipe_id' => $missing]))
+        ->assertUnprocessable()
+        ->assertExactJson(['message' => "El plato «Guiso de alubias y pollo» apunta a una receta que no existe en el recetario («{$missing}»)."]);
+
+    expect(DB::table('nutrition_plans')->count())->toBe(0);
+});
+
+it('rejects a malformed recipe id with the domain message', function () {
+    // No es un error de forma (es un texto), sino del dominio: RecipeReference.
+    $this->postJson('/api/nutrition-plans', planPayload(['self_week.0.dinner.recipe_id' => 'guiso-de-alubias']))
+        ->assertUnprocessable()
+        ->assertExactJson(['message' => '"guiso-de-alubias" no es una referencia de receta válida.']);
+
+    expect(DB::table('nutrition_plans')->count())->toBe(0);
 });

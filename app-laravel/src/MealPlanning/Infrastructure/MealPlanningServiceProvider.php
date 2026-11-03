@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace MealPlanning\Infrastructure;
 
 use Illuminate\Support\ServiceProvider;
+use MealPlanning\Application\RecipeCatalog;
 use MealPlanning\Domain\NutritionPlanRepository;
 use MealPlanning\Infrastructure\Persistence\Eloquent\EloquentNutritionPlanRepository;
+use MealPlanning\Infrastructure\Recipes\RecipesContextRecipeCatalog;
 
 /**
  * MealPlanningServiceProvider: la raíz de composición del contexto de planes.
@@ -22,8 +24,9 @@ use MealPlanning\Infrastructure\Persistence\Eloquent\EloquentNutritionPlanReposi
  * context se enchufa a la aplicación por su cuenta, y quitar o cambiar uno
  * no obliga a tocar los demás. Se registra en bootstrap/providers.php.
  *
- * Lo que aún no está: el binding del puerto Clock (Shared\Application) a
- * SystemClock, que llega con GET /api/menu en HEXM-0022.
+ * Enchufa los dos puertos de salida del contexto: el repositorio de planes
+ * y, desde HEXM-0025, el recetario (RecipeCatalog). El puerto Clock es de
+ * Shared y lo enchufa SharedServiceProvider (HEXM-0022).
  *
  * CAPA: Infraestructura (MealPlanning\Infrastructure). Conoce los puertos y
  * los adaptadores; el núcleo no lo conoce a él.
@@ -34,5 +37,12 @@ final class MealPlanningServiceProvider extends ServiceProvider
     {
         // Puerto de salida (Domain) → adaptador de salida (Infrastructure).
         $this->app->bind(NutritionPlanRepository::class, EloquentNutritionPlanRepository::class);
+
+        // Puerto hacia otro contexto (Application) → adaptador anticorrupción
+        // que habla con la capa de aplicación de Recipes (HEXM-0025). El
+        // GetRecipe que necesita lo construye el contenedor con el binding
+        // de RecipesServiceProvider: este provider no sabe cómo se guardan
+        // las recetas.
+        $this->app->bind(RecipeCatalog::class, RecipesContextRecipeCatalog::class);
     }
 }

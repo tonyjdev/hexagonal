@@ -27,6 +27,17 @@ use DateTimeImmutable;
  * menú 6 es el domingo" (una regla del negocio) se queda en el dominio, en
  * MenuWeek::fromNutritionistMenus() y fromSelfDays().
  *
+ * DECISIÓN: la receta de cada plato, opcional (HEXM-0025, ADR 0017)
+ * Un plato puede apuntar a una receta del recetario con su id (texto):
+ *   - semana 1: lunch_recipe_id y dinner_recipe_id, claves HERMANAS de
+ *     lunch y dinner, porque allí un plato es solo un texto y no tiene dónde
+ *     llevarlo. Así el formato de siempre sigue valiendo tal cual;
+ *   - semana 2: recipe_id dentro del objeto de cada plato.
+ * Las claves son opcionales (`?:` en el tipo): quien no las conoce (el
+ * importador del nivel 7, los tests anteriores) no tiene que enviarlas. El
+ * id llega como texto: que sea un UUID lo dice el dominio (RecipeReference)
+ * y que exista, el puerto RecipeCatalog.
+ *
  * startsOn es un DateTimeImmutable y no un texto, como en GetMenuForDate
  * (HEXM-0019): es un tipo nativo de PHP, y convertir el texto de una
  * petición es trabajo del adaptador.
@@ -42,8 +53,8 @@ final readonly class RegisterNutritionPlanCommand
      * @param  list<array{meal_type: string, description: string|null, option_groups: list<array{choose: int, options: list<string>}>}>  $fixedMeals
      * @param  list<array{category: string, food: string, serving: string}>  $exchanges
      * @param  list<string>  $exchangeRules  en el orden del documento
-     * @param  list<array{menu: int, lunch: string|null, dinner: string|null}>  $nutritionistWeek
-     * @param  list<array{day: int, lunch: array{name: string, ingredients: list<array{name: string, quantity: string|null}>}|null, dinner: array{name: string, ingredients: list<array{name: string, quantity: string|null}>}|null}>  $selfWeek
+     * @param  list<array{menu: int, lunch: string|null, dinner: string|null, lunch_recipe_id?: string|null, dinner_recipe_id?: string|null}>  $nutritionistWeek
+     * @param  list<array{day: int, lunch: array{name: string, ingredients: list<array{name: string, quantity: string|null}>, recipe_id?: string|null}|null, dinner: array{name: string, ingredients: list<array{name: string, quantity: string|null}>, recipe_id?: string|null}|null}>  $selfWeek
      */
     public function __construct(
         public int $number,

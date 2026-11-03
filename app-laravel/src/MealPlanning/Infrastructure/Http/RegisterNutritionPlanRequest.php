@@ -27,6 +27,14 @@ use MealPlanning\Application\RegisterNutritionPlanCommand;
  * Por eso los textos son `nullable` (un plato vacío o sin nombre es una
  * regla, no un problema de forma) y las listas no exigen un mínimo.
  *
+ * Lo mismo con la receta de un plato (HEXM-0025, ADR 0017): recipe_id (semana
+ * 2) y lunch_recipe_id / dinner_recipe_id (semana 1, claves hermanas del
+ * texto del plato) solo se validan como texto opcional. Ni la regla `uuid`
+ * ni `exists:recipes,id`: que sea un id válido lo dice el dominio
+ * (InvalidRecipeReference) y que la receta exista, el puerto RecipeCatalog
+ * (UnknownRecipe). Un `exists:` además haría que MealPlanning consultara la
+ * tabla de OTRO contexto, saltándose su capa de aplicación.
+ *
  * Con un payload grande, esta frontera se nota: una petición mal formada
  * recibe la lista de TODOS sus errores de forma, con la ruta de cada uno
  * ("self_week.2.lunch.ingredients.0.quantity"), sin llegar al caso de uso.
@@ -77,6 +85,8 @@ final class RegisterNutritionPlanRequest extends FormRequest
             'nutritionist_week.*.menu' => ['required', 'integer'],
             'nutritionist_week.*.lunch' => ['nullable', 'string'],
             'nutritionist_week.*.dinner' => ['nullable', 'string'],
+            'nutritionist_week.*.lunch_recipe_id' => ['nullable', 'string'],
+            'nutritionist_week.*.dinner_recipe_id' => ['nullable', 'string'],
 
             'self_week' => ['present', 'array', 'list'],
             'self_week.*' => ['array'],
@@ -87,8 +97,8 @@ final class RegisterNutritionPlanRequest extends FormRequest
     }
 
     /**
-     * Un plato de la semana 2: un objeto {name, ingredients}, o null si el
-     * día está vacío (el 13).
+     * Un plato de la semana 2: un objeto {name, ingredients, recipe_id}, o
+     * null si el día está vacío (el 13).
      *
      * @return array<string, list<string>>
      */
@@ -97,6 +107,7 @@ final class RegisterNutritionPlanRequest extends FormRequest
         return [
             $dish => ['nullable', 'array'],
             "{$dish}.name" => ['nullable', 'string'],
+            "{$dish}.recipe_id" => ['nullable', 'string'],
             "{$dish}.ingredients" => ['sometimes', 'array', 'list'],
             "{$dish}.ingredients.*" => ['array'],
             "{$dish}.ingredients.*.name" => ['nullable', 'string'],
@@ -114,7 +125,7 @@ final class RegisterNutritionPlanRequest extends FormRequest
      */
     public function toCommand(): RegisterNutritionPlanCommand
     {
-        /** @var array{number: int|string, starts_on: string, fixed_meals: list<array{meal_type: string, description?: string|null, option_groups?: list<array{choose: int|string, options: list<string|null>}>}>, exchanges: list<array{category: string, food?: string|null, serving?: string|null}>, exchange_rules?: list<string|null>, nutritionist_week: list<array{menu: int|string, lunch?: string|null, dinner?: string|null}>, self_week: list<array{day: int|string, lunch?: array{name?: string|null, ingredients?: list<array{name?: string|null, quantity?: string|null}>}|null, dinner?: array{name?: string|null, ingredients?: list<array{name?: string|null, quantity?: string|null}>}|null}>} $data */
+        /** @var array{number: int|string, starts_on: string, fixed_meals: list<array{meal_type: string, description?: string|null, option_groups?: list<array{choose: int|string, options: list<string|null>}>}>, exchanges: list<array{category: string, food?: string|null, serving?: string|null}>, exchange_rules?: list<string|null>, nutritionist_week: list<array{menu: int|string, lunch?: string|null, dinner?: string|null, lunch_recipe_id?: string|null, dinner_recipe_id?: string|null}>, self_week: list<array{day: int|string, lunch?: array{name?: string|null, ingredients?: list<array{name?: string|null, quantity?: string|null}>, recipe_id?: string|null}|null, dinner?: array{name?: string|null, ingredients?: list<array{name?: string|null, quantity?: string|null}>, recipe_id?: string|null}|null}>} $data */
         $data = $this->validated();
 
         return new RegisterNutritionPlanCommand(
@@ -142,6 +153,8 @@ final class RegisterNutritionPlanRequest extends FormRequest
                 'menu' => (int) $menu['menu'],
                 'lunch' => $menu['lunch'] ?? null,
                 'dinner' => $menu['dinner'] ?? null,
+                'lunch_recipe_id' => $menu['lunch_recipe_id'] ?? null,
+                'dinner_recipe_id' => $menu['dinner_recipe_id'] ?? null,
             ], $data['nutritionist_week']),
             selfWeek: array_map(fn (array $day): array => [
                 'day' => (int) $day['day'],
@@ -152,8 +165,8 @@ final class RegisterNutritionPlanRequest extends FormRequest
     }
 
     /**
-     * @param  array{name?: string|null, ingredients?: list<array{name?: string|null, quantity?: string|null}>}|null  $dish
-     * @return array{name: string, ingredients: list<array{name: string, quantity: string|null}>}|null
+     * @param  array{name?: string|null, ingredients?: list<array{name?: string|null, quantity?: string|null}>, recipe_id?: string|null}|null  $dish
+     * @return array{name: string, ingredients: list<array{name: string, quantity: string|null}>, recipe_id: string|null}|null
      */
     private static function toDish(?array $dish): ?array
     {
@@ -167,6 +180,7 @@ final class RegisterNutritionPlanRequest extends FormRequest
                 'name' => $ingredient['name'] ?? '',
                 'quantity' => $ingredient['quantity'] ?? null,
             ], $dish['ingredients'] ?? []),
+            'recipe_id' => $dish['recipe_id'] ?? null,
         ];
     }
 }

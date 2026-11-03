@@ -1,6 +1,6 @@
 # 0014. Contrato de entrada de un plan con el formato de los documentos
 
-**Fecha:** 2026-11-04 · **Estado:** aceptada · **Tarea:** HEXM-0021 · **Relacionado:** [ADR 0007](0007-adaptador-http-validacion-de-forma-y-errores-de-dominio.md), [ADR 0013](0013-persistencia-del-agregado-nutritionplan-como-documento.md)
+**Fecha:** 2026-11-04 · **Estado:** aceptada (ampliada por el [ADR 0017](0017-puerto-recipecatalog-y-capa-anticorrupcion.md): `recipe_id` opcional en cada plato) · **Tarea:** HEXM-0021 · **Relacionado:** [ADR 0007](0007-adaptador-http-validacion-de-forma-y-errores-de-dominio.md), [ADR 0013](0013-persistencia-del-agregado-nutritionplan-como-documento.md)
 
 ## Contexto
 
