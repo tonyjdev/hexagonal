@@ -94,6 +94,8 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 | Día libre | `FreeDay` | Concepto | El sábado: `Weekday::Saturday->isFreeDay()`. No puede tener menú. |
 | Calendario de comidas | `MealCalendar` | Servicio de dominio | `dayOn(plan, fecha)`: qué semana toca (se alternan desde el lunes de inicio: semanas completas pares → la 1, impares → la 2) y su menú, o que es el día libre. Sin estado; recibe el plan y la fecha, no busca ninguno de los dos. Cuenta días del calendario, no horas: ni la hora, ni la zona horaria, ni el horario de verano cambian el resultado (HEXM-0017). |
 | Día del calendario | `ScheduledDay` | Value object | Lo que devuelve `MealCalendar`: la fecha, la semana que toca (1 o 2), el día de la semana y su `MenuDay`, o día libre (`isFreeDay()`). Se crea con `withMenu()` o `freeDay()`. |
+| Repositorio de planes | `NutritionPlanRepository` | Puerto (de salida) | Guardar (`save`), recuperar (`find`) y el plan vigente en una fecha (`inForceOn`). Responde las reglas que comparan varios planes: la vigencia y que no haya dos planes que empiecen el mismo día. Adaptadores: `InMemoryNutritionPlanRepository` (hoy); Eloquent en el nivel 5, con los mismos tests de contrato (HEXM-0018). |
+| Inicio de plan repetido | `DuplicatedPlanStart` | Excepción (`MealPlanning\Domain`) | Otro plan (distinto id) ya empieza ese día. La lanza el repositorio al guardar; hereda de `DomainException` (HTTP 422). |
 | Reloj | `Clock` | Puerto | Abstracción de "la fecha de hoy", para poder testear. |
 | Importación de plan | `PlanImport` | Caso de uso | Leer un plan desde un fichero externo. |
 | Lector de planes | `PlanReader` | Puerto | Implementado por adaptadores (Excel vía FastAPI, PDF…). |
@@ -114,7 +116,7 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 2. Cada semana tiene **6 días con menú** (lunes–viernes y domingo), sin repetir ninguno; el sábado es libre y **no puede tener menú**. La numeración de los documentos (menús 1-6 en la semana 1, días 8-14 en la semana 2) es solo formato: el menú 6 es el domingo y el día 13 es el sábado vacío.
 3. Cada día con menú tiene **una comida y una cena**, las dos obligatorias.
 4. Las pautas fijas y los intercambios son **comunes a todas las semanas** del plan, pero **pueden cambiar entre planes**.
-5. Solo hay **un plan vigente** en cada fecha; un plan nuevo cierra la vigencia del anterior.
+5. Solo hay **un plan vigente** en cada fecha; un plan nuevo cierra la vigencia del anterior. Por eso **dos planes distintos no pueden empezar el mismo día**: el segundo se rechaza al guardarlo (HEXM-0018).
 6. Un plato puede ser **texto libre** o **referenciar una receta** del recetario, y esa receta debe existir.
 7. Intercambio de grasa: **solo en la comida o en la cena, no en ambas** (validable cuando el usuario elabore su semana 2).
 8. Una cantidad siempre es **mayor que cero** y se guarda de forma exacta (½ es exactamente ½). "Al gusto" o "una pizca" no son cantidades.

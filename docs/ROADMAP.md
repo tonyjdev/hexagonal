@@ -2,7 +2,7 @@
 
 Hoja de ruta del proyecto organizada en **niveles**. Cada nivel es pequeño, termina con tests en verde y una etiqueta git (`nivel-NN`), y añade **un concepto nuevo** cada vez.
 
-**Estado actual:** 🟡 Nivel 4 (Calendario) en curso: ya existe el servicio de dominio `MealCalendar`, que dice qué toca en una fecha con un plan (HEXM-0017). Siguiente: el repositorio de planes y el plan vigente (HEXM-0018), y después el caso de uso `GetMenuForDate` con el puerto `Clock` (HEXM-0019), que cierra el nivel.
+**Estado actual:** 🟡 Nivel 4 (Calendario) en curso: ya existen el servicio de dominio `MealCalendar` (HEXM-0017) y el repositorio de planes con el plan vigente (HEXM-0018). Siguiente: el caso de uso `GetMenuForDate` con el puerto `Clock` (HEXM-0019), que cierra el nivel.
 
 Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado
 
@@ -101,3 +101,4 @@ El roadmap tiene tres bloques:
 | 2026-11-03 | 3 | HEXM-0014: pautas fijas (`FixedMeal` con parte fija en texto y grupos "elige N" `OptionGroup`/`MealOption`) y tabla de intercambios (`Exchange`, `ExchangeTable` agrupada por categoría con las reglas guardadas en texto, sin ejecutarlas hasta el nivel 8); `MealType::isFixed()`. |
 | 2026-11-03 | 3 | HEXM-0015: agregado `NutritionPlan` (raíz): exactamente la semana 1 y la 2, inicio en lunes (`DateTimeImmutable` nativo, `Weekday::fromDate()`), como mucho una pauta fija por tipo; un único agregado con semanas y días, vigencia derivada sin fecha de fin (ADR 0010). **Nivel 3 terminado** (`nivel-03`, diario `03-planes-dominio.md`). |
 | 2026-11-03 | 4 | HEXM-0017: servicio de dominio `MealCalendar` (`dayOn(plan, fecha)`) y value object `ScheduledDay`: alternancia de semanas desde el lunes de inicio, sábado libre y sin menú antes del inicio; cuenta días del calendario (ni la hora, ni la zona horaria, ni el horario de verano cambian el resultado). |
+| 2026-11-03 | 4 | HEXM-0018: puerto `NutritionPlanRepository` (`save`, `find`, `inForceOn`) con `InMemoryNutritionPlanRepository`, tests de contrato y `NutritionPlanMother`; vigencia por fechas del calendario y `DuplicatedPlanStart` si otro plan empieza el mismo día: reglas entre agregados en el contrato del puerto (ADR 0011). |
