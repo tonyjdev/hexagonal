@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "diagram_type": "tree",
+  "meta": {
+    "title": "Un plan, una fila: el agregado como documento",
+    "subtitle": "Cómo queda guardado el plan 27 en nutrition_plans: tres columnas para consultar y tres documentos jsonb con el contenido. Cada nodo está dentro de su padre; no son llamadas.",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0020/un-plan-una-fila.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "fafb98bad578766b96d381603d2d935312c59ff8"
+    }
+  },
+  "layout": { "direction": "right" },
+  "nodes": [
+    { "id": "row", "label": "nutrition_plans", "sublabel": "una fila por plan", "sources": [ { "path": "app-laravel/database/migrations/2026_11_04_000000_create_nutrition_plans_table.php", "line": 37, "end_line": 60, "label": "Schema::create" }, { "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/NutritionPlanMapper.php", "line": 73, "end_line": 84, "label": "toRow()" } ] },
+    { "id": "columns", "label": "Columnas para consultar", "parent": "row", "sublabel": "las mira el repositorio" },
+    { "id": "col_id", "label": "id", "parent": "columns", "sublabel": "uuid · clave primaria", "sources": [ { "path": "app-laravel/database/migrations/2026_11_04_000000_create_nutrition_plans_table.php", "line": 39, "end_line": 39 } ] },
+    { "id": "col_number", "label": "number", "parent": "columns", "sublabel": "27", "sources": [ { "path": "app-laravel/database/migrations/2026_11_04_000000_create_nutrition_plans_table.php", "line": 40, "end_line": 40 } ] },
+    { "id": "col_starts", "label": "starts_on", "parent": "columns", "sublabel": "date · índice único", "sources": [ { "path": "app-laravel/database/migrations/2026_11_04_000000_create_nutrition_plans_table.php", "line": 52, "end_line": 52, "label": "dos planes no empiezan el mismo día" } ] },
+    { "id": "documents", "label": "Documentos jsonb", "parent": "row", "sublabel": "CHECK: tipo y 2 semanas", "sources": [ { "path": "app-laravel/database/migrations/2026_11_04_000000_create_nutrition_plans_table.php", "line": 54, "end_line": 56 }, { "path": "app-laravel/database/migrations/2026_11_04_000000_create_nutrition_plans_table.php", "line": 70, "end_line": 77, "label": "CHECK" } ] },
+    { "id": "fixed_meals", "label": "fixed_meals", "parent": "documents", "sublabel": "lista de pautas fijas", "sources": [ { "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/NutritionPlanMapper.php", "line": 89, "end_line": 99 } ] },
+    { "id": "fixed_meal", "label": "meal_type · description", "parent": "fixed_meals", "sublabel": "breakfast · Café con leche" },
+    { "id": "option_groups", "label": "option_groups", "parent": "fixed_meal", "sublabel": "choose: 1 · options: [2 textos]" },
+    { "id": "exchange_table", "label": "exchange_table", "parent": "documents", "sublabel": "objeto", "sources": [ { "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/NutritionPlanMapper.php", "line": 109, "end_line": 124 } ] },
+    { "id": "exchanges", "label": "exchanges", "parent": "exchange_table", "sublabel": "lista plana: category · food · serving" },
+    { "id": "rules", "label": "rules", "parent": "exchange_table", "sublabel": "textos, en orden" },
+    { "id": "weeks", "label": "weeks", "parent": "documents", "sublabel": "exactamente 2", "sources": [ { "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/NutritionPlanMapper.php", "line": 129, "end_line": 142 } ] },
+    { "id": "week", "label": "number · source", "parent": "weeks", "sublabel": "2 · self" },
+    { "id": "days", "label": "days", "parent": "week", "sublabel": "6 días · weekday ISO (3 = miércoles)" },
+    { "id": "dish", "label": "lunch · dinner", "parent": "days", "sublabel": "name | description", "sources": [ { "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/NutritionPlanMapper.php", "line": 151, "end_line": 161 } ] },
+    { "id": "ingredients", "label": "ingredients", "parent": "dish", "sublabel": "name · quantity (\"80 g\")" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Por qué una sola fila (ADR 0013)",
+      "items": [
+        "El agregado se lee y se escribe siempre entero: nada consulta sus partes por separado.",
+        "Las reglas del repositorio solo miran starts_on: vigencia y un inicio por día.",
+        "Sin tablas hijas no hay filas huérfanas: reemplazar el plan es reemplazar su fila."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "El JSON guardado es una entrada no confiable",
+      "items": [
+        "PostgreSQL solo comprueba el CHECK; el mapper valida cada campo al leer y nombra su ruta.",
+        "El plan se reconstruye con los constructores del dominio: un día repetido falla al cargar."
+      ]
+    }
+  ]
+}

@@ -41,6 +41,10 @@ Los diagramas Archify de cada tarea están en [`../diagramas/`](../diagramas/REA
 - [HEXM-0018: Repositorio de planes y plan vigente](HEXM-0018-repositorio-de-planes-y-plan-vigente.md): por qué la vigencia y «dos planes no pueden empezar el mismo día» son reglas entre agregados que forman parte del contrato del puerto, por qué el rechazo se hace al guardar y no en un caso de uso, y por qué un repositorio de objetos inmutables no necesita copias. Diagramas: [repositorio de planes](../diagramas/HEXM-0018/repositorio-de-planes.architecture.json) y [vigencia de los planes 26 y 27](../diagramas/HEXM-0018/vigencia-de-los-planes.timeline.json).
 - [HEXM-0019: Caso de uso GetMenuForDate y reloj](HEXM-0019-caso-de-uso-getmenufordate-y-reloj.md): por qué «hoy» llega a través de un puerto `Clock` de aplicación compartido (con interfaz propia y no PSR-20, y la zona horaria inyectada), por qué el caso de uso solo orquesta y devuelve un DTO de lectura, por qué «sin plan vigente» es un `NotFound` y cómo un test de arquitectura con *tokens* impide leer el reloj del sistema en el núcleo. Diagramas: [¿qué me toca hoy?](../diagramas/HEXM-0019/que-me-toca-hoy.sequence.json) y [el reloj como puerto](../diagramas/HEXM-0019/el-reloj-como-puerto.architecture.json).
 
+### Nivel 5: Planes (adaptadores)
+
+- [HEXM-0020: Repositorio Eloquent de planes](HEXM-0020-repositorio-eloquent-de-planes.md): por qué el agregado se guarda como una fila con documentos `jsonb` y no en tablas, por qué el JSON guardado se lee como una entrada no confiable, cómo un índice único garantiza la regla 5 y por qué hace falta una transacción (un `SAVEPOINT`) aunque solo haya una fila. Diagramas: [un plan, una fila](../diagramas/HEXM-0020/un-plan-una-fila.tree.json) y [guardar un plan en un día ocupado](../diagramas/HEXM-0020/guardar-en-un-dia-ocupado.sequence.json).
+
 ### Transversal
 
 - [HEXM-0008: Diagramas Archify en las tareas](HEXM-0008-diagramas-archify-en-las-tareas.md): por qué los diagramas se generan desde una fuente versionada, respaldados por el código en un commit fijo, y por qué el cierre de una tarea tiene dos commits.

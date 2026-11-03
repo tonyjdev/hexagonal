@@ -32,6 +32,7 @@ Después se abre `docs/diagramas/HEXM-NNNN/<slug>.html` en el navegador. Requier
 | Tablas, claves y relaciones de la base de datos (nivel 2 en adelante) | `erd` | [Tablas del recetario](HEXM-0009/tablas-del-recetario.erd.json) |
 | Datos que fluyen entre servicios (Laravel ↔ FastAPI, embeddings…) | `dataflow` | — |
 | Qué pasa en cada fecha, sobre un eje de tiempo proporcional (calendario, historial) | `timeline` | [Alternancia de semanas](HEXM-0017/alternancia-de-semanas.timeline.json) |
+| Una estructura de contención (qué está dentro de qué): la forma de un documento, un árbol de módulos | `tree` | [Un plan, una fila](HEXM-0020/un-plan-una-fila.tree.json) |
 
 Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración), su Explicación lo dice en la sección "Diagramas".
 
@@ -82,6 +83,13 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 | HEXM-0018 | [Vigencia de los planes 26 y 27](HEXM-0018/vigencia-de-los-planes.timeline.json) (`timeline`) | Qué plan devuelve `inForceOn()` en cada fecha de ejemplo (ninguno, el 26, el 27; del último minuto del 1 de noviembre al primero del 2) y el plan 28 rechazado por empezar el mismo día que el 27. |
 | HEXM-0019 | [¿Qué me toca hoy?](HEXM-0019/que-me-toca-hoy.sequence.json) (`sequence`) | `GetMenuForDate` en sus tres caminos: sin fecha pide `today()` al `Clock` (miércoles 11/11 → semana 2), con fecha explícita el reloj ni se consulta (sábado 14/11 → día libre) y sin plan vigente lanza `NoPlanInForce` (un `NotFound`). |
 | HEXM-0019 | [El reloj como puerto](HEXM-0019/el-reloj-como-puerto.architecture.json) (`architecture`) | Dónde vive "hoy": el puerto `Clock` en `Shared\Application` (el dominio no lo ve), sus adaptadores `FrozenClock` y `SystemClock` en `Shared\Infrastructure` y el test de arquitectura que impide leer el reloj del sistema en el núcleo (ADR 0012). |
+
+### Nivel 5: Planes (adaptadores)
+
+| Tarea | Diagrama | Qué muestra |
+|---|---|---|
+| HEXM-0020 | [Un plan, una fila](HEXM-0020/un-plan-una-fila.tree.json) (`tree`) | Cómo queda guardado un plan en `nutrition_plans`: las tres columnas que consulta el repositorio (`starts_on` con índice único) y la estructura de los documentos `jsonb` `fixed_meals`, `exchange_table` y `weeks`, hasta los ingredientes de un plato (ADR 0013). |
+| HEXM-0020 | [Guardar un plan en un día ocupado](HEXM-0020/guardar-en-un-dia-ocupado.sequence.json) (`sequence`) | `save()` de un plan ya guardado movido al inicio de otro: `SAVEPOINT`, violación del índice único, `ROLLBACK TO SAVEPOINT`, consulta del plan que ocupa el día y `DuplicatedPlanStart`. |
 
 ### Transversal
 
