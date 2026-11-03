@@ -17,7 +17,7 @@ namespace MealPlanning\Domain;
  * orden en que los listará MealType::cases() (útil para mostrar un día).
  *
  * En el negocio hay dos grupos (ver docs/DOMINIO.md):
- *   - Pautas fijas (FixedMeal, HEXM-0013+): desayuno, media mañana y media
+ *   - Pautas fijas (FixedMeal, HEXM-0014): desayuno, media mañana y media
  *     tarde; iguales todos los días.
  *   - Comidas del menú (Dish en MenuDay): comida y cena; cambian cada día.
  * De momento no se añade un método isFixed(): se escribirá cuando alguna

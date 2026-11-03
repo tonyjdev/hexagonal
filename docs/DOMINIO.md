@@ -65,7 +65,7 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 | Receta no encontrada | `RecipeNotFound` | Excepción (`Recipes\Application`) | No existe ninguna receta con ese id. Hereda de `NotFound`, no de `DomainException`. |
 | No encontrado | `NotFound` | Excepción (`Shared\Application`) | Base de "lo que buscas no existe", para todos los contextos. En la API llega como HTTP 404 `{"message": "…"}`. |
 | Al gusto / una pizca | — | Concepto | Cantidad sin número: no es una `Quantity`, sino la ausencia de cantidad del ingrediente. |
-| Error de dominio | `DomainException` | Excepción (`Shared\Domain`) | Base de los errores de negocio, con mensaje en español para el usuario: `InvalidQuantity`, `InvalidServings`, `InvalidStep`, `InvalidRecipeId`, `InvalidIngredient`, `InvalidRecipe` y, en `MealPlanning`, `InvalidNutritionPlanId`, `InvalidPlanNumber`, `InvalidDish`. En la API llegan como HTTP 422 `{"message": "…"}`, traducidos en un único manejador ([ADR 0007](adr/0007-adaptador-http-validacion-de-forma-y-errores-de-dominio.md)). |
+| Error de dominio | `DomainException` | Excepción (`Shared\Domain`) | Base de los errores de negocio, con mensaje en español para el usuario: `InvalidQuantity`, `InvalidServings`, `InvalidStep`, `InvalidRecipeId`, `InvalidIngredient`, `InvalidRecipe` y, en `MealPlanning`, `InvalidNutritionPlanId`, `InvalidPlanNumber`, `InvalidDish`, `InvalidMenuDay`, `InvalidMenuWeek`. En la API llegan como HTTP 422 `{"message": "…"}`, traducidos en un único manejador ([ADR 0007](adr/0007-adaptador-http-validacion-de-forma-y-errores-de-dominio.md)). |
 
 ### Planes y calendario (`MealPlanning`)
 
@@ -81,12 +81,13 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 | Intercambio | `Exchange` | Value object | Una equivalencia: alimento + ración. |
 | Categoría de intercambio | `ExchangeCategory` | Enum | `Carbohydrates` (hidratos), `Protein` (proteínas), `Vegetables` (vegetales), `Fat` (grasas). |
 | Tabla de intercambios | `ExchangeTable` | Value object | Conjunto de intercambios y reglas de un plan. |
-| Semana de menú | `MenuWeek` | Entidad | Semana 1 o 2 de un plan. |
+| Semana de menú | `MenuWeek` | Entidad (local) | Semana 1 o 2 de un plan: su número es su identidad dentro del plan. Exactamente 6 días con menú, sin repetir ninguno, ordenados de lunes a domingo. Se construye desde los dos formatos de origen: `fromNutritionistMenus()` (menús 1-6, el 6 cae en domingo) y `fromSelfDays()` (días 8-14, el 13 vacío); o con `create()` a partir de sus días (HEXM-0013). |
 | Origen de la semana | `WeekSource` | Enum | `Nutritionist` (semana 1, "nutricionista"), `Self` (semana 2, "elaboración propia"). |
-| Día de menú | `MenuDay` | Entidad | Contiene la comida y la cena de un día. |
+| Día de menú | `MenuDay` | Value object | Día de la semana + comida + cena, ambas obligatorias. Nunca en sábado. Es value object y no entidad: su día de la semana es una clave dentro de su semana, no una identidad con ciclo de vida; cambiar un plato es sustituir el día entero (HEXM-0013). |
+| Día de la semana | `Weekday` | Enum | `Monday` (1) … `Sunday` (7), con la numeración ISO de PHP (`$date->format('N')`). Etiqueta en español con `label()`; `isFreeDay()` dice si es el día libre. |
 | Plato | `Dish` | Value object | Dos formatos: semana 1 `Dish::described()` (texto libre) y semana 2 `Dish::named()` (nombre corto + ingredientes opcionales). Nunca vacío. Opcionalmente un `RecipeId` (nivel 6). |
 | Ingrediente de un plato | `DishIngredient` | Value object | Nombre + cantidad opcional **en texto** ("80 g", "½ bote"). No usa el `Quantity` del recetario (frontera entre contextos); si la lista de la compra necesita sumar cantidades, se decidirá en el nivel 9 (HEXM-0012). |
-| Día libre | `FreeDay` | Concepto | El sábado. |
+| Día libre | `FreeDay` | Concepto | El sábado: `Weekday::Saturday->isFreeDay()`. No puede tener menú. |
 | Calendario de comidas | `MealCalendar` | Servicio de dominio | Calcula qué semana y qué día de menú corresponde a una fecha. |
 | Reloj | `Clock` | Puerto | Abstracción de "la fecha de hoy", para poder testear. |
 | Importación de plan | `PlanImport` | Caso de uso | Leer un plan desde un fichero externo. |
@@ -105,8 +106,8 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 ## 4. Reglas de negocio identificadas
 
 1. Un plan tiene exactamente **dos semanas** que se alternan, empezando por la semana 1.
-2. Cada semana tiene **6 días con menú** (lunes–viernes y domingo); el sábado es libre.
-3. Cada día con menú tiene **una comida y una cena**.
+2. Cada semana tiene **6 días con menú** (lunes–viernes y domingo), sin repetir ninguno; el sábado es libre y **no puede tener menú**. La numeración de los documentos (menús 1-6 en la semana 1, días 8-14 en la semana 2) es solo formato: el menú 6 es el domingo y el día 13 es el sábado vacío.
+3. Cada día con menú tiene **una comida y una cena**, las dos obligatorias.
 4. Las pautas fijas y los intercambios son **comunes a todas las semanas** del plan, pero **pueden cambiar entre planes**.
 5. Solo hay **un plan vigente** en cada fecha; un plan nuevo cierra la vigencia del anterior.
 6. Un plato puede ser **texto libre** o **referenciar una receta** del recetario, y esa receta debe existir.

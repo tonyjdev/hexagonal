@@ -2,7 +2,7 @@
 
 Hoja de ruta del proyecto organizada en **niveles**. Cada nivel es pequeño, termina con tests en verde y una etiqueta git (`nivel-NN`), y añade **un concepto nuevo** cada vez.
 
-**Estado actual:** 🟡 Nivel 3 (Planes: dominio) en curso: ya existen los value objects y enums de `MealPlanning` (HEXM-0012). Siguiente: días y semanas del plan (HEXM-0013).
+**Estado actual:** 🟡 Nivel 3 (Planes: dominio) en curso: ya existen los value objects y enums de `MealPlanning` (HEXM-0012) y las dos semanas de menú con sus días (HEXM-0013). Siguiente: pautas fijas e intercambios (HEXM-0014).
 
 Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado
 
@@ -97,3 +97,4 @@ El roadmap tiene tres bloques:
 | 2026-11-01 | 2 | HEXM-0011: `GET /api/recipes/{id}`, primer caso de uso de consulta (`GetRecipe`) con DTO de lectura (`RecipeView`), `Quantity::amountAsText()` ("1 ½"), `RecipeNotFound` → 404 e id mal formado → 422; JSON con un *API Resource* (ADR 0008). **Nivel 2 terminado** (`nivel-02`, diario `02-recetario-adaptadores.md`). |
 | 2026-11-01 | 2 | HEXM-0016: primera pantalla web, `GET /recipes/{id}` con Blade: segundo adaptador de entrada sobre `GetRecipe` y `RecipeView` sin tocar el núcleo, vistas en el contexto (`recipes::`), página 404 en español y errores según el canal (ADR 0009). Refuerzo posterior a `nivel-02`. |
 | 2026-11-02 | 3 | HEXM-0012: value objects y enums de `MealPlanning` (`NutritionPlanId`, `PlanNumber`, `MealType`, `WeekSource`, `ExchangeCategory`, `Dish`, `DishIngredient`); UUID v7 extraído a `Shared\Domain\Uuid` (actualización del ADR 0005); ingredientes de un plato con cantidad en texto, sin cruzar la frontera con `Recipes`. |
+| 2026-11-03 | 3 | HEXM-0013: `Weekday` (enum ISO, sábado libre), `MenuDay` (value object: comida y cena obligatorias, nunca en sábado) y `MenuWeek` (entidad local: 6 días sin repetir); traducción de los formatos de origen (menús 1-6 y días 8-14) en constructores con nombre. |

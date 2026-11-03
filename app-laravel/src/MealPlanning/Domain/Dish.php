@@ -26,7 +26,7 @@ namespace MealPlanning\Domain;
  * obligaría a comprobar tipos (instanceof) por todas partes.
  *
  * Por qué no guarda el WeekSource: el origen es de la SEMANA, no del plato.
- * Lo sabrá MenuWeek (HEXM-0013+), y un plato no necesita conocerlo.
+ * Lo sabe MenuWeek (HEXM-0013), y un plato no necesita conocerlo.
  *
  * INVARIANTE: un plato no puede estar vacío. Debe tener nombre (semana 2) o
  * descripción (semana 1). Los ingredientes son opcionales: algunos platos

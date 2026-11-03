@@ -1,0 +1,411 @@
+{
+  "schema_version": 1,
+  "diagram_type": "class",
+  "meta": {
+    "title": "Semana de menú: MenuWeek, MenuDay y Weekday",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0013/semana-de-menu.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "f383a2ce0d0a7a3f52d1a6a6cf01266918d29c5d"
+    }
+  },
+  "layout": {
+    "mode": "grid"
+  },
+  "types": [
+    {
+      "id": "menu_week",
+      "label": "MenuWeek",
+      "kind": "class",
+      "sublabel": "Entidad local · su número (1 o 2) dentro del plan",
+      "row": 0,
+      "col": 0,
+      "attributes": [
+        {
+          "name": "number",
+          "type": "int",
+          "visibility": "private"
+        },
+        {
+          "name": "source",
+          "type": "WeekSource",
+          "visibility": "private"
+        },
+        {
+          "name": "days",
+          "type": "list<MenuDay>",
+          "visibility": "private"
+        }
+      ],
+      "methods": [
+        {
+          "name": "create",
+          "parameters": "number, source, days",
+          "returns": "MenuWeek",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "fromNutritionistMenus",
+          "parameters": "menus 1-6",
+          "returns": "MenuWeek",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "fromSelfDays",
+          "parameters": "days 8-14",
+          "returns": "MenuWeek",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "day",
+          "parameters": "weekday: Weekday",
+          "returns": "?MenuDay",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MenuWeek.php",
+          "line": 77,
+          "end_line": 98,
+          "label": "create(): invariantes"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MenuWeek.php",
+          "line": 114,
+          "end_line": 169,
+          "label": "formatos de origen"
+        }
+      ]
+    },
+    {
+      "id": "menu_day",
+      "label": "MenuDay",
+      "kind": "class",
+      "sublabel": "Value object · comida + cena, nunca en sábado",
+      "row": 0,
+      "col": 1,
+      "attributes": [
+        {
+          "name": "weekday",
+          "type": "Weekday",
+          "visibility": "private"
+        },
+        {
+          "name": "lunch",
+          "type": "Dish",
+          "visibility": "private"
+        },
+        {
+          "name": "dinner",
+          "type": "Dish",
+          "visibility": "private"
+        }
+      ],
+      "methods": [
+        {
+          "name": "of",
+          "parameters": "weekday, ?lunch, ?dinner",
+          "returns": "MenuDay",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "equals",
+          "parameters": "other: MenuDay",
+          "returns": "bool",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MenuDay.php",
+          "line": 53,
+          "end_line": 94
+        }
+      ]
+    },
+    {
+      "id": "dish",
+      "label": "Dish",
+      "kind": "class",
+      "sublabel": "Value object (HEXM-0012) · nunca vacío",
+      "row": 0,
+      "col": 2,
+      "methods": [
+        {
+          "name": "described",
+          "parameters": "description",
+          "returns": "Dish",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "named",
+          "parameters": "name, ingredients = []",
+          "returns": "Dish",
+          "visibility": "public",
+          "static": true
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/Dish.php",
+          "line": 58,
+          "end_line": 84
+        }
+      ]
+    },
+    {
+      "id": "week_source",
+      "label": "WeekSource",
+      "kind": "enum",
+      "sublabel": "Nutritionist (sem. 1) · Self (sem. 2)",
+      "row": 1,
+      "col": 0,
+      "methods": [
+        {
+          "name": "label",
+          "returns": "string",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/WeekSource.php",
+          "line": 27,
+          "end_line": 42
+        }
+      ]
+    },
+    {
+      "id": "weekday",
+      "label": "Weekday",
+      "kind": "enum",
+      "sublabel": "ISO: Monday = 1 … Sunday = 7",
+      "row": 1,
+      "col": 1,
+      "methods": [
+        {
+          "name": "label",
+          "returns": "string",
+          "visibility": "public"
+        },
+        {
+          "name": "isFreeDay",
+          "returns": "bool",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/Weekday.php",
+          "line": 29,
+          "end_line": 69
+        }
+      ]
+    },
+    {
+      "id": "meal_type",
+      "label": "MealType",
+      "kind": "enum",
+      "sublabel": "Lunch y Dinner nombran lo que falta",
+      "row": 1,
+      "col": 2,
+      "methods": [
+        {
+          "name": "label",
+          "returns": "string",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MealType.php",
+          "line": 28,
+          "end_line": 54
+        }
+      ]
+    },
+    {
+      "id": "invalid_menu_week",
+      "label": "InvalidMenuWeek",
+      "kind": "class",
+      "sublabel": "Semana 3, días que faltan, repetidos o fuera de rango",
+      "row": 2,
+      "col": 0,
+      "methods": [
+        {
+          "name": "wrongNumberOfDays",
+          "parameters": "days: int",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "duplicatedDay",
+          "parameters": "weekday",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "unknownNutritionistMenu",
+          "parameters": "menu: int",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "unknownSelfDay",
+          "parameters": "day: int",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/InvalidMenuWeek.php",
+          "line": 15,
+          "end_line": 44
+        }
+      ]
+    },
+    {
+      "id": "invalid_menu_day",
+      "label": "InvalidMenuDay",
+      "kind": "class",
+      "sublabel": "Sin comida, sin cena o en sábado",
+      "row": 2,
+      "col": 1,
+      "methods": [
+        {
+          "name": "withoutMeal",
+          "parameters": "weekday, meal",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "onFreeDay",
+          "parameters": "weekday",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/InvalidMenuDay.php",
+          "line": 15,
+          "end_line": 26
+        }
+      ]
+    },
+    {
+      "id": "domain_exception",
+      "label": "DomainException",
+      "kind": "abstract",
+      "sublabel": "Shared\\Domain · base de errores de negocio",
+      "row": 3,
+      "col": 1,
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Domain/DomainException.php",
+          "line": 33,
+          "end_line": 33
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "week_has_days",
+      "from": "menu_week",
+      "to": "menu_day",
+      "kind": "composition",
+      "label": "6 días"
+    },
+    {
+      "id": "day_has_dishes",
+      "from": "menu_day",
+      "to": "dish",
+      "kind": "composition",
+      "label": "comida + cena"
+    },
+    {
+      "id": "week_source_of",
+      "from": "menu_week",
+      "to": "week_source",
+      "kind": "association",
+      "label": "origen"
+    },
+    {
+      "id": "day_keyed_by",
+      "from": "menu_day",
+      "to": "weekday",
+      "kind": "association",
+      "label": "clave en la semana"
+    },
+    {
+      "id": "day_names_meal",
+      "from": "menu_day",
+      "to": "meal_type",
+      "kind": "dependency",
+      "label": "nombra la que falta"
+    },
+    {
+      "id": "week_throws",
+      "from": "menu_week",
+      "to": "invalid_menu_week",
+      "kind": "dependency",
+      "label": "lanza"
+    },
+    {
+      "id": "day_throws",
+      "from": "menu_day",
+      "to": "invalid_menu_day",
+      "kind": "dependency",
+      "label": "lanza"
+    },
+    {
+      "id": "week_error_extends",
+      "from": "invalid_menu_week",
+      "to": "domain_exception",
+      "kind": "inheritance"
+    },
+    {
+      "id": "day_error_extends",
+      "from": "invalid_menu_day",
+      "to": "domain_exception",
+      "kind": "inheritance"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Entidad local frente a value object",
+      "items": [
+        "MenuWeek tiene identidad dentro del plan: la semana 2 sigue siendo la misma aunque cambien sus platos.",
+        "MenuDay no: cambiar la cena del martes es sustituir el día entero. Su Weekday es una clave, no una identidad.",
+        "Las dos son readonly: days() devuelve una copia y cada MenuDay es inmutable."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Invariantes repartidas",
+      "items": [
+        "MenuDay: comida y cena obligatorias; nunca en el día libre (Weekday::isFreeDay()).",
+        "MenuWeek: semana 1 o 2, ningún día repetido y exactamente 6 días.",
+        "Con 6 días distintos y ninguno en sábado, por fuerza son de lunes a viernes y el domingo."
+      ]
+    }
+  ]
+}
