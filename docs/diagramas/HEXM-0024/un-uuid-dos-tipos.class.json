@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "diagram_type": "class",
+  "meta": {
+    "title": "Un UUID, dos tipos: cómo nombra cada contexto a una receta",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0024/un-uuid-dos-tipos.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "ce28553be5c50bc6ae28ed943e757d84693081cf"
+    },
+    "legend": {
+      "entries": {
+        "composition": {
+          "label": "Envuelve (composición)"
+        },
+        "association": {
+          "label": "Apunta a (solo por identidad)"
+        },
+        "dependency": {
+          "label": "Lanza (error de dominio)"
+        }
+      }
+    }
+  },
+  "layout": {
+    "mode": "grid"
+  },
+  "types": [
+    {
+      "id": "recipe_id",
+      "label": "RecipeId",
+      "kind": "class",
+      "sublabel": "Recipes\\Domain · identidad de la receta",
+      "row": 0,
+      "col": 0,
+      "methods": [
+        {
+          "name": "generate",
+          "returns": "RecipeId",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "fromString",
+          "parameters": "value",
+          "returns": "RecipeId",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "value",
+          "returns": "string",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/RecipeId.php",
+          "line": 35,
+          "end_line": 69
+        }
+      ]
+    },
+    {
+      "id": "uuid",
+      "label": "Uuid",
+      "kind": "class",
+      "sublabel": "Shared\\Domain · shared kernel (técnica)",
+      "row": 0,
+      "col": 1,
+      "methods": [
+        {
+          "name": "v7",
+          "returns": "Uuid",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "tryFromString",
+          "parameters": "value",
+          "returns": "?Uuid",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "value",
+          "returns": "string",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Domain/Uuid.php",
+          "line": 40,
+          "end_line": 124
+        }
+      ]
+    },
+    {
+      "id": "recipe_ref",
+      "label": "RecipeReference",
+      "kind": "class",
+      "sublabel": "MealPlanning\\Domain · referencia hacia fuera",
+      "row": 0,
+      "col": 2,
+      "methods": [
+        {
+          "name": "fromString",
+          "parameters": "value",
+          "returns": "RecipeReference",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "value",
+          "returns": "string",
+          "visibility": "public"
+        },
+        {
+          "name": "equals",
+          "parameters": "other",
+          "returns": "bool",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/RecipeReference.php",
+          "line": 37,
+          "end_line": 61
+        }
+      ]
+    },
+    {
+      "id": "plan_id",
+      "label": "NutritionPlanId",
+      "kind": "class",
+      "sublabel": "MealPlanning\\Domain · identidad del plan",
+      "row": 1,
+      "col": 1,
+      "methods": [
+        {
+          "name": "generate",
+          "returns": "NutritionPlanId",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "value",
+          "returns": "string",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlanId.php",
+          "line": 28,
+          "end_line": 55
+        }
+      ]
+    },
+    {
+      "id": "dish",
+      "label": "Dish",
+      "kind": "class",
+      "sublabel": "MealPlanning\\Domain · value object",
+      "row": 1,
+      "col": 2,
+      "attributes": [
+        {
+          "name": "recipe",
+          "type": "?RecipeReference",
+          "visibility": "private"
+        }
+      ],
+      "methods": [
+        {
+          "name": "withRecipe",
+          "parameters": "recipe",
+          "returns": "Dish",
+          "visibility": "public"
+        },
+        {
+          "name": "recipe",
+          "returns": "?RecipeReference",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/Dish.php",
+          "line": 45,
+          "end_line": 110
+        }
+      ]
+    },
+    {
+      "id": "invalid",
+      "label": "InvalidRecipeReference",
+      "kind": "class",
+      "sublabel": "Error de dominio · en español",
+      "row": 1,
+      "col": 3,
+      "methods": [
+        {
+          "name": "malformed",
+          "parameters": "value",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/InvalidRecipeReference.php",
+          "line": 17,
+          "end_line": 23
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "r1",
+      "from": "recipe_id",
+      "to": "uuid",
+      "kind": "composition",
+      "label": "envuelve"
+    },
+    {
+      "id": "r2",
+      "from": "recipe_ref",
+      "to": "uuid",
+      "kind": "composition",
+      "label": "envuelve"
+    },
+    {
+      "id": "r3",
+      "from": "plan_id",
+      "to": "uuid",
+      "kind": "composition",
+      "label": "envuelve"
+    },
+    {
+      "id": "r4",
+      "from": "dish",
+      "to": "recipe_ref",
+      "kind": "association",
+      "label": "0..1 receta"
+    },
+    {
+      "id": "r5",
+      "from": "recipe_ref",
+      "to": "invalid",
+      "kind": "dependency",
+      "label": "lanza"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Se comparte la técnica, no el concepto (ADR 0016)",
+      "items": [
+        "RecipeId y RecipeReference envuelven el mismo Uuid del shared kernel, pero son tipos distintos: PHPStan no deja confundirlos.",
+        "El núcleo de MealPlanning no importa nada de Recipes; lo comprueban los tests de arquitectura."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Identidad frente a referencia",
+      "items": [
+        "RecipeId es la identidad del agregado Recipe en su contexto.",
+        "RecipeReference es una referencia hacia fuera: el plato solo guarda el id, no la receta, y puede apuntar a algo que ya no existe (HEXM-0027)."
+      ]
+    }
+  ]
+}
