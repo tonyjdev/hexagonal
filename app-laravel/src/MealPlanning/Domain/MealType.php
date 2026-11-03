@@ -17,11 +17,14 @@ namespace MealPlanning\Domain;
  * orden en que los listará MealType::cases() (útil para mostrar un día).
  *
  * En el negocio hay dos grupos (ver docs/DOMINIO.md):
- *   - Pautas fijas (FixedMeal, HEXM-0014): desayuno, media mañana y media
- *     tarde; iguales todos los días.
+ *   - Pautas fijas (FixedMeal): desayuno, media mañana y media tarde;
+ *     iguales todos los días. Lo dice isFixed().
  *   - Comidas del menú (Dish en MenuDay): comida y cena; cambian cada día.
- * De momento no se añade un método isFixed(): se escribirá cuando alguna
- * pieza del dominio lo necesite de verdad.
+ *
+ * CONCEPTO: YAGNI ("no lo vas a necesitar")
+ * isFixed() no se escribió en HEXM-0012, cuando nació el enum, sino en
+ * HEXM-0014, cuando FixedMeal lo necesitó de verdad. Así cada método tiene
+ * al menos un uso real (y un test) desde el primer día.
  *
  * CAPA: Dominio (MealPlanning\Domain).
  */
@@ -49,6 +52,21 @@ enum MealType: string
             self::Lunch => 'comida',
             self::AfternoonSnack => 'media tarde',
             self::Dinner => 'cena',
+        };
+    }
+
+    /**
+     * ¿Es una pauta fija (igual todos los días del plan)?
+     *
+     * Desayuno, media mañana y media tarde sí; comida y cena no, porque esas
+     * van en el menú de cada día (MenuDay). Con `match` sin `default`, un
+     * tipo de comida nuevo obliga a decidir a qué grupo pertenece.
+     */
+    public function isFixed(): bool
+    {
+        return match ($this) {
+            self::Breakfast, self::MidMorning, self::AfternoonSnack => true,
+            self::Lunch, self::Dinner => false,
         };
     }
 }

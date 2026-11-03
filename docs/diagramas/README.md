@@ -66,6 +66,8 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 | HEXM-0012 | [Shared kernel entre dos contextos](HEXM-0012/shared-kernel-entre-contextos.architecture.json) (`architecture`) | Qué comparten `Recipes` y `MealPlanning` (`Uuid` y `DomainException`, en `Shared\Domain`) y qué no (`Quantity`), sin ninguna flecha entre los dos contextos. |
 | HEXM-0013 | [Semana de menú](HEXM-0013/semana-de-menu.class.json) (`class`) | `MenuWeek` (entidad local) compuesta por 6 `MenuDay` (value objects) con comida y cena, la clave `Weekday`, el origen `WeekSource` y las excepciones `InvalidMenuWeek` e `InvalidMenuDay`. |
 | HEXM-0013 | [De los documentos a la semana](HEXM-0013/de-los-documentos-a-la-semana.workflow.json) (`workflow`) | Cómo los menús 1-6 y los días 8-14 se traducen a días de la semana y pasan por las mismas reglas (sábado, comida y cena, semana 1 o 2, repetidos, 6 días) hasta un `MenuWeek`. |
+| HEXM-0014 | [Pautas fijas e intercambios](HEXM-0014/pautas-fijas-e-intercambios.class.json) (`class`) | `FixedMeal` compuesta por grupos `OptionGroup` de `MealOption`, ligada a `MealType::isFixed()`, y `ExchangeTable` agrupando `Exchange` por `ExchangeCategory`, con la excepción que lanza cada pieza. |
+| HEXM-0014 | [¿Es válida esta pauta fija?](HEXM-0014/es-valida-esta-pauta-fija.workflow.json) (`workflow`) | Las reglas de un grupo "elige N" (rango de N, opciones repetidas) y de la pauta (comida fija, nunca vacía) hasta un `FixedMeal`, con cada error. |
 
 ### Transversal
 

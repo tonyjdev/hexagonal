@@ -1,0 +1,488 @@
+{
+  "schema_version": 1,
+  "diagram_type": "class",
+  "meta": {
+    "title": "Pautas fijas e intercambios: lo común a todas las semanas del plan",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0014/pautas-fijas-e-intercambios.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "027723f8e8a28bbc3eba4aa8ff47c45798df989a"
+    }
+  },
+  "layout": {
+    "mode": "grid"
+  },
+  "types": [
+    {
+      "id": "meal_type",
+      "label": "MealType",
+      "kind": "enum",
+      "sublabel": "isFixed(): las tres pautas fijas",
+      "row": 0,
+      "col": 0,
+      "methods": [
+        {
+          "name": "label",
+          "returns": "string",
+          "visibility": "public"
+        },
+        {
+          "name": "isFixed",
+          "returns": "bool",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MealType.php",
+          "line": 65,
+          "end_line": 71,
+          "label": "isFixed()"
+        }
+      ]
+    },
+    {
+      "id": "fixed_meal",
+      "label": "FixedMeal",
+      "kind": "class",
+      "sublabel": "Value object · nunca vacía",
+      "row": 0,
+      "col": 1,
+      "attributes": [
+        {
+          "name": "mealType",
+          "type": "MealType",
+          "visibility": "private"
+        },
+        {
+          "name": "description",
+          "type": "?string",
+          "visibility": "private"
+        },
+        {
+          "name": "optionGroups",
+          "type": "list<OptionGroup>",
+          "visibility": "private"
+        }
+      ],
+      "methods": [
+        {
+          "name": "of",
+          "parameters": "type, ?description, groups",
+          "returns": "FixedMeal",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "equals",
+          "parameters": "other: FixedMeal",
+          "returns": "bool",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/FixedMeal.php",
+          "line": 61,
+          "end_line": 76
+        }
+      ]
+    },
+    {
+      "id": "option_group",
+      "label": "OptionGroup",
+      "kind": "class",
+      "sublabel": "Value object · elige N, 1 ≤ N ≤ opciones",
+      "row": 0,
+      "col": 2,
+      "attributes": [
+        {
+          "name": "choose",
+          "type": "int",
+          "visibility": "private"
+        },
+        {
+          "name": "options",
+          "type": "list<MealOption>",
+          "visibility": "private"
+        }
+      ],
+      "methods": [
+        {
+          "name": "choose",
+          "parameters": "count, options",
+          "returns": "OptionGroup",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "count",
+          "returns": "int",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/OptionGroup.php",
+          "line": 52,
+          "end_line": 67,
+          "label": "choose(): invariantes"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/OptionGroup.php",
+          "line": 106,
+          "end_line": 115,
+          "label": "sin repetidas"
+        }
+      ]
+    },
+    {
+      "id": "meal_option",
+      "label": "MealOption",
+      "kind": "class",
+      "sublabel": "Value object · texto libre",
+      "row": 1,
+      "col": 2,
+      "methods": [
+        {
+          "name": "of",
+          "parameters": "text: string",
+          "returns": "MealOption",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "equals",
+          "parameters": "other: MealOption",
+          "returns": "bool",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MealOption.php",
+          "line": 36,
+          "end_line": 59
+        }
+      ]
+    },
+    {
+      "id": "invalid_fixed_meal",
+      "label": "InvalidFixedMeal",
+      "kind": "class",
+      "sublabel": "Comida o cena · pauta vacía",
+      "row": 1,
+      "col": 0,
+      "methods": [
+        {
+          "name": "notAFixedMeal",
+          "parameters": "mealType",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "empty",
+          "parameters": "mealType",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/InvalidFixedMeal.php",
+          "line": 14,
+          "end_line": 31
+        }
+      ]
+    },
+    {
+      "id": "invalid_option_group",
+      "label": "InvalidOptionGroup",
+      "kind": "class",
+      "sublabel": "N fuera de rango · opción vacía o repetida",
+      "row": 1,
+      "col": 1,
+      "methods": [
+        {
+          "name": "chooseAtLeastOne",
+          "parameters": "count",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "moreThanAvailable",
+          "parameters": "count, available",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "duplicatedOption",
+          "parameters": "option",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/InvalidOptionGroup.php",
+          "line": 15,
+          "end_line": 36
+        }
+      ]
+    },
+    {
+      "id": "exchange_category",
+      "label": "ExchangeCategory",
+      "kind": "enum",
+      "sublabel": "hidratos, proteínas, vegetales, grasas",
+      "row": 2,
+      "col": 0,
+      "methods": [
+        {
+          "name": "label",
+          "returns": "string",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/ExchangeCategory.php",
+          "line": 19,
+          "end_line": 39
+        }
+      ]
+    },
+    {
+      "id": "exchange",
+      "label": "Exchange",
+      "kind": "class",
+      "sublabel": "Value object · alimento + ración (texto)",
+      "row": 2,
+      "col": 1,
+      "attributes": [
+        {
+          "name": "category",
+          "type": "ExchangeCategory",
+          "visibility": "private"
+        },
+        {
+          "name": "food",
+          "type": "string",
+          "visibility": "private"
+        },
+        {
+          "name": "serving",
+          "type": "string",
+          "visibility": "private"
+        }
+      ],
+      "methods": [
+        {
+          "name": "of",
+          "parameters": "category, food, serving",
+          "returns": "Exchange",
+          "visibility": "public",
+          "static": true
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/Exchange.php",
+          "line": 43,
+          "end_line": 57
+        }
+      ]
+    },
+    {
+      "id": "exchange_table",
+      "label": "ExchangeTable",
+      "kind": "class",
+      "sublabel": "Value object · por categoría + reglas",
+      "row": 2,
+      "col": 2,
+      "attributes": [
+        {
+          "name": "byCategory",
+          "type": "array<string, list>",
+          "visibility": "private"
+        },
+        {
+          "name": "rules",
+          "type": "list<string>",
+          "visibility": "private"
+        }
+      ],
+      "methods": [
+        {
+          "name": "of",
+          "parameters": "exchanges, rules = []",
+          "returns": "ExchangeTable",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "exchangesIn",
+          "parameters": "category",
+          "returns": "list<Exchange>",
+          "visibility": "public"
+        },
+        {
+          "name": "rules",
+          "returns": "list<string>",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/ExchangeTable.php",
+          "line": 53,
+          "end_line": 76,
+          "label": "of(): agrupar y guardar reglas"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/ExchangeTable.php",
+          "line": 84,
+          "end_line": 97,
+          "label": "exchangesIn() y rules()"
+        }
+      ]
+    },
+    {
+      "id": "invalid_exchange_table",
+      "label": "InvalidExchangeTable",
+      "kind": "class",
+      "sublabel": "Sin alimento · sin ración · regla vacía",
+      "row": 3,
+      "col": 1,
+      "methods": [
+        {
+          "name": "exchangeWithoutFood",
+          "parameters": "category",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "exchangeWithoutServing",
+          "parameters": "food",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "emptyRule",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/InvalidExchangeTable.php",
+          "line": 18,
+          "end_line": 34
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "meal_is_fixed",
+      "from": "fixed_meal",
+      "to": "meal_type",
+      "kind": "association",
+      "label": "isFixed()"
+    },
+    {
+      "id": "meal_has_groups",
+      "from": "fixed_meal",
+      "to": "option_group",
+      "kind": "composition",
+      "label": "0..*"
+    },
+    {
+      "id": "group_has_options",
+      "from": "option_group",
+      "to": "meal_option",
+      "kind": "composition",
+      "label": "1..*"
+    },
+    {
+      "id": "meal_throws",
+      "from": "fixed_meal",
+      "to": "invalid_fixed_meal",
+      "kind": "dependency",
+      "label": "lanza"
+    },
+    {
+      "id": "group_throws",
+      "from": "option_group",
+      "to": "invalid_option_group",
+      "kind": "dependency",
+      "label": "lanza"
+    },
+    {
+      "id": "option_throws",
+      "from": "meal_option",
+      "to": "invalid_option_group",
+      "kind": "dependency",
+      "label": "lanza"
+    },
+    {
+      "id": "table_has_exchanges",
+      "from": "exchange_table",
+      "to": "exchange",
+      "kind": "composition",
+      "label": "agrupa"
+    },
+    {
+      "id": "exchange_category_of",
+      "from": "exchange",
+      "to": "exchange_category",
+      "kind": "association",
+      "label": "categoría"
+    },
+    {
+      "id": "exchange_throws",
+      "from": "exchange",
+      "to": "invalid_exchange_table",
+      "kind": "dependency",
+      "label": "lanza"
+    },
+    {
+      "id": "table_throws",
+      "from": "exchange_table",
+      "to": "invalid_exchange_table",
+      "kind": "dependency",
+      "label": "lanza"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Value objects compuestos",
+      "items": [
+        "Cada MealOption es válida sola; OptionGroup añade reglas sobre el conjunto: N ≥ 1, N ≤ opciones, sin repetidas.",
+        "FixedMeal solo para comidas fijas (MealType::isFixed()) y nunca vacía: parte fija, grupos o ambos.",
+        "Todo inmutable y comparado por valor; las tres excepciones heredan de DomainException."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Guardar una regla no es hacerla cumplir",
+      "items": [
+        "ExchangeTable conserva el texto y el orden de las reglas: \"la grasa solo en la comida o en la cena\".",
+        "Validarlas contra un menú llegará en el nivel 8, con la semana 2 del usuario.",
+        "PHP no admite enums como clave: se agrupa por ->value y se pregunta con exchangesIn()."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "¿Es válida esta pauta fija? Del documento a un FixedMeal",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0014/es-valida-esta-pauta-fija.html",
+    "quality_profile": "showcase",
+    "repository": { "url": "https://github.com/tonyjdev/hexagonal.git", "provider": "github", "revision": "027723f8e8a28bbc3eba4aa8ff47c45798df989a" },
+    "legend": {
+      "entries": {
+        "external": { "label": "Pauta del documento" },
+        "security": { "label": "Regla de negocio o error" },
+        "database": { "label": "Pauta válida" }
+      }
+    }
+  },
+  "lanes": [
+    { "id": "doc", "label": "Documento de la nutricionista" },
+    { "id": "groups", "label": "Cada grupo «elige N» (OptionGroup::choose)" },
+    { "id": "meal", "label": "La pauta (FixedMeal::of)" },
+    { "id": "errors", "label": "Errores en español", "variant": "exception" }
+  ],
+  "mainPath": ["input", "range_check", "dup_check", "type_check", "empty_check", "meal_ok"],
+  "nodes": [
+    {
+      "id": "input", "lane": "doc", "col": 0, "type": "external",
+      "label": "Media mañana", "sublabel": "elegir 2: fruta · yogur · nueces"
+    },
+    {
+      "id": "range_check", "lane": "groups", "col": 1, "type": "security",
+      "label": "¿1 ≤ N ≤ opciones?", "sublabel": "elige 2 de 3",
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/OptionGroup.php", "line": 56, "end_line": 62 } ]
+    },
+    {
+      "id": "dup_check", "lane": "groups", "col": 2, "type": "security",
+      "label": "¿Opción repetida?", "sublabel": "sin mayúsculas ni espacios",
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/OptionGroup.php", "line": 106, "end_line": 115 } ]
+    },
+    {
+      "id": "type_check", "lane": "meal", "col": 3, "type": "security",
+      "label": "¿Es comida fija?", "sublabel": "MealType::isFixed()",
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/FixedMeal.php", "line": 63, "end_line": 65 } ]
+    },
+    {
+      "id": "empty_check", "lane": "meal", "col": 4, "type": "security",
+      "label": "¿Tiene algo?", "sublabel": "parte fija o algún grupo",
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/FixedMeal.php", "line": 67, "end_line": 73 } ]
+    },
+    {
+      "id": "meal_ok", "lane": "meal", "col": 5, "type": "database",
+      "label": "FixedMeal", "sublabel": "igual todos los días",
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/FixedMeal.php", "line": 75, "end_line": 75 } ]
+    },
+    {
+      "id": "err_range", "lane": "errors", "col": 1, "type": "security",
+      "label": "N fuera de rango", "sublabel": "\"elegir 4 … solo tiene 3\"",
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/InvalidOptionGroup.php", "line": 17, "end_line": 25 } ]
+    },
+    {
+      "id": "err_dup", "lane": "errors", "col": 2, "type": "security",
+      "label": "Opción repetida", "sublabel": "\"la opción … está repetida\"",
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/InvalidOptionGroup.php", "line": 27, "end_line": 30 } ]
+    },
+    {
+      "id": "err_type", "lane": "errors", "col": 3, "type": "security",
+      "label": "Comida o cena", "sublabel": "\"no es una pauta fija\"",
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/InvalidFixedMeal.php", "line": 16, "end_line": 22 } ]
+    },
+    {
+      "id": "err_empty", "lane": "errors", "col": 4, "type": "security",
+      "label": "Pauta vacía", "sublabel": "\"no puede estar vacía\"",
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Domain/InvalidFixedMeal.php", "line": 24, "end_line": 30 } ]
+    }
+  ],
+  "edges": [
+    { "id": "read_group", "from": "input", "to": "range_check", "label": "cada grupo", "variant": "emphasis" },
+    { "id": "range_ok", "from": "range_check", "to": "dup_check", "label": "sí", "variant": "emphasis" },
+    { "id": "dup_ok", "from": "dup_check", "to": "type_check", "label": "ninguna", "variant": "emphasis" },
+    { "id": "type_ok", "from": "type_check", "to": "empty_check", "label": "sí", "variant": "emphasis" },
+    { "id": "empty_ok", "from": "empty_check", "to": "meal_ok", "label": "sí", "variant": "emphasis" },
+    { "id": "range_bad", "from": "range_check", "to": "err_range", "label": "0 o 4 de 3", "variant": "security", "role": "error" },
+    { "id": "dup_bad", "from": "dup_check", "to": "err_dup", "label": "sí", "variant": "security", "role": "error" },
+    { "id": "type_bad", "from": "type_check", "to": "err_type", "label": "comida, cena", "variant": "security", "role": "error" },
+    { "id": "empty_bad", "from": "empty_check", "to": "err_empty", "label": "no", "variant": "security", "role": "error" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Primero los grupos, después la pauta",
+      "items": [
+        "Cada OptionGroup ya llega válido a FixedMeal::of(): las reglas de un grupo se comprueban al crearlo.",
+        "La pauta solo añade lo suyo: que sea una comida fija y que no esté vacía."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Fuera de este recorrido",
+      "items": [
+        "Que el plan no repita pautas (dos desayunos) lo vigilará NutritionPlan (HEXM-0015).",
+        "Las reglas de los intercambios se guardan, no se aplican aquí (nivel 8)."
+      ]
+    }
+  ]
+}
