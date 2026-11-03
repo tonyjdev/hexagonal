@@ -65,7 +65,7 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 | Receta no encontrada | `RecipeNotFound` | Excepción (`Recipes\Application`) | No existe ninguna receta con ese id. Hereda de `NotFound`, no de `DomainException`. |
 | No encontrado | `NotFound` | Excepción (`Shared\Application`) | Base de "lo que buscas no existe", para todos los contextos. En la API llega como HTTP 404 `{"message": "…"}`. |
 | Al gusto / una pizca | — | Concepto | Cantidad sin número: no es una `Quantity`, sino la ausencia de cantidad del ingrediente. |
-| Error de dominio | `DomainException` | Excepción (`Shared\Domain`) | Base de los errores de negocio, con mensaje en español para el usuario: `InvalidQuantity`, `InvalidServings`, `InvalidStep`, `InvalidRecipeId`, `InvalidIngredient`, `InvalidRecipe` y, en `MealPlanning`, `InvalidNutritionPlanId`, `InvalidPlanNumber`, `InvalidDish`, `InvalidMenuDay`, `InvalidMenuWeek`. En la API llegan como HTTP 422 `{"message": "…"}`, traducidos en un único manejador ([ADR 0007](adr/0007-adaptador-http-validacion-de-forma-y-errores-de-dominio.md)). |
+| Error de dominio | `DomainException` | Excepción (`Shared\Domain`) | Base de los errores de negocio, con mensaje en español para el usuario: `InvalidQuantity`, `InvalidServings`, `InvalidStep`, `InvalidRecipeId`, `InvalidIngredient`, `InvalidRecipe` y, en `MealPlanning`, `InvalidNutritionPlanId`, `InvalidPlanNumber`, `InvalidDish`, `InvalidMenuDay`, `InvalidMenuWeek`, `InvalidFixedMeal`, `InvalidOptionGroup`, `InvalidExchangeTable`. En la API llegan como HTTP 422 `{"message": "…"}`, traducidos en un único manejador ([ADR 0007](adr/0007-adaptador-http-validacion-de-forma-y-errores-de-dominio.md)). |
 
 ### Planes y calendario (`MealPlanning`)
 
@@ -74,13 +74,15 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 | Plan nutricional | `NutritionPlan` | Entidad / raíz de agregado | Número (27), fecha de inicio, vigencia. |
 | Identificador de plan | `NutritionPlanId` | Value object | UUID v7 generado por el dominio, sobre el `Uuid` del *shared kernel* (como `RecipeId`). |
 | Número de plan | `PlanNumber` | Value object | Entero positivo que asigna la nutricionista ("plan 27"). Es un dato del negocio, no la identidad del plan. |
-| Tipo de comida | `MealType` | Enum | `Breakfast` (desayuno), `MidMorning` (media mañana), `Lunch` (comida), `AfternoonSnack` (media tarde), `Dinner` (cena), en el orden del día. Etiqueta en español con `label()`. |
-| Pauta fija | `FixedMeal` | Value object | Desayuno, media mañana y media tarde: iguales todos los días. |
-| Grupo de opciones | `OptionGroup` | Value object | "Elegir N de las siguientes". |
-| Opción | `MealOption` | Value object | |
-| Intercambio | `Exchange` | Value object | Una equivalencia: alimento + ración. |
+| Tipo de comida | `MealType` | Enum | `Breakfast` (desayuno), `MidMorning` (media mañana), `Lunch` (comida), `AfternoonSnack` (media tarde), `Dinner` (cena), en el orden del día. Etiqueta en español con `label()`; `isFixed()` dice si es una pauta fija (desayuno, media mañana, media tarde). |
+| Pauta fija | `FixedMeal` | Value object | Desayuno, media mañana o media tarde (nunca comida ni cena): iguales todos los días. Una parte fija opcional en texto libre (lo que se toma siempre) más sus grupos de opciones; nunca vacía (HEXM-0014). |
+| Grupo de opciones | `OptionGroup` | Value object | "Elegir N de las siguientes": `OptionGroup::choose(N, opciones)`, con N ≥ 1, N ≤ número de opciones y sin opciones repetidas. |
+| Opción | `MealOption` | Value object | Una opción de un grupo, en texto libre ("Yogur natural desnatado"). Nunca vacía; se compara sin distinguir mayúsculas ni espacios. |
+| Intercambio | `Exchange` | Value object | Una equivalencia: categoría + alimento + ración ("Arroz", "60 g en crudo"). La ración es texto y obligatoria. Un alimento puede estar en dos categorías (la legumbre). |
+| Ración (de un intercambio) | `serving` | Atributo de `Exchange` | La cantidad que equivale a un intercambio, tal como la escribe la nutricionista. |
 | Categoría de intercambio | `ExchangeCategory` | Enum | `Carbohydrates` (hidratos), `Protein` (proteínas), `Vegetables` (vegetales), `Fat` (grasas). |
-| Tabla de intercambios | `ExchangeTable` | Value object | Conjunto de intercambios y reglas de un plan. |
+| Tabla de intercambios | `ExchangeTable` | Value object | Intercambios agrupados por categoría (`exchangesIn()`), en el orden del documento, y las reglas del plan en texto y en orden (`rules()`). Las reglas se guardan; hacerlas cumplir contra un menú es del nivel 8 (HEXM-0014). |
+| Regla de intercambio | — | Concepto (texto en `ExchangeTable`) | "La legumbre cuenta como ½ intercambio de proteína", "la grasa solo en la comida o en la cena". Hoy es texto; puede pasar a código en el nivel 8. |
 | Semana de menú | `MenuWeek` | Entidad (local) | Semana 1 o 2 de un plan: su número es su identidad dentro del plan. Exactamente 6 días con menú, sin repetir ninguno, ordenados de lunes a domingo. Se construye desde los dos formatos de origen: `fromNutritionistMenus()` (menús 1-6, el 6 cae en domingo) y `fromSelfDays()` (días 8-14, el 13 vacío); o con `create()` a partir de sus días (HEXM-0013). |
 | Origen de la semana | `WeekSource` | Enum | `Nutritionist` (semana 1, "nutricionista"), `Self` (semana 2, "elaboración propia"). |
 | Día de menú | `MenuDay` | Value object | Día de la semana + comida + cena, ambas obligatorias. Nunca en sábado. Es value object y no entidad: su día de la semana es una clave dentro de su semana, no una identidad con ciclo de vida; cambiar un plato es sustituir el día entero (HEXM-0013). |
@@ -119,5 +121,8 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 12. Los **pasos de preparación son opcionales** y su orden es el de la lista: algunas recetas de los planes solo detallan ingredientes y raciones.
 13. Un **plato nunca está vacío**: en la semana 1 tiene una descripción en texto libre; en la semana 2, un nombre corto (los ingredientes son opcionales). Cada ingrediente de un plato tiene nombre; la cantidad es opcional y se guarda tal como se escribió.
 14. El **número de plan** es un entero positivo. Lo asigna la nutricionista y no es la identidad del plan.
+15. Las **pautas fijas** son solo desayuno, media mañana y media tarde, y nunca están vacías: tienen una parte fija, opciones a elegir o ambas.
+16. En un grupo **"elige N"**, N es al menos 1 y no mayor que el número de opciones, y ninguna opción se repite.
+17. Un **intercambio** indica siempre su alimento y su ración. Las **reglas de los intercambios** se conservan con su texto y su orden; se harán cumplir en el nivel 8.
 
 Esta lista crecerá a medida que avance el proyecto.

@@ -11,8 +11,8 @@ namespace MealPlanning\Domain;
  *
  * Un intercambio es una equivalencia dentro de una categoría: "60 g de arroz"
  * se puede cambiar por "80 g de pasta" porque los dos cuentan como un
- * intercambio de hidratos. La tabla (ExchangeTable) llegará en una tarea
- * posterior del nivel 3; aquí solo queda fijado el vocabulario.
+ * intercambio de hidratos. Cada Exchange lleva su categoría, y la tabla
+ * (ExchangeTable, HEXM-0014) los agrupa por ella.
  *
  * CAPA: Dominio (MealPlanning\Domain).
  */

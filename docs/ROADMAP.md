@@ -2,7 +2,7 @@
 
 Hoja de ruta del proyecto organizada en **niveles**. Cada nivel es pequeño, termina con tests en verde y una etiqueta git (`nivel-NN`), y añade **un concepto nuevo** cada vez.
 
-**Estado actual:** 🟡 Nivel 3 (Planes: dominio) en curso: ya existen los value objects y enums de `MealPlanning` (HEXM-0012) y las dos semanas de menú con sus días (HEXM-0013). Siguiente: pautas fijas e intercambios (HEXM-0014).
+**Estado actual:** 🟡 Nivel 3 (Planes: dominio) en curso: ya existen los value objects y enums de `MealPlanning` (HEXM-0012) las dos semanas de menú con sus días (HEXM-0013) y las pautas fijas e intercambios (HEXM-0014). Siguiente: el agregado `NutritionPlan` (HEXM-0015), que cierra el nivel.
 
 Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado
 
@@ -98,3 +98,4 @@ El roadmap tiene tres bloques:
 | 2026-11-01 | 2 | HEXM-0016: primera pantalla web, `GET /recipes/{id}` con Blade: segundo adaptador de entrada sobre `GetRecipe` y `RecipeView` sin tocar el núcleo, vistas en el contexto (`recipes::`), página 404 en español y errores según el canal (ADR 0009). Refuerzo posterior a `nivel-02`. |
 | 2026-11-02 | 3 | HEXM-0012: value objects y enums de `MealPlanning` (`NutritionPlanId`, `PlanNumber`, `MealType`, `WeekSource`, `ExchangeCategory`, `Dish`, `DishIngredient`); UUID v7 extraído a `Shared\Domain\Uuid` (actualización del ADR 0005); ingredientes de un plato con cantidad en texto, sin cruzar la frontera con `Recipes`. |
 | 2026-11-03 | 3 | HEXM-0013: `Weekday` (enum ISO, sábado libre), `MenuDay` (value object: comida y cena obligatorias, nunca en sábado) y `MenuWeek` (entidad local: 6 días sin repetir); traducción de los formatos de origen (menús 1-6 y días 8-14) en constructores con nombre. |
+| 2026-11-03 | 3 | HEXM-0014: pautas fijas (`FixedMeal` con parte fija en texto y grupos "elige N" `OptionGroup`/`MealOption`) y tabla de intercambios (`Exchange`, `ExchangeTable` agrupada por categoría con las reglas guardadas en texto, sin ejecutarlas hasta el nivel 8); `MealType::isFixed()`. |
