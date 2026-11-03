@@ -2,7 +2,7 @@
 
 Hoja de ruta del proyecto organizada en **niveles**. Cada nivel es pequeño, termina con tests en verde y una etiqueta git (`nivel-NN`), y añade **un concepto nuevo** cada vez.
 
-**Estado actual:** 🟡 Nivel 5 (Planes: adaptadores) en curso: los planes ya se guardan en PostgreSQL con `EloquentNutritionPlanRepository` (HEXM-0020). Siguiente: el alta manual de un plan por API (HEXM-0021).
+**Estado actual:** 🟡 Nivel 5 (Planes: adaptadores) en curso: los planes se guardan en PostgreSQL (HEXM-0020) y se dan de alta por la API con `POST /api/nutrition-plans` (HEXM-0021). Siguiente: el menú de hoy por la API con el reloj real (HEXM-0022).
 
 Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado
 
@@ -104,3 +104,4 @@ El roadmap tiene tres bloques:
 | 2026-11-03 | 4 | HEXM-0018: puerto `NutritionPlanRepository` (`save`, `find`, `inForceOn`) con `InMemoryNutritionPlanRepository`, tests de contrato y `NutritionPlanMother`; vigencia por fechas del calendario y `DuplicatedPlanStart` si otro plan empieza el mismo día: reglas entre agregados en el contrato del puerto (ADR 0011). |
 | 2026-11-03 | 4 | HEXM-0019: caso de uso `GetMenuForDate` ("¿qué me toca hoy?"), primero de `MealPlanning`: orquesta `inForceOn()`, `MealCalendar` y el puerto `Shared\Application\Clock` (`today()`, interfaz propia y no PSR-20; `SystemClock` con la zona inyectada y `FrozenClock`), y devuelve el DTO `ScheduledDayView`; sin plan vigente, `NoPlanInForce` (un `NotFound`). Tests de arquitectura: el núcleo no lee el reloj del sistema (ADR 0012). **Nivel 4 terminado** (`nivel-04`, diario `04-calendario.md`). |
 | 2026-11-04 | 5 | HEXM-0020: `EloquentNutritionPlanRepository`, segundo adaptador del puerto de planes: una fila por plan en `nutrition_plans` con el contenido en documentos `jsonb` (`NutritionPlanMapper`, que valida el JSON al leerlo), índice único en `starts_on` traducido a `DuplicatedPlanStart` y transacción como `SAVEPOINT` para que un duplicado no aborte la transacción de fuera; tests de contrato con los dos adaptadores, sin tocar el dominio ni la aplicación (ADR 0013). |
+| 2026-11-04 | 5 | HEXM-0021: alta manual de un plan, primer comando de `MealPlanning`: `RegisterNutritionPlan` (traduce sin decidir, con los constructores de formato de `MenuWeek`) y `POST /api/nutrition-plans` con una *Form Request* que solo valida la forma; JSON con el formato de los documentos (menús 1-6 y días 8-14), contrato natural del importador del nivel 7 (ADR 0014); `MealPlanningServiceProvider` enchufa el puerto a Eloquent; errores de traducción (tipo de comida, categoría, menú o día repetidos) como errores del dominio. |

@@ -1,0 +1,54 @@
+{
+    "number": 27,
+    "starts_on": "2026-11-02",
+    "fixed_meals": [
+        {
+            "meal_type": "breakfast",
+            "description": "Café con leche desnatada",
+            "option_groups": [
+                { "choose": 1, "options": ["Tostada de pan integral (40 g) con tomate", "30 g de copos de avena con canela"] }
+            ]
+        },
+        {
+            "meal_type": "mid_morning",
+            "description": null,
+            "option_groups": [
+                { "choose": 2, "options": ["Una pieza de fruta", "Un yogur natural desnatado", "Un puñado de almendras (15 g)"] }
+            ]
+        },
+        {
+            "meal_type": "afternoon_snack",
+            "description": "Infusión y 20 g de nueces",
+            "option_groups": []
+        }
+    ],
+    "exchanges": [
+        { "category": "carbohydrates", "food": "Arroz", "serving": "60 g en crudo" },
+        { "category": "carbohydrates", "food": "Pan integral", "serving": "40 g" },
+        { "category": "protein", "food": "Pechuga de pollo", "serving": "100 g" },
+        { "category": "protein", "food": "Legumbre cocida", "serving": "½ bote" },
+        { "category": "vegetables", "food": "Verdura de hoja", "serving": "200 g" },
+        { "category": "fat", "food": "Aceite de oliva virgen extra", "serving": "1 cucharada sopera" }
+    ],
+    "exchange_rules": [
+        "La legumbre cuenta como ½ intercambio de proteína.",
+        "La grasa solo en la comida o en la cena, no en ambas."
+    ],
+    "nutritionist_week": [
+        { "menu": 1, "lunch": "Lentejas (½ bote) con pisto y arroz", "dinner": "Merluza a la plancha con ensalada verde" },
+        { "menu": 2, "lunch": "Pollo al horno con patata asada", "dinner": "Crema de calabacín y tortilla francesa" },
+        { "menu": 3, "lunch": "Garbanzos con espinacas", "dinner": "Salmón con verduras salteadas" },
+        { "menu": 4, "lunch": "Pasta integral con atún y tomate", "dinner": "Revuelto de champiñones con pan integral" },
+        { "menu": 5, "lunch": "Arroz con verduras y huevo", "dinner": "Pavo a la plancha con pimientos asados" },
+        { "menu": 6, "lunch": "Guiso de alubias y pollo", "dinner": "Ensalada de quinoa con queso fresco" }
+    ],
+    "self_week": [
+        { "day": 8, "lunch": { "name": "Pasta con salmón y pesto", "ingredients": [{ "name": "Pasta integral", "quantity": "80 g" }, { "name": "Salmón", "quantity": "120 g" }, { "name": "Pesto", "quantity": "1 cucharada" }] }, "dinner": { "name": "Tortilla de calabacín", "ingredients": [{ "name": "Huevos", "quantity": "2" }, { "name": "Calabacín", "quantity": "1" }] } },
+        { "day": 9, "lunch": { "name": "Lentejas estofadas", "ingredients": [{ "name": "Lentejas cocidas", "quantity": "½ bote" }] }, "dinner": { "name": "Merluza con verduras", "ingredients": [] } },
+        { "day": 10, "lunch": { "name": "Pollo al curry con arroz", "ingredients": [{ "name": "Pechuga de pollo", "quantity": "100 g" }, { "name": "Arroz", "quantity": "60 g" }] }, "dinner": { "name": "Crema de calabaza", "ingredients": [] } },
+        { "day": 11, "lunch": { "name": "Garbanzos con bacalao", "ingredients": [] }, "dinner": { "name": "Ensalada de atún", "ingredients": [] } },
+        { "day": 12, "lunch": { "name": "Arroz con verduras", "ingredients": [] }, "dinner": { "name": "Huevos revueltos con espárragos", "ingredients": [] } },
+        { "day": 13, "lunch": null, "dinner": null },
+        { "day": 14, "lunch": { "name": "Guiso de ternera con patatas", "ingredients": [] }, "dinner": { "name": "Sopa de verduras", "ingredients": [] } }
+    ]
+}

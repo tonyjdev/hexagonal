@@ -28,4 +28,17 @@ final class InvalidFixedMeal extends DomainException
             $mealType->label(),
         ));
     }
+
+    /**
+     * Un tipo de comida que no existe ("merienda", "brunch"...). Solo puede
+     * pasar al traducir datos que llegan de fuera (el alta de un plan,
+     * HEXM-0021): dentro del dominio, MealType es un enum cerrado.
+     */
+    public static function unknownMealType(string $mealType): self
+    {
+        return new self(sprintf(
+            '"%s" no es un tipo de comida: las pautas fijas son el desayuno (breakfast), la media mañana (mid_morning) y la media tarde (afternoon_snack).',
+            $mealType,
+        ));
+    }
 }
