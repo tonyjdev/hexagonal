@@ -78,6 +78,8 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 |---|---|---|
 | HEXM-0017 | [¿Qué toca el día X?](HEXM-0017/que-toca-el-dia-x.workflow.json) (`workflow`) | `MealCalendar::dayOn()` paso a paso: días del calendario en UTC, fecha anterior al inicio (error), semana que toca por paridad y sábado libre o día con menú (`ScheduledDay`). |
 | HEXM-0017 | [Alternancia de semanas](HEXM-0017/alternancia-de-semanas.timeline.json) (`timeline`) | Las fechas de los tests del plan 27 sobre el tiempo: semanas 1 y 2 alternándose, sábados libres, la fecha anterior al inicio y el cambio de hora de marzo de 2027. La leyenda genérica de Archify se explica en la tarjeta "Cómo leerlo" (el tipo `timeline` no admite `meta.legend`). |
+| HEXM-0018 | [Repositorio de planes](HEXM-0018/repositorio-de-planes.architecture.json) (`architecture`) | El puerto `NutritionPlanRepository` en el dominio con su contrato (vigencia y planes que empiezan el mismo día), el adaptador en memoria que lo implementa y lanza `DuplicatedPlanStart`, y el de Eloquent que llegará en el nivel 5 (ADR 0011). |
+| HEXM-0018 | [Vigencia de los planes 26 y 27](HEXM-0018/vigencia-de-los-planes.timeline.json) (`timeline`) | Qué plan devuelve `inForceOn()` en cada fecha de ejemplo (ninguno, el 26, el 27; del último minuto del 1 de noviembre al primero del 2) y el plan 28 rechazado por empezar el mismo día que el 27. |
 
 ### Transversal
 

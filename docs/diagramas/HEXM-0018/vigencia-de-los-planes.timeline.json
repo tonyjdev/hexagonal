@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "diagram_type": "timeline",
+  "meta": {
+    "title": "Vigencia de los planes 26 y 27",
+    "subtitle": "Fechas de ejemplo de los tests de contrato: qué plan devuelve inForceOn() en cada una.",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0018/vigencia-de-los-planes.html",
+    "evidence": "illustrative",
+    "timezone": "Europe/Madrid",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "753b3cf132d7970a0042e56e6fa439645be191e4"
+    }
+  },
+  "layout": { "breaks": "auto" },
+  "lanes": [
+    { "id": "none", "label": "Sin plan vigente" },
+    { "id": "plan26", "label": "Plan 26 (desde el 07/09)" },
+    { "id": "plan27", "label": "Plan 27 (desde el 02/11)" },
+    { "id": "rejected", "label": "Rechazado al guardar" }
+  ],
+  "events": [
+    {
+      "id": "before_all", "at": "2026-08-01T12:00:00+02:00", "lane": "none", "kind": "alert",
+      "title": "01/08: ninguno", "detail": "Antes del primer plan: inForceOn() devuelve null."
+    },
+    {
+      "id": "plan26_starts", "at": "2026-09-07T12:00:00+02:00", "lane": "plan26", "kind": "action",
+      "title": "07/09: empieza el 26", "detail": "El día de inicio ya cuenta como vigente.",
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Infrastructure/InMemoryNutritionPlanRepository.php", "line": 65, "end_line": 79 } ]
+    },
+    {
+      "id": "mid_26", "at": "2026-10-15T12:00:00+02:00", "lane": "plan26", "kind": "default",
+      "title": "15/10: plan 26", "detail": "Inicio más reciente que no pasa de la fecha."
+    },
+    {
+      "id": "last_minute_26", "at": "2026-11-01T23:59:00+01:00", "lane": "plan26", "kind": "default",
+      "title": "01/11 23:59: plan 26", "detail": "El último minuto sigue siendo del 26."
+    },
+    {
+      "id": "plan27_starts", "at": "2026-11-02T00:00:00+01:00", "lane": "plan27", "kind": "change",
+      "title": "02/11: empieza el 27", "detail": "El 27 cierra la vigencia del 26, sin fecha de fin guardada (ADR 0010).",
+      "sources": [ { "path": "app-laravel/tests/Unit/MealPlanning/Infrastructure/NutritionPlanRepositoryContractTest.php", "line": 85, "end_line": 95 } ]
+    },
+    {
+      "id": "plan28_rejected", "at": "2026-11-02T12:00:00+01:00", "lane": "rejected", "kind": "alert",
+      "title": "Plan 28 el 02/11: rechazado", "detail": "DuplicatedPlanStart: ese día ya empieza el plan 27.",
+      "sources": [ { "path": "app-laravel/src/MealPlanning/Infrastructure/InMemoryNutritionPlanRepository.php", "line": 43, "end_line": 52 } ]
+    },
+    {
+      "id": "later_27", "at": "2026-12-20T12:00:00+01:00", "lane": "plan27", "kind": "default",
+      "title": "20/12: plan 27", "detail": "Sigue vigente hasta que llegue otro plan."
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Vigencia derivada",
+      "items": [
+        "Está vigente el plan de inicio más reciente que no pasa de la fecha.",
+        "Ningún plan guarda su fin: lo cierra el siguiente. Solo cuenta la fecha del calendario, no la hora."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Cómo leerlo",
+      "items": [
+        "Leyenda: «Respuesta» = empieza un plan, «Cambio» = cambia el plan vigente, «Alerta» = sin plan o plan rechazado, «Evento» = una consulta.",
+        "Son fechas de ejemplo de NutritionPlanRepositoryContractTest, no un registro real."
+      ]
+    }
+  ]
+}
