@@ -1,0 +1,283 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "¿Es válido este plan? Las comprobaciones de NutritionPlan::create()",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0015/es-valido-este-plan.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "d53e4b9ec0037c1feb754082ac34221ed15ebfb4"
+    },
+    "legend": {
+      "entries": {
+        "external": {
+          "label": "Piezas del plan (ya válidas)"
+        },
+        "security": {
+          "label": "Regla de negocio o error"
+        },
+        "database": {
+          "label": "Plan válido"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "input",
+      "label": "Piezas del plan 27"
+    },
+    {
+      "id": "rules",
+      "label": "Invariantes del agregado (NutritionPlan::create)"
+    },
+    {
+      "id": "errors",
+      "label": "Errores en español (InvalidNutritionPlan)",
+      "variant": "exception"
+    }
+  ],
+  "mainPath": [
+    "pieces",
+    "monday_check",
+    "fixed_check",
+    "dup_week_check",
+    "missing_week_check",
+    "plan_ok"
+  ],
+  "nodes": [
+    {
+      "id": "pieces",
+      "lane": "input",
+      "col": 0,
+      "type": "external",
+      "label": "Plan 27",
+      "sublabel": "inicio, pautas, intercambios, semanas"
+    },
+    {
+      "id": "monday_check",
+      "lane": "rules",
+      "col": 1,
+      "type": "security",
+      "label": "¿Empieza en lunes?",
+      "sublabel": "a medianoche · Weekday::fromDate()",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlan.php",
+          "line": 111,
+          "end_line": 116
+        }
+      ]
+    },
+    {
+      "id": "fixed_check",
+      "lane": "rules",
+      "col": 2,
+      "type": "security",
+      "label": "¿Pauta repetida?",
+      "sublabel": "como mucho una por tipo",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlan.php",
+          "line": 255,
+          "end_line": 263
+        }
+      ]
+    },
+    {
+      "id": "dup_week_check",
+      "lane": "rules",
+      "col": 3,
+      "type": "security",
+      "label": "¿Semana repetida?",
+      "sublabel": "dos veces la 1",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlan.php",
+          "line": 227,
+          "end_line": 233
+        }
+      ]
+    },
+    {
+      "id": "missing_week_check",
+      "lane": "rules",
+      "col": 4,
+      "type": "security",
+      "label": "¿Están la 1 y la 2?",
+      "sublabel": "sin repetidas, nunca más de 2",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlan.php",
+          "line": 235,
+          "end_line": 241
+        }
+      ]
+    },
+    {
+      "id": "plan_ok",
+      "lane": "rules",
+      "col": 5,
+      "type": "database",
+      "label": "NutritionPlan",
+      "sublabel": "semanas 1, 2 · pautas en orden del día",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlan.php",
+          "line": 118,
+          "end_line": 125
+        }
+      ]
+    },
+    {
+      "id": "err_monday",
+      "lane": "errors",
+      "col": 1,
+      "type": "security",
+      "label": "No es lunes",
+      "sublabel": "\"el 04/11/2026 es miércoles\"",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/InvalidNutritionPlan.php",
+          "line": 31,
+          "end_line": 40
+        }
+      ]
+    },
+    {
+      "id": "err_fixed",
+      "lane": "errors",
+      "col": 2,
+      "type": "security",
+      "label": "Pauta repetida",
+      "sublabel": "\"la pauta de desayuno…\"",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/InvalidNutritionPlan.php",
+          "line": 42,
+          "end_line": 45
+        }
+      ]
+    },
+    {
+      "id": "err_dup_week",
+      "lane": "errors",
+      "col": 3,
+      "type": "security",
+      "label": "Semana repetida",
+      "sublabel": "\"la semana 1 aparece más de una vez\"",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/InvalidNutritionPlan.php",
+          "line": 26,
+          "end_line": 29
+        }
+      ]
+    },
+    {
+      "id": "err_missing_week",
+      "lane": "errors",
+      "col": 4,
+      "type": "security",
+      "label": "Falta una semana",
+      "sublabel": "\"falta la semana 2\"",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/InvalidNutritionPlan.php",
+          "line": 18,
+          "end_line": 24
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "read_start",
+      "from": "pieces",
+      "to": "monday_check",
+      "label": "startsOn",
+      "variant": "emphasis"
+    },
+    {
+      "id": "monday_ok",
+      "from": "monday_check",
+      "to": "fixed_check",
+      "label": "sí",
+      "variant": "emphasis"
+    },
+    {
+      "id": "fixed_ok",
+      "from": "fixed_check",
+      "to": "dup_week_check",
+      "label": "no",
+      "variant": "emphasis"
+    },
+    {
+      "id": "dup_ok",
+      "from": "dup_week_check",
+      "to": "missing_week_check",
+      "label": "no",
+      "variant": "emphasis"
+    },
+    {
+      "id": "both_ok",
+      "from": "missing_week_check",
+      "to": "plan_ok",
+      "label": "sí",
+      "variant": "emphasis"
+    },
+    {
+      "id": "monday_bad",
+      "from": "monday_check",
+      "to": "err_monday",
+      "label": "no",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "fixed_bad",
+      "from": "fixed_check",
+      "to": "err_fixed",
+      "label": "sí",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "dup_bad",
+      "from": "dup_week_check",
+      "to": "err_dup_week",
+      "label": "sí",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "missing_bad",
+      "from": "missing_week_check",
+      "to": "err_missing_week",
+      "label": "no",
+      "variant": "security",
+      "role": "error"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Las piezas ya llegan válidas",
+      "items": [
+        "Cada MenuWeek (6 días, semana 1 o 2), FixedMeal y ExchangeTable comprobó sus reglas al crearse.",
+        "El agregado solo añade las reglas del CONJUNTO: cuántas semanas, qué día empieza, pautas sin repetir."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Fuera de este recorrido",
+      "items": [
+        "\"Solo un plan vigente en cada fecha\" mira varios planes: nivel 5.",
+        "\"¿Qué me toca hoy?\" (MealCalendar + Clock): nivel 4."
+      ]
+    }
+  ]
+}

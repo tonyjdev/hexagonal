@@ -1,0 +1,202 @@
+{
+  "schema_version": 1,
+  "diagram_type": "class",
+  "meta": {
+    "title": "Agregado NutritionPlan: qué hay dentro de la frontera de consistencia",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0015/agregado-nutritionplan.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "d53e4b9ec0037c1feb754082ac34221ed15ebfb4"
+    },
+    "legend": {
+      "entries": {
+        "composition": { "label": "Dentro del agregado (se crea y se guarda con el plan)" },
+        "association": { "label": "Usa un value object o enum" },
+        "dependency": { "label": "Lanza (error de dominio)" }
+      }
+    }
+  },
+  "layout": {
+    "mode": "grid"
+  },
+  "types": [
+    {
+      "id": "plan_id",
+      "label": "NutritionPlanId",
+      "kind": "class",
+      "sublabel": "Value object · identidad (UUID v7)",
+      "row": 0,
+      "col": 0,
+      "methods": [
+        { "name": "generate", "returns": "NutritionPlanId", "visibility": "public", "static": true },
+        { "name": "equals", "parameters": "other", "returns": "bool", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/NutritionPlanId.php", "line": 28, "end_line": 55 }
+      ]
+    },
+    {
+      "id": "plan_number",
+      "label": "PlanNumber",
+      "kind": "class",
+      "sublabel": "Value object · \"plan 27\", no es la identidad",
+      "row": 1,
+      "col": 0,
+      "methods": [
+        { "name": "of", "parameters": "value: int", "returns": "PlanNumber", "visibility": "public", "static": true }
+      ],
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/PlanNumber.php", "line": 25, "end_line": 47 }
+      ]
+    },
+    {
+      "id": "weekday",
+      "label": "Weekday",
+      "kind": "enum",
+      "sublabel": "ISO 1-7 · fromDate() nuevo",
+      "row": 2,
+      "col": 0,
+      "methods": [
+        { "name": "fromDate", "parameters": "date", "returns": "Weekday", "visibility": "public", "static": true },
+        { "name": "isFreeDay", "returns": "bool", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/Weekday.php", "line": 54, "end_line": 57, "label": "fromDate()" }
+      ]
+    },
+    {
+      "id": "nutrition_plan",
+      "label": "NutritionPlan",
+      "kind": "class",
+      "sublabel": "Raíz del agregado · entidad readonly",
+      "row": 1,
+      "col": 1,
+      "attributes": [
+        { "name": "id", "type": "NutritionPlanId", "visibility": "private" },
+        { "name": "number", "type": "PlanNumber", "visibility": "private" },
+        { "name": "startsOn", "type": "DateTimeImmutable", "visibility": "private" },
+        { "name": "fixedMeals", "type": "list<FixedMeal>", "visibility": "private" },
+        { "name": "exchangeTable", "type": "ExchangeTable", "visibility": "private" },
+        { "name": "weeks", "type": "list<MenuWeek>", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "create", "parameters": "id, number, startsOn, fixedMeals, table, weeks", "returns": "NutritionPlan", "visibility": "public", "static": true },
+        { "name": "week", "parameters": "number: int", "returns": "MenuWeek", "visibility": "public" },
+        { "name": "fixedMeal", "parameters": "type: MealType", "returns": "?FixedMeal", "visibility": "public" },
+        { "name": "equals", "parameters": "other", "returns": "bool", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/NutritionPlan.php", "line": 82, "end_line": 89, "label": "estado (readonly)" },
+        { "path": "app-laravel/src/MealPlanning/Domain/NutritionPlan.php", "line": 103, "end_line": 126, "label": "create(): invariantes" },
+        { "path": "app-laravel/src/MealPlanning/Domain/NutritionPlan.php", "line": 192, "end_line": 210, "label": "week() y equals()" }
+      ]
+    },
+    {
+      "id": "invalid_plan",
+      "label": "InvalidNutritionPlan",
+      "kind": "class",
+      "sublabel": "Semana que falta o repetida · no es lunes · pauta repetida",
+      "row": 2,
+      "col": 1,
+      "methods": [
+        { "name": "missingWeek", "parameters": "number", "returns": "self", "visibility": "public", "static": true },
+        { "name": "duplicatedWeek", "parameters": "number", "returns": "self", "visibility": "public", "static": true },
+        { "name": "startsOnNonMonday", "parameters": "startsOn", "returns": "self", "visibility": "public", "static": true },
+        { "name": "duplicatedFixedMeal", "parameters": "mealType", "returns": "self", "visibility": "public", "static": true }
+      ],
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/InvalidNutritionPlan.php", "line": 16, "end_line": 46 }
+      ]
+    },
+    {
+      "id": "fixed_meal",
+      "label": "FixedMeal",
+      "kind": "class",
+      "sublabel": "Value object · 0..1 por tipo (HEXM-0014)",
+      "row": 0,
+      "col": 2,
+      "methods": [
+        { "name": "mealType", "returns": "MealType", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/NutritionPlan.php", "line": 251, "end_line": 274, "label": "sin repetir, en el orden del día" }
+      ]
+    },
+    {
+      "id": "exchange_table",
+      "label": "ExchangeTable",
+      "kind": "class",
+      "sublabel": "Value object · intercambios + reglas (HEXM-0014)",
+      "row": 1,
+      "col": 2,
+      "methods": [
+        { "name": "rules", "returns": "list<string>", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/NutritionPlan.php", "line": 172, "end_line": 175, "label": "exchangeTable()" }
+      ]
+    },
+    {
+      "id": "menu_week",
+      "label": "MenuWeek",
+      "kind": "class",
+      "sublabel": "Entidad local · semana 1 y 2 (HEXM-0013)",
+      "row": 2,
+      "col": 2,
+      "methods": [
+        { "name": "number", "returns": "int", "visibility": "public" },
+        { "name": "day", "parameters": "weekday", "returns": "?MenuDay", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/NutritionPlan.php", "line": 223, "end_line": 242, "label": "exactamente la 1 y la 2" }
+      ]
+    },
+    {
+      "id": "menu_day",
+      "label": "MenuDay",
+      "kind": "class",
+      "sublabel": "Value object · comida + cena, nunca sábado",
+      "row": 3,
+      "col": 2,
+      "methods": [
+        { "name": "of", "parameters": "weekday, lunch, dinner", "returns": "MenuDay", "visibility": "public", "static": true }
+      ],
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/MenuDay.php", "line": 53, "end_line": 53 }
+      ]
+    }
+  ],
+  "relationships": [
+    { "id": "plan_has_id", "from": "nutrition_plan", "to": "plan_id", "kind": "association", "label": "identidad" },
+    { "id": "plan_has_number", "from": "nutrition_plan", "to": "plan_number", "kind": "association", "label": "número" },
+    { "id": "plan_monday", "from": "nutrition_plan", "to": "weekday", "kind": "association", "label": "¿lunes?" },
+    { "id": "plan_throws", "from": "nutrition_plan", "to": "invalid_plan", "kind": "dependency", "label": "lanza" },
+    { "id": "plan_fixed", "from": "nutrition_plan", "to": "fixed_meal", "kind": "composition", "label": "0..3" },
+    { "id": "plan_table", "from": "nutrition_plan", "to": "exchange_table", "kind": "composition", "label": "1" },
+    { "id": "plan_weeks", "from": "nutrition_plan", "to": "menu_week", "kind": "composition", "label": "2" },
+    { "id": "week_days", "from": "menu_week", "to": "menu_day", "kind": "composition", "label": "6" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Dentro: todo lo que comparte una regla",
+      "items": [
+        "Las dos semanas, sus 6 días, las pautas fijas y la tabla de intercambios se crean, validan y (en el nivel 5) se guardan juntas, a través de la raíz.",
+        "Invariantes: semana 1 y 2 sin repetir, inicio en lunes, como mucho una pauta por tipo.",
+        "Se lee todo (week(), fixedMeal()…), pero nada se puede cambiar: clase readonly y arrays devueltos como copia."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Fuera: otros agregados (ADR 0010)",
+      "items": [
+        "Las recetas: un plato las referenciará solo por RecipeId (nivel 6).",
+        "Los demás planes: \"solo un plan vigente\" afecta a varios, se resuelve con el repositorio (nivel 5).",
+        "Sin fecha de fin: la vigencia acaba cuando empieza el plan siguiente."
+      ]
+    }
+  ]
+}
