@@ -1,0 +1,413 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Borrar una receta: 204 con RecipeDeleted, 404 o 422",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0026/borrar-una-receta.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "4c984322829d197c5b65883e1fcc25d54e6ad49b"
+    },
+    "legend": {
+      "entries": {
+        "default": {
+          "label": "Llamada"
+        },
+        "emphasis": {
+          "label": "Camino principal"
+        },
+        "security": {
+          "label": "Error (404 / 422), sin evento"
+        },
+        "return": {
+          "label": "Respuesta"
+        }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Cliente",
+      "sublabel": "tests · curl",
+      "sources": [
+        {
+          "path": "app-laravel/tests/Feature/Recipes/Infrastructure/Http/DeleteRecipeEndpointTest.php",
+          "line": 41,
+          "end_line": 64,
+          "label": "borrada y evento"
+        },
+        {
+          "path": "app-laravel/tests/Feature/Recipes/Infrastructure/Http/DeleteRecipeEndpointTest.php",
+          "line": 66,
+          "end_line": 80,
+          "label": "404 y 422"
+        }
+      ]
+    },
+    {
+      "id": "http",
+      "type": "frontend",
+      "label": "HTTP",
+      "sublabel": "DeleteRecipeController",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Http/DeleteRecipeController.php",
+          "line": 27,
+          "end_line": 39
+        },
+        {
+          "path": "app-laravel/routes/api.php",
+          "line": 52,
+          "end_line": 52,
+          "label": "DELETE /api/recipes/{id}"
+        }
+      ]
+    },
+    {
+      "id": "usecase",
+      "type": "backend",
+      "label": "DeleteRecipe",
+      "sublabel": "Recipes\\Application",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Application/DeleteRecipe.php",
+          "line": 43,
+          "end_line": 70
+        }
+      ]
+    },
+    {
+      "id": "recipe",
+      "type": "security",
+      "label": "Recipe",
+      "sublabel": "agregado (dominio)",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Domain/Recipe.php",
+          "line": 142,
+          "end_line": 145,
+          "label": "delete()"
+        },
+        {
+          "path": "app-laravel/src/Shared/Domain/RecordsEvents.php",
+          "line": 34,
+          "end_line": 65,
+          "label": "releaseEvents()"
+        }
+      ]
+    },
+    {
+      "id": "repo",
+      "type": "database",
+      "label": "Repositorio",
+      "sublabel": "Eloquent · PostgreSQL",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/Persistence/Eloquent/EloquentRecipeRepository.php",
+          "line": 92,
+          "end_line": 122
+        }
+      ]
+    },
+    {
+      "id": "bus",
+      "type": "messagebus",
+      "label": "EventBus",
+      "sublabel": "LaravelEventBus",
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Application/EventBus.php",
+          "line": 35,
+          "end_line": 42,
+          "label": "puerto"
+        },
+        {
+          "path": "app-laravel/src/Shared/Infrastructure/LaravelEventBus.php",
+          "line": 51,
+          "end_line": 85,
+          "label": "afterCommit"
+        }
+      ]
+    },
+    {
+      "id": "listener",
+      "type": "cloud",
+      "label": "Oyente",
+      "sublabel": "listener de Laravel",
+      "sources": [
+        {
+          "path": "app-laravel/tests/Feature/Recipes/Infrastructure/Http/DeleteRecipeEndpointTest.php",
+          "line": 30,
+          "end_line": 39,
+          "label": "Event::listen en los tests"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 140,
+      "to": 840,
+      "label": "1. La receta existe → 204 y un RecipeDeleted"
+    },
+    {
+      "from": 875,
+      "to": 1175,
+      "label": "2. No existe → 404, sin borrar ni publicar"
+    },
+    {
+      "from": 1210,
+      "to": 1420,
+      "label": "3. Id mal formado → 422, sin evento"
+    }
+  ],
+  "messages": [
+    {
+      "id": "del",
+      "from": "client",
+      "to": "http",
+      "y": 165,
+      "label": "DELETE /api/recipes/0190a…",
+      "variant": "emphasis"
+    },
+    {
+      "id": "inv",
+      "from": "http",
+      "to": "usecase",
+      "y": 210,
+      "label": "__invoke(id)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "find",
+      "from": "usecase",
+      "to": "repo",
+      "y": 255,
+      "label": "find(RecipeId)",
+      "variant": "default"
+    },
+    {
+      "id": "found",
+      "from": "repo",
+      "to": "usecase",
+      "y": 300,
+      "label": "Recipe",
+      "variant": "return"
+    },
+    {
+      "id": "mark",
+      "from": "usecase",
+      "to": "recipe",
+      "y": 345,
+      "label": "delete(03/11)",
+      "variant": "emphasis",
+      "note": "registra RecipeDeleted"
+    },
+    {
+      "id": "remove",
+      "from": "usecase",
+      "to": "repo",
+      "y": 415,
+      "label": "delete(RecipeId)",
+      "variant": "emphasis",
+      "note": "un DELETE; cascada a ingredientes y pasos"
+    },
+    {
+      "id": "removed",
+      "from": "repo",
+      "to": "usecase",
+      "y": 485,
+      "label": "borrada (confirmado)",
+      "variant": "return"
+    },
+    {
+      "id": "release",
+      "from": "usecase",
+      "to": "recipe",
+      "y": 530,
+      "label": "releaseEvents()",
+      "variant": "default"
+    },
+    {
+      "id": "events",
+      "from": "recipe",
+      "to": "usecase",
+      "y": 575,
+      "label": "[RecipeDeleted]",
+      "variant": "return"
+    },
+    {
+      "id": "publish",
+      "from": "usecase",
+      "to": "bus",
+      "y": 620,
+      "label": "publish(RecipeDeleted)",
+      "variant": "emphasis",
+      "note": "después de borrar, nunca antes"
+    },
+    {
+      "id": "dispatch",
+      "from": "bus",
+      "to": "listener",
+      "y": 690,
+      "label": "dispatch() tras el commit",
+      "variant": "emphasis",
+      "note": "HEXM-0027: MealPlanning"
+    },
+    {
+      "id": "done",
+      "from": "usecase",
+      "to": "http",
+      "y": 760,
+      "label": "void",
+      "variant": "return"
+    },
+    {
+      "id": "no_content",
+      "from": "http",
+      "to": "client",
+      "y": 805,
+      "label": "204 No Content",
+      "variant": "return"
+    },
+    {
+      "id": "del2",
+      "from": "client",
+      "to": "http",
+      "y": 900,
+      "label": "DELETE /api/recipes/0190a…f90",
+      "variant": "default"
+    },
+    {
+      "id": "inv2",
+      "from": "http",
+      "to": "usecase",
+      "y": 945,
+      "label": "__invoke(id)",
+      "variant": "default"
+    },
+    {
+      "id": "find2",
+      "from": "usecase",
+      "to": "repo",
+      "y": 990,
+      "label": "find(RecipeId)",
+      "variant": "default"
+    },
+    {
+      "id": "none",
+      "from": "repo",
+      "to": "usecase",
+      "y": 1035,
+      "label": "null",
+      "variant": "return"
+    },
+    {
+      "id": "not_found",
+      "from": "usecase",
+      "to": "http",
+      "y": 1080,
+      "label": "throw RecipeNotFound",
+      "variant": "security",
+      "note": "ni se borra ni se publica"
+    },
+    {
+      "id": "r404",
+      "from": "http",
+      "to": "client",
+      "y": 1150,
+      "label": "404 {message}",
+      "variant": "return"
+    },
+    {
+      "id": "del3",
+      "from": "client",
+      "to": "http",
+      "y": 1235,
+      "label": "DELETE /api/recipes/guiso",
+      "variant": "default"
+    },
+    {
+      "id": "inv3",
+      "from": "http",
+      "to": "usecase",
+      "y": 1280,
+      "label": "__invoke('guiso')",
+      "variant": "default"
+    },
+    {
+      "id": "bad",
+      "from": "usecase",
+      "to": "http",
+      "y": 1325,
+      "label": "throw InvalidRecipeId",
+      "variant": "security",
+      "note": "RecipeId::fromString()"
+    },
+    {
+      "id": "r422",
+      "from": "http",
+      "to": "client",
+      "y": 1395,
+      "label": "422 {message}",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "usecase",
+      "from": 210,
+      "to": 760,
+      "type": "backend"
+    },
+    {
+      "participant": "bus",
+      "from": 620,
+      "to": 690,
+      "type": "messagebus"
+    },
+    {
+      "participant": "usecase",
+      "from": 945,
+      "to": 1080,
+      "type": "backend"
+    },
+    {
+      "participant": "usecase",
+      "from": 1280,
+      "to": 1325,
+      "type": "backend"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Registrar, borrar y después publicar",
+      "items": [
+        "La receta anota el evento; el caso de uso borra y solo entonces lo publica.",
+        "Con 404 o 422 el caso de uso se para antes: ni se borra ni se anuncia nada."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Nadie conoce al oyente",
+      "items": [
+        "Ni DeleteRecipe ni el bus saben quién escucha: el oyente se registra en Laravel.",
+        "En HEXM-0027 será MealPlanning; hoy solo los tests."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "El riesgo que se acepta (ADR 0018)",
+      "items": [
+        "Si el proceso se cae entre el borrado y la publicación, el aviso se pierde.",
+        "El patrón outbox lo evitaría; queda fuera de alcance."
+      ]
+    }
+  ]
+}

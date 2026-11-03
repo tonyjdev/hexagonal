@@ -60,6 +60,12 @@ final class InMemoryRecipeRepository implements RecipeRepository
         return $recipe === null ? null : clone $recipe;
     }
 
+    public function delete(RecipeId $id): void
+    {
+        // unset() de una clave que no existe no hace nada: idempotente.
+        unset($this->recipes[$id->value()]);
+    }
+
     /**
      * Cuántas recetas hay guardadas. No forma parte del puerto: es una
      * ayuda para los tests ("no se ha guardado nada").

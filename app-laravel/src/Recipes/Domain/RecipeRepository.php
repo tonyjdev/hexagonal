@@ -28,8 +28,9 @@ namespace Recipes\Domain;
  * ni consultas SQL. save() vale tanto para una receta nueva como para una
  * modificada.
  *
- * Solo tiene los métodos que alguien usa hoy (CreateRecipe y sus tests).
- * Crecerá con los casos de uso que lo necesiten (borrar, listar...).
+ * Solo tiene los métodos que alguien usa hoy: guardar (CreateRecipe), buscar
+ * (GetRecipe) y, desde HEXM-0026, borrar (DeleteRecipe). Crecerá con los
+ * casos de uso que lo necesiten (listar...).
  *
  * CAPA: Dominio (Recipes\Domain).
  */
@@ -45,4 +46,18 @@ interface RecipeRepository
      * Devuelve la receta con ese identificador, o null si no existe.
      */
     public function find(RecipeId $id): ?Recipe;
+
+    /**
+     * Borra la receta con ese identificador, entera: con sus ingredientes y
+     * sus pasos (el agregado se borra como una unidad, igual que se guarda).
+     *
+     * Si no existe, no hace nada: borrar es IDEMPOTENTE (repetirlo deja el
+     * mismo resultado). Decir "no existe" es trabajo del caso de uso, que la
+     * busca antes (RecipeNotFound); el repositorio no lanza nada.
+     *
+     * Recibe el id y no la Recipe: para borrar basta con saber cuál. Los
+     * eventos que la receta haya registrado no son cosa del repositorio: los
+     * publica el caso de uso (ADR 0018).
+     */
+    public function delete(RecipeId $id): void;
 }

@@ -4,9 +4,9 @@ Piezas **mínimas** que necesitan varios contextos. En DDD se llama *shared kern
 
 | Capa | Ejemplos de lo que puede ir aquí |
 |---|---|
-| `Domain/` | La excepción base `DomainException`, el tipo `Uuid` (UUID v7, HEXM-0012) y, más adelante, la interfaz `DomainEvent`… |
-| `Application/` | La excepción base `NotFound` (HEXM-0011, → HTTP 404) y puertos transversales: el reloj `Clock` (HEXM-0019, ADR 0012) y, más adelante, un `EventBus` o un `TransactionManager`. |
-| `Infrastructure/` | Sus adaptadores: `SystemClock` (el reloj real, con la zona horaria inyectada) y `FrozenClock` (una fecha fija, para los tests), y `SharedServiceProvider`, que enchufa `Clock` a `SystemClock` con la zona de `config/clock.php` (HEXM-0022). |
+| `Domain/` | La excepción base `DomainException`, el tipo `Uuid` (UUID v7, HEXM-0012), la interfaz `DomainEvent` y el *trait* `RecordsEvents` con el que un agregado registra sus eventos (HEXM-0026, ADR 0018). |
+| `Application/` | La excepción base `NotFound` (HEXM-0011, → HTTP 404) y puertos transversales: el reloj `Clock` (HEXM-0019, ADR 0012) y el bus de eventos `EventBus` (HEXM-0026, ADR 0018). |
+| `Infrastructure/` | Sus adaptadores: `SystemClock` (el reloj real, con la zona horaria inyectada) y `FrozenClock` (una fecha fija, para los tests), `LaravelEventBus` (el *dispatcher* de Laravel, que publica después del *commit*) e `InMemoryEventBus` (tests), y `SharedServiceProvider`, que enchufa `Clock` a `SystemClock` con la zona de `config/clock.php` (HEXM-0022) y `EventBus` a `LaravelEventBus` (HEXM-0026). |
 
 **Regla:** `Shared` no depende de ningún contexto (los tests de arquitectura lo comprueban). Antes de mover algo aquí, conviene preguntarse si es *de verdad* común o si solo se parece: duplicar un poco es mejor que acoplar dos contextos por una abstracción prematura.
 

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Recipes\Domain;
 
+use DateTimeImmutable;
+use Shared\Domain\RecordsEvents;
+
 /**
  * Recipe: una receta del recetario.
  *
@@ -43,7 +46,13 @@ namespace Recipes\Domain;
  * viven repartidas en controladores y FormRequests. Aquí el modelo es RICO:
  * no hay setters, sino métodos con significado de negocio (rename()) que
  * validan antes de cambiar nada. Solo existe el comportamiento que alguien
- * necesita: hoy, crear y renombrar.
+ * necesita: crear, renombrar y, desde HEXM-0026, borrar.
+ *
+ * CONCEPTO: el agregado registra sus eventos de dominio (HEXM-0026, ADR 0018)
+ * Cuando a la receta le pasa algo que a otros les importa (que se borra), lo
+ * ANOTA como un evento (RecipeDeleted) con el trait RecordsEvents. No lo
+ * publica: el dominio no conoce el bus. El caso de uso lo recoge con
+ * releaseEvents() cuando el borrado se ha guardado y lo publica.
  *
  * CONCEPTO: colecciones inmutables con arrays de PHP
  * No usamos Illuminate\Support\Collection (el dominio no conoce Laravel).
@@ -60,6 +69,8 @@ namespace Recipes\Domain;
  */
 final class Recipe
 {
+    use RecordsEvents;
+
     /**
      * Privado: solo se crea con Recipe::create(), que comprueba las
      * invariantes.
@@ -112,6 +123,25 @@ final class Recipe
     public function rename(string $name): void
     {
         $this->name = self::validName($name);
+    }
+
+    /**
+     * Borra la receta: registra el evento RecipeDeleted con el día en que se
+     * borra.
+     *
+     * Quitarla de verdad es cosa del repositorio (RecipeRepository::delete()):
+     * un objeto en memoria no puede "desaparecer". Lo que sí hace la receta
+     * es dejar constancia de lo que le ha pasado, para que ningún caso de uso
+     * que la borre pueda olvidarse de avisar. La fecha llega de fuera (el
+     * Clock del caso de uso): el dominio no lee el reloj (ADR 0012).
+     *
+     * Hoy no hay ninguna regla que impida borrar una receta; si mañana la
+     * hubiera ("no se puede borrar una receta que usa un plan vigente"),
+     * este es el sitio donde comprobarla.
+     */
+    public function delete(DateTimeImmutable $on): void
+    {
+        $this->record(RecipeDeleted::of($this->id, $on));
     }
 
     public function id(): RecipeId
