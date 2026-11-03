@@ -10,11 +10,17 @@
 |   - las reglas las sigue vigilando el dominio, con sus mensajes;
 |   - lo que solo existe al traducir (un tipo de comida o un menú repetido)
 |     también se rechaza en español;
-|   - si algo falla, no se guarda nada.
+|   - si algo falla, no se guarda nada;
+|   - un plato puede apuntar a una receta, que tiene que existir: se pregunta
+|     al puerto RecipeCatalog, aquí con un fake en memoria (HEXM-0025). El
+|     test decide qué recetas "existen" sin tocar el contexto Recipes.
 */
 
+use MealPlanning\Application\RecipeCatalog;
 use MealPlanning\Application\RegisterNutritionPlan;
 use MealPlanning\Application\RegisterNutritionPlanCommand;
+use MealPlanning\Application\UnknownRecipe;
+use MealPlanning\Domain\Dish;
 use MealPlanning\Domain\DuplicatedPlanStart;
 use MealPlanning\Domain\ExchangeCategory;
 use MealPlanning\Domain\InvalidExchangeTable;
@@ -23,21 +29,25 @@ use MealPlanning\Domain\InvalidMenuDay;
 use MealPlanning\Domain\InvalidMenuWeek;
 use MealPlanning\Domain\InvalidNutritionPlan;
 use MealPlanning\Domain\InvalidOptionGroup;
+use MealPlanning\Domain\InvalidRecipeReference;
 use MealPlanning\Domain\MealType;
 use MealPlanning\Domain\NutritionPlan;
+use MealPlanning\Domain\RecipeReference;
 use MealPlanning\Domain\Weekday;
 use MealPlanning\Domain\WeekSource;
 use MealPlanning\Infrastructure\InMemoryNutritionPlanRepository;
+use MealPlanning\Infrastructure\InMemoryRecipeCatalog;
 use Shared\Domain\DomainException;
 use Tests\Support\MealPlanning\NutritionPlanMother;
 
 /**
- * Registra el comando y devuelve el plan guardado.
+ * Registra el comando y devuelve el plan guardado. Sin recetario, uno vacío:
+ * los platos del Mother no apuntan a ninguna receta.
  */
-function registerAndFind(RegisterNutritionPlanCommand $command, ?InMemoryNutritionPlanRepository $plans = null): NutritionPlan
+function registerAndFind(RegisterNutritionPlanCommand $command, ?InMemoryNutritionPlanRepository $plans = null, ?RecipeCatalog $recipes = null): NutritionPlan
 {
     $plans ??= new InMemoryNutritionPlanRepository;
-    $id = (new RegisterNutritionPlan($plans))($command);
+    $id = (new RegisterNutritionPlan($plans, $recipes ?? new InMemoryRecipeCatalog))($command);
 
     return $plans->find($id) ?? throw new LogicException('El plan no se ha guardado.');
 }
@@ -170,4 +180,104 @@ it('rejects a plan that starts on the same day as another one', function () {
 
     expect(fn () => registerAndFind(NutritionPlanMother::registerCommand(['number' => 28]), $plans))
         ->toThrow(DuplicatedPlanStart::class, 'El plan 28 no puede empezar el 02/11/2026: ese día ya empieza el plan 27.');
+});
+
+// ---------------------------------------------------------------------------
+// Platos que apuntan a una receta (regla 6, HEXM-0025)
+// ---------------------------------------------------------------------------
+
+const GUISO = '0190a6e4-5b1c-7d2e-8f3a-4b5c6d7e8f90';
+const PISTO = '0190a6e4-5b1c-7d2e-8f3a-4b5c6d7e8f91';
+
+/**
+ * El comando del Mother con recetas en algunos platos: el menú 6 (domingo de
+ * la semana 1) y el día 10 (miércoles de la semana 2).
+ *
+ * @param  array{lunch?: string, dinner?: string, self?: string}  $recipes
+ */
+function commandWithRecipes(array $recipes): RegisterNutritionPlanCommand
+{
+    $command = NutritionPlanMother::registerCommand();
+    $menus = $command->nutritionistWeek;
+    $days = $command->selfWeek;
+
+    $menus[5]['lunch_recipe_id'] = $recipes['lunch'] ?? null;
+    $menus[5]['dinner_recipe_id'] = $recipes['dinner'] ?? null;
+
+    if (isset($recipes['self'], $days[2]['lunch'])) {
+        $days[2]['lunch']['recipe_id'] = $recipes['self'];
+    }
+
+    return NutritionPlanMother::registerCommand(['nutritionistWeek' => $menus, 'selfWeek' => $days]);
+}
+
+it('links a dish to an existing recipe, in both weeks', function () {
+    $recipes = new InMemoryRecipeCatalog(RecipeReference::fromString(GUISO), RecipeReference::fromString(PISTO));
+
+    $plan = registerAndFind(commandWithRecipes(['lunch' => GUISO, 'self' => PISTO]), recipes: $recipes);
+
+    expect($plan->week(1)->day(Weekday::Sunday)?->lunch()->recipe()?->value())->toBe(GUISO)
+        // La cena del mismo menú no trae receta: sigue sin ella.
+        ->and($plan->week(1)->day(Weekday::Sunday)?->dinner()->recipe())->toBeNull()
+        ->and($plan->week(2)->day(Weekday::Wednesday)?->lunch()->recipe()?->value())->toBe(PISTO);
+});
+
+it('rejects a dish that points to a recipe missing from the catalog, in Spanish', function () {
+    // El recetario solo tiene el guiso; la cena apunta al pisto.
+    $recipes = new InMemoryRecipeCatalog(RecipeReference::fromString(GUISO));
+
+    expect(fn () => registerAndFind(commandWithRecipes(['lunch' => GUISO, 'dinner' => PISTO]), recipes: $recipes))
+        ->toThrow(UnknownRecipe::class, 'El plato «Cena del menú 6» apunta a una receta que no existe en el recetario («'.PISTO.'»).');
+});
+
+it('reports a missing recipe as a domain error (HTTP 422), not as not found', function () {
+    // Lo que falla es un dato del plan que se da de alta, no el recurso pedido.
+    expect(UnknownRecipe::referencedBy(Dish::described('Guiso'), RecipeReference::fromString(GUISO)))
+        ->toBeInstanceOf(DomainException::class);
+});
+
+it('rejects a malformed recipe id before asking the catalog', function () {
+    // El formato lo dice el dominio (RecipeReference): ni se llega al puerto.
+    expect(fn () => registerAndFind(commandWithRecipes(['self' => 'no-es-un-uuid'])))
+        ->toThrow(InvalidRecipeReference::class, '"no-es-un-uuid" no es una referencia de receta válida.');
+});
+
+it('saves nothing when a recipe does not exist', function () {
+    $plans = new InMemoryNutritionPlanRepository;
+
+    try {
+        registerAndFind(commandWithRecipes(['lunch' => GUISO]), $plans);
+    } catch (UnknownRecipe) {
+        // Esperado: el recetario está vacío.
+    }
+
+    expect($plans->history())->toBe([]);
+});
+
+it('asks the catalog once per distinct recipe, and only for a valid plan', function () {
+    // Un recetario espía: cuenta las preguntas. El mismo guiso en la comida
+    // y en la cena se pregunta una vez.
+    $spy = new class implements RecipeCatalog
+    {
+        /** @var list<string> */
+        public array $asked = [];
+
+        public function exists(RecipeReference $recipe): bool
+        {
+            $this->asked[] = $recipe->value();
+
+            return true;
+        }
+    };
+
+    registerAndFind(commandWithRecipes(['lunch' => GUISO, 'dinner' => GUISO, 'self' => PISTO]), recipes: $spy);
+    expect($spy->asked)->toBe([GUISO, PISTO]);
+
+    // Un plan que incumple una regla del dominio no llega a preguntar.
+    $spy->asked = [];
+    $invalid = commandWithRecipes(['lunch' => GUISO]);
+
+    expect(fn () => registerAndFind(NutritionPlanMother::registerCommand(['startsOn' => new DateTimeImmutable('2026-11-03'), 'nutritionistWeek' => $invalid->nutritionistWeek]), recipes: $spy))
+        ->toThrow(InvalidNutritionPlan::class)
+        ->and($spy->asked)->toBe([]);
 });

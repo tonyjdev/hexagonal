@@ -51,6 +51,7 @@ Los diagramas Archify de cada tarea están en [`../diagramas/`](../diagramas/REA
 ### Nivel 6: Relación con recetas
 
 - [HEXM-0024: Referencia a receta en un plato](HEXM-0024-referencia-a-receta-en-un-plato.md): por qué `MealPlanning` nombra a una receta con un value object propio (`RecipeReference`) y no con el `RecipeId` del recetario ni con uno compartido, por qué el plato la guarda solo por identidad y por qué el documento `jsonb` evoluciona de forma compatible, sin migrar datos. Diagramas: [un UUID, dos tipos](../diagramas/HEXM-0024/un-uuid-dos-tipos.class.json) y [leer el recipe_id de un plato](../diagramas/HEXM-0024/leer-el-recipe-id.workflow.json).
+- [HEXM-0025: Validar la receta entre contextos](HEXM-0025-validar-la-receta-entre-contextos.md): por qué `MealPlanning` pregunta al recetario con un puerto propio (`RecipeCatalog`, en `Application`) y una capa anticorrupción sobre `GetRecipe` en lugar de una regla `exists:` o una llamada directa, por qué una receta inexistente es un 422 y no un 404, y cómo los tests de arquitectura fijan que un contexto solo entra en otro por su capa de aplicación. Diagramas: [capa anticorrupción](../diagramas/HEXM-0025/capa-anticorrupcion.architecture.json) y [alta de un plan con recetas](../diagramas/HEXM-0025/alta-con-receta.sequence.json).
 
 ### Transversal
 

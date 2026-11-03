@@ -190,6 +190,50 @@ arch('a context core does not depend on other contexts', function (string $conte
     expect("{$context}\\{$layer}")->not->toUse(otherContexts($context));
 })->with(fn () => businessContexts())->with(['Domain', 'Application']);
 
+/**
+ * Cada par (contexto, otro contexto, capa del otro) que la infraestructura
+ * de un contexto NO puede usar: el dominio y la infraestructura de los demás.
+ *
+ * @return array<string, array{string, string}>
+ */
+function forbiddenCrossContextLayers(): array
+{
+    $pairs = [];
+
+    foreach (businessContexts() as $context) {
+        foreach (otherContexts($context) as $other) {
+            foreach (['Domain', 'Infrastructure'] as $layer) {
+                $pairs["{$context} → {$other}\\{$layer}"] = ["{$context}\\Infrastructure", "{$other}\\{$layer}"];
+            }
+        }
+    }
+
+    return $pairs;
+}
+
+arch('a context enters another one only through its application layer', function (string $adapters, string $forbidden) {
+    // CONCEPTO: capa anticorrupción (HEXM-0025, ADR 0017)
+    // Cuando un contexto necesita algo de otro, lo pide por un puerto propio
+    // (MealPlanning\Application\RecipeCatalog) y su adaptador, en
+    // Infrastructure, habla con el otro contexto. Pero no de cualquier forma:
+    // solo con su capa de APLICACIÓN (casos de uso y DTO), que es su API
+    // pública. Su dominio (Recipe, RecipeId, InvalidRecipeId...) y su
+    // infraestructura (RecipeRepository de Eloquent, la tabla recipes) son
+    // detalles internos: usarlos se saltaría sus reglas y acoplaría los dos
+    // contextos a cómo está construido el otro.
+    //
+    //     MealPlanning\Infrastructure ──► Recipes\Application   ✔
+    //     MealPlanning\Infrastructure ──► Recipes\Domain         ✘
+    //     MealPlanning\Infrastructure ──► Recipes\Infrastructure ✘
+    //
+    // El núcleo (Domain y Application) ya no puede usar ningún otro contexto:
+    // lo comprueba 'a context core does not depend on other contexts'.
+    //
+    // Una expectativa por par (en Pest 5 un array como objetivo de expect()
+    // puede dar falsos negativos, ver arriba).
+    expect($adapters)->not->toUse($forbidden);
+})->with(forbiddenCrossContextLayers());
+
 arch('the shared kernel does not depend on any context', function () {
     // CONCEPTO: shared kernel
     // Shared es común a todos; si dependiera de un contexto, ese contexto

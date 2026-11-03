@@ -103,6 +103,8 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 |---|---|---|
 | HEXM-0024 | [Un UUID, dos tipos](HEXM-0024/un-uuid-dos-tipos.class.json) (`class`) | `RecipeId` (identidad en `Recipes`) y `RecipeReference` (referencia en `MealPlanning`) envuelven el mismo `Uuid` del shared kernel sin depender uno del otro; el `Dish` que apunta a 0..1 receta y el error `InvalidRecipeReference`. |
 | HEXM-0024 | [Leer el recipe_id de un plato](HEXM-0024/leer-el-recipe-id.workflow.json) (`workflow`) | La lectura compatible del documento `weeks`: clave ausente o `null` (planes anteriores) → plato sin receta; UUID → plato con receta; otro valor → datos corruptos, no se carga (ADR 0016). |
+| HEXM-0025 | [Capa anticorrupción](HEXM-0025/capa-anticorrupcion.architecture.json) (`architecture`) | Cómo pregunta `MealPlanning` al recetario: el caso de uso usa su puerto propio `RecipeCatalog` (en `Application`), la capa anticorrupción `RecipesContextRecipeCatalog` lo traduce a `GetRecipe`, y el test de arquitectura prohíbe entrar en `Recipes\Domain` (ADR 0017). |
+| HEXM-0025 | [Alta de un plan con recetas](HEXM-0025/alta-con-receta.sequence.json) (`sequence`) | `POST /api/nutrition-plans` en sus tres caminos: receta existente (201), receta inexistente (`RecipeNotFound` → `false` → `UnknownRecipe`, 422 y nada guardado) e id mal formado (422 sin preguntar al recetario). |
 
 ### Transversal
 

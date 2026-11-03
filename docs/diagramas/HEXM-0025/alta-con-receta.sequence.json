@@ -1,0 +1,458 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Alta de un plan con recetas: 201, receta inexistente o id mal formado",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0025/alta-con-receta.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "c53d0ec383f90c333b8fb29fd12fb06b65a681d3"
+    },
+    "legend": {
+      "entries": {
+        "default": {
+          "label": "Llamada"
+        },
+        "emphasis": {
+          "label": "Camino principal"
+        },
+        "security": {
+          "label": "Error (422 del dominio)"
+        },
+        "return": {
+          "label": "Respuesta"
+        }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Cliente",
+      "sublabel": "tests · curl",
+      "sources": [
+        {
+          "path": "app-laravel/tests/Feature/MealPlanning/Infrastructure/Http/RegisterNutritionPlanEndpointTest.php",
+          "line": 179,
+          "end_line": 198,
+          "label": "receta existente"
+        },
+        {
+          "path": "app-laravel/tests/Feature/MealPlanning/Infrastructure/Http/RegisterNutritionPlanEndpointTest.php",
+          "line": 200,
+          "end_line": 209,
+          "label": "receta inexistente"
+        },
+        {
+          "path": "app-laravel/tests/Feature/MealPlanning/Infrastructure/Http/RegisterNutritionPlanEndpointTest.php",
+          "line": 211,
+          "end_line": 218,
+          "label": "id mal formado"
+        }
+      ]
+    },
+    {
+      "id": "http",
+      "type": "frontend",
+      "label": "HTTP",
+      "sublabel": "Request · Controller",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Http/RegisterNutritionPlanRequest.php",
+          "line": 86,
+          "end_line": 112,
+          "label": "recipe_id: solo texto"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Http/RegisterNutritionPlanController.php",
+          "line": 33,
+          "end_line": 43
+        },
+        {
+          "path": "app-laravel/bootstrap/app.php",
+          "line": 61,
+          "end_line": 74,
+          "label": "DomainException → 422"
+        }
+      ]
+    },
+    {
+      "id": "usecase",
+      "type": "backend",
+      "label": "Alta del plan",
+      "sublabel": "RegisterNutritionPlan",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/RegisterNutritionPlan.php",
+          "line": 90,
+          "end_line": 106,
+          "label": "__invoke()"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Application/RegisterNutritionPlan.php",
+          "line": 115,
+          "end_line": 138,
+          "label": "ensureRecipesExist()"
+        }
+      ]
+    },
+    {
+      "id": "domain",
+      "type": "security",
+      "label": "Dominio",
+      "sublabel": "NutritionPlan · Dish",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlan.php",
+          "line": 103,
+          "end_line": 126,
+          "label": "create()"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/RecipeReference.php",
+          "line": 47,
+          "end_line": 50,
+          "label": "fromString()"
+        }
+      ]
+    },
+    {
+      "id": "acl",
+      "type": "messagebus",
+      "label": "RecipeCatalog",
+      "sublabel": "ACL hacia Recipes",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/RecipeCatalog.php",
+          "line": 45,
+          "end_line": 52,
+          "label": "puerto"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Recipes/RecipesContextRecipeCatalog.php",
+          "line": 58,
+          "end_line": 69,
+          "label": "exists()"
+        }
+      ]
+    },
+    {
+      "id": "getrecipe",
+      "type": "cloud",
+      "label": "GetRecipe",
+      "sublabel": "Recipes\\Application",
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Application/GetRecipe.php",
+          "line": 43,
+          "end_line": 53
+        },
+        {
+          "path": "app-laravel/src/Recipes/Application/RecipeNotFound.php",
+          "line": 18,
+          "end_line": 24
+        }
+      ]
+    },
+    {
+      "id": "repo",
+      "type": "database",
+      "label": "Repositorio",
+      "sublabel": "planes · Eloquent",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlanRepository.php",
+          "line": 55,
+          "end_line": 55,
+          "label": "save()"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/EloquentNutritionPlanRepository.php",
+          "line": 68,
+          "end_line": 70
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 140,
+      "to": 715,
+      "label": "1. El menú 6 apunta al guiso, que existe → 201"
+    },
+    {
+      "from": 750,
+      "to": 1250,
+      "label": "2. Apunta a una receta que no existe → 422, nada guardado"
+    },
+    {
+      "from": 1285,
+      "to": 1540,
+      "label": "3. recipe_id no es un UUID → 422 sin preguntar al recetario"
+    }
+  ],
+  "messages": [
+    {
+      "id": "post_ok",
+      "from": "client",
+      "to": "http",
+      "y": 165,
+      "label": "POST {menu 6: lunch_recipe_id: guiso}",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cmd_ok",
+      "from": "http",
+      "to": "usecase",
+      "y": 210,
+      "label": "__invoke(command)",
+      "variant": "emphasis",
+      "note": "la Form Request solo exige que sea texto"
+    },
+    {
+      "id": "create_ok",
+      "from": "usecase",
+      "to": "domain",
+      "y": 280,
+      "label": "NutritionPlan::create(…)",
+      "variant": "default",
+      "note": "el plato lleva su RecipeReference"
+    },
+    {
+      "id": "plan_ok",
+      "from": "domain",
+      "to": "usecase",
+      "y": 350,
+      "label": "plan válido",
+      "variant": "return"
+    },
+    {
+      "id": "exists_ok",
+      "from": "usecase",
+      "to": "acl",
+      "y": 395,
+      "label": "exists(guiso)",
+      "variant": "emphasis",
+      "note": "una pregunta por receta distinta"
+    },
+    {
+      "id": "get_ok",
+      "from": "acl",
+      "to": "getrecipe",
+      "y": 465,
+      "label": "__invoke('0190a…')",
+      "variant": "emphasis"
+    },
+    {
+      "id": "view_ok",
+      "from": "getrecipe",
+      "to": "acl",
+      "y": 510,
+      "label": "RecipeView",
+      "variant": "return"
+    },
+    {
+      "id": "true_ok",
+      "from": "acl",
+      "to": "usecase",
+      "y": 555,
+      "label": "true",
+      "variant": "return"
+    },
+    {
+      "id": "save_ok",
+      "from": "usecase",
+      "to": "repo",
+      "y": 600,
+      "label": "save(plan)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "id_ok",
+      "from": "usecase",
+      "to": "http",
+      "y": 645,
+      "label": "NutritionPlanId",
+      "variant": "return"
+    },
+    {
+      "id": "created",
+      "from": "http",
+      "to": "client",
+      "y": 690,
+      "label": "201 {id} + Location",
+      "variant": "return"
+    },
+    {
+      "id": "post_missing",
+      "from": "client",
+      "to": "http",
+      "y": 775,
+      "label": "POST {menu 6: lunch_recipe_id: 0190a…f90}",
+      "variant": "default"
+    },
+    {
+      "id": "cmd_missing",
+      "from": "http",
+      "to": "usecase",
+      "y": 820,
+      "label": "__invoke(command)",
+      "variant": "default"
+    },
+    {
+      "id": "exists_missing",
+      "from": "usecase",
+      "to": "acl",
+      "y": 865,
+      "label": "exists(0190a…f90)",
+      "variant": "default",
+      "note": "el plan ya es válido: solo falta la receta"
+    },
+    {
+      "id": "get_missing",
+      "from": "acl",
+      "to": "getrecipe",
+      "y": 935,
+      "label": "__invoke('0190a…f90')",
+      "variant": "default"
+    },
+    {
+      "id": "not_found",
+      "from": "getrecipe",
+      "to": "acl",
+      "y": 980,
+      "label": "throw RecipeNotFound",
+      "variant": "security",
+      "note": "no sale del adaptador: se traduce"
+    },
+    {
+      "id": "false_missing",
+      "from": "acl",
+      "to": "usecase",
+      "y": 1050,
+      "label": "false",
+      "variant": "return"
+    },
+    {
+      "id": "unknown",
+      "from": "usecase",
+      "to": "http",
+      "y": 1095,
+      "label": "throw UnknownRecipe",
+      "variant": "security",
+      "note": "save() no se llama: no se guarda nada"
+    },
+    {
+      "id": "rejected",
+      "from": "http",
+      "to": "client",
+      "y": 1165,
+      "label": "422 {message}",
+      "variant": "return",
+      "note": "«El plato «Guiso de alubias y pollo» apunta a una receta que no existe…»"
+    },
+    {
+      "id": "post_bad",
+      "from": "client",
+      "to": "http",
+      "y": 1310,
+      "label": "POST {recipe_id: 'guiso-de-alubias'}",
+      "variant": "default"
+    },
+    {
+      "id": "cmd_bad",
+      "from": "http",
+      "to": "usecase",
+      "y": 1355,
+      "label": "__invoke(command)",
+      "variant": "default"
+    },
+    {
+      "id": "reference_bad",
+      "from": "usecase",
+      "to": "domain",
+      "y": 1400,
+      "label": "RecipeReference::fromString()",
+      "variant": "default",
+      "note": "no es un UUID"
+    },
+    {
+      "id": "invalid",
+      "from": "domain",
+      "to": "usecase",
+      "y": 1470,
+      "label": "throw InvalidRecipeReference",
+      "variant": "security"
+    },
+    {
+      "id": "rejected_bad",
+      "from": "http",
+      "to": "client",
+      "y": 1515,
+      "label": "422 «… no es una referencia de receta válida.»",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "usecase",
+      "from": 210,
+      "to": 645,
+      "type": "backend"
+    },
+    {
+      "participant": "acl",
+      "from": 395,
+      "to": 555,
+      "type": "messagebus"
+    },
+    {
+      "participant": "usecase",
+      "from": 820,
+      "to": 1095,
+      "type": "backend"
+    },
+    {
+      "participant": "acl",
+      "from": 865,
+      "to": 1050,
+      "type": "messagebus"
+    },
+    {
+      "participant": "usecase",
+      "from": 1355,
+      "to": 1470,
+      "type": "backend"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Primero el dominio, después el recetario",
+      "items": [
+        "Las reglas del plan se comprueban en memoria antes de consultar a nadie.",
+        "Al recetario se pregunta una vez por receta distinta, y solo con un plan válido."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Lo que traduce la capa anticorrupción",
+      "items": [
+        "RecipeView → true; RecipeNotFound → false.",
+        "El caso de uso nunca ve nada de Recipes: solo un bool."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Dos errores, los dos 422",
+      "items": [
+        "UnknownRecipe: la receta no existe (un dato del plan, no un 404).",
+        "InvalidRecipeReference: ni siquiera es un id; no se llega a preguntar."
+      ]
+    }
+  ]
+}
