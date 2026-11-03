@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Support\MealPlanning;
 
 use DateTimeImmutable;
+use MealPlanning\Application\RegisterNutritionPlanCommand;
 use MealPlanning\Domain\Dish;
 use MealPlanning\Domain\DishIngredient;
 use MealPlanning\Domain\Exchange;
@@ -112,5 +113,58 @@ final class NutritionPlanMother
         ], [
             'La grasa solo en la comida o en la cena, no en ambas.',
         ]);
+    }
+
+    /**
+     * El comando de alta del mismo plan 27 (RegisterNutritionPlan, HEXM-0021),
+     * con los datos en el formato de los documentos y cambios opcionales en
+     * sus argumentos. Como en los tests del alta de recetas, cada test estropea
+     * UNA sola cosa.
+     *
+     * @param  array<string, mixed>  $changes  argumento del constructor → valor
+     */
+    public static function registerCommand(array $changes = []): RegisterNutritionPlanCommand
+    {
+        $menus = [];
+
+        foreach (range(1, 6) as $menu) {
+            $menus[] = ['menu' => $menu, 'lunch' => "Comida del menú {$menu}", 'dinner' => "Cena del menú {$menu}"];
+        }
+
+        $days = [];
+
+        foreach (range(8, 14) as $day) {
+            $days[] = $day === 13
+                ? ['day' => 13, 'lunch' => null, 'dinner' => null]
+                : [
+                    'day' => $day,
+                    'lunch' => ['name' => "Comida del día {$day}", 'ingredients' => [['name' => 'Pasta integral', 'quantity' => '80 g']]],
+                    'dinner' => ['name' => "Cena del día {$day}", 'ingredients' => []],
+                ];
+        }
+
+        $arguments = [
+            'number' => 27,
+            'startsOn' => new DateTimeImmutable('2026-11-02'),
+            'fixedMeals' => [
+                ['meal_type' => 'breakfast', 'description' => 'Café con leche desnatada', 'option_groups' => [
+                    ['choose' => 1, 'options' => ['Tostada de pan integral con tomate', '30 g de copos de avena']],
+                ]],
+                ['meal_type' => 'afternoon_snack', 'description' => 'Infusión y 20 g de nueces', 'option_groups' => []],
+            ],
+            'exchanges' => [
+                ['category' => 'carbohydrates', 'food' => 'Arroz', 'serving' => '60 g en crudo'],
+                ['category' => 'protein', 'food' => 'Pechuga de pollo', 'serving' => '100 g'],
+            ],
+            'exchangeRules' => ['La grasa solo en la comida o en la cena, no en ambas.'],
+            'nutritionistWeek' => $menus,
+            'selfWeek' => $days,
+            ...$changes,
+        ];
+
+        // PHPStan no puede seguir los tipos de un array armado así; en los tests
+        // basta con que el constructor reciba los argumentos por nombre.
+        /** @phpstan-ignore argument.type */
+        return new RegisterNutritionPlanCommand(...$arguments);
     }
 }

@@ -31,4 +31,16 @@ final class InvalidExchangeTable extends DomainException
     {
         return new self('Una regla de los intercambios no puede estar vacía.');
     }
+
+    /**
+     * Una categoría de intercambio que no existe. Como unknownMealType(),
+     * solo puede pasar al traducir datos que llegan de fuera (HEXM-0021).
+     */
+    public static function unknownCategory(string $category): self
+    {
+        return new self(sprintf(
+            '"%s" no es una categoría de intercambio: son hidratos (carbohydrates), proteínas (protein), vegetales (vegetables) y grasas (fat).',
+            $category,
+        ));
+    }
 }

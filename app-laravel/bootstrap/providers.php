@@ -1,6 +1,7 @@
 <?php
 
 use App\Providers\AppServiceProvider;
+use MealPlanning\Infrastructure\MealPlanningServiceProvider;
 use Recipes\Infrastructure\RecipesServiceProvider;
 
 /*
@@ -13,4 +14,5 @@ use Recipes\Infrastructure\RecipesServiceProvider;
 return [
     AppServiceProvider::class,
     RecipesServiceProvider::class,
+    MealPlanningServiceProvider::class,
 ];

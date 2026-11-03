@@ -1,0 +1,274 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Del papel a la base de datos: las tres formas de un plan",
+    "subtitle": "El mismo plan 27 cambia de forma al cruzar cada capa: menús 1-6 y días 8-14 al entrar, días de la semana en el dominio, documentos jsonb al guardarse.",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0021/del-papel-a-la-base-de-datos.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "ea595ac3ed01578a9bd15575ccb798cade739bc3"
+    },
+    "legend": {
+      "entries": {
+        "default": {
+          "label": "Datos que pasan a la capa siguiente"
+        },
+        "emphasis": {
+          "label": "Camino del alta válida"
+        },
+        "security": {
+          "label": "Rechazo: 422"
+        },
+        "dashed": {
+          "label": "Guardado en PostgreSQL"
+        }
+      }
+    }
+  },
+  "stages": [
+    {
+      "label": "El documento (JSON)"
+    },
+    {
+      "label": "Frontera HTTP"
+    },
+    {
+      "label": "Aplicación"
+    },
+    {
+      "label": "Dominio"
+    },
+    {
+      "label": "Persistencia"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "json",
+      "type": "external",
+      "label": "Plan 27 (JSON)",
+      "sublabel": "menús y días",
+      "stage": 0,
+      "row": 1,
+      "tag": "como el papel",
+      "sources": [
+        {
+          "path": "app-laravel/tests/fixtures/nutrition-plan-27.json",
+          "line": 1,
+          "end_line": 54
+        }
+      ]
+    },
+    {
+      "id": "request",
+      "type": "backend",
+      "label": "Form Request",
+      "sublabel": "valida la forma",
+      "stage": 1,
+      "row": 1,
+      "tag": "HTTP",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Http/RegisterNutritionPlanRequest.php",
+          "line": 49,
+          "end_line": 87,
+          "label": "rules()"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Http/RegisterNutritionPlanRequest.php",
+          "line": 115,
+          "end_line": 152,
+          "label": "toCommand()"
+        }
+      ]
+    },
+    {
+      "id": "shape422",
+      "type": "security",
+      "label": "422 de validación",
+      "sublabel": "errores por campo",
+      "stage": 1,
+      "row": 2
+    },
+    {
+      "id": "usecase",
+      "type": "backend",
+      "label": "RegisterNutritionPlan",
+      "sublabel": "traduce",
+      "stage": 2,
+      "row": 1,
+      "tag": "comando",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/RegisterNutritionPlan.php",
+          "line": 69,
+          "end_line": 83,
+          "label": "__invoke()"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Application/RegisterNutritionPlanCommand.php",
+          "line": 36,
+          "end_line": 57,
+          "label": "el comando"
+        }
+      ],
+      "width": 136
+    },
+    {
+      "id": "weeks",
+      "type": "security",
+      "label": "MenuWeek",
+      "sublabel": "por formato",
+      "stage": 3,
+      "row": 0,
+      "tag": "menú 6 = domingo",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MenuWeek.php",
+          "line": 114,
+          "end_line": 169,
+          "label": "fromNutritionistMenus() / fromSelfDays()"
+        }
+      ]
+    },
+    {
+      "id": "plan",
+      "type": "security",
+      "label": "NutritionPlan",
+      "sublabel": "agregado válido",
+      "stage": 3,
+      "row": 1,
+      "tag": "todas las reglas",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlan.php",
+          "line": 103,
+          "end_line": 126,
+          "label": "create()"
+        }
+      ]
+    },
+    {
+      "id": "domain422",
+      "type": "security",
+      "label": "422 del dominio",
+      "sublabel": "en español",
+      "stage": 3,
+      "row": 2
+    },
+    {
+      "id": "table",
+      "type": "database",
+      "label": "nutrition_plans",
+      "sublabel": "una fila jsonb",
+      "stage": 4,
+      "row": 1,
+      "tag": "weekday ISO",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/NutritionPlanMapper.php",
+          "line": 73,
+          "end_line": 84,
+          "label": "toRow()"
+        }
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "id": "post",
+      "from": "json",
+      "to": "request",
+      "label": "POST /api/nutrition-plans",
+      "classification": "JSON",
+      "variant": "emphasis"
+    },
+    {
+      "id": "malformed",
+      "from": "request",
+      "to": "shape422",
+      "label": "falta un campo o tipo erróneo",
+      "variant": "security",
+      "labelAt": [
+        315,
+        315
+      ]
+    },
+    {
+      "id": "command",
+      "from": "request",
+      "to": "usecase",
+      "label": "comando",
+      "classification": "primitivos + DateTimeImmutable",
+      "variant": "emphasis"
+    },
+    {
+      "id": "by_number",
+      "from": "usecase",
+      "to": "weeks",
+      "label": "menús y días por número",
+      "classification": "Dish por plato"
+    },
+    {
+      "id": "by_weekday",
+      "from": "weeks",
+      "to": "plan",
+      "label": "semanas por día de la semana",
+      "classification": "MenuWeek 1 y 2"
+    },
+    {
+      "id": "create",
+      "from": "usecase",
+      "to": "plan",
+      "label": "create()",
+      "classification": "pautas e intercambios",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelAt": [
+        625,
+        318
+      ]
+    },
+    {
+      "id": "broken",
+      "from": "plan",
+      "to": "domain422",
+      "label": "regla incumplida",
+      "variant": "security",
+      "labelAt": [
+        790,
+        345
+      ]
+    },
+    {
+      "id": "save",
+      "from": "plan",
+      "to": "table",
+      "label": "save()",
+      "classification": "documentos jsonb",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "El contrato copia el papel (ADR 0014)",
+      "items": [
+        "La semana 1 entra como menús 1-6 y la 2 como días 8-14: quien envía el plan no traduce nada.",
+        "La traducción a días de la semana vive en MenuWeek, una sola vez; es también el contrato del importador del nivel 7."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Dos tipos de 422",
+      "items": [
+        "Forma (Form Request): un campo que falta o un tipo erróneo, con la ruta de cada error.",
+        "Reglas (dominio): inicio en martes, cinco menús, sábado con menú, tipo de comida desconocido, otro plan el mismo día."
+      ]
+    }
+  ]
+}

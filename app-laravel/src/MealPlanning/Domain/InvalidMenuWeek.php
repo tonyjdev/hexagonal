@@ -41,4 +41,22 @@ final class InvalidMenuWeek extends DomainException
     {
         return new self(sprintf('La semana 2 numera los días del 8 al 14: el día %d no existe.', $day));
     }
+
+    /**
+     * El mismo menú dos veces en la semana de la nutricionista. Se dice con
+     * el número de menú (el lenguaje del documento) y no con el día de la
+     * semana, porque es lo que el usuario ha escrito (HEXM-0021).
+     */
+    public static function duplicatedNutritionistMenu(int $menu): self
+    {
+        return new self(sprintf('El menú %d aparece más de una vez en la semana 1.', $menu));
+    }
+
+    /**
+     * El mismo día dos veces en la semana del usuario (HEXM-0021).
+     */
+    public static function duplicatedSelfDay(int $day): self
+    {
+        return new self(sprintf('El día %d aparece más de una vez en la semana 2.', $day));
+    }
 }

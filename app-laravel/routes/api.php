@@ -29,6 +29,7 @@
 */
 
 use Illuminate\Support\Facades\Route;
+use MealPlanning\Infrastructure\Http\RegisterNutritionPlanController;
 use Recipes\Infrastructure\Http\CreateRecipeController;
 use Recipes\Infrastructure\Http\GetRecipeController;
 
@@ -44,3 +45,7 @@ use Recipes\Infrastructure\Http\GetRecipeController;
 // controlador.
 Route::post('/recipes', CreateRecipeController::class)->name('recipes.store');
 Route::get('/recipes/{id}', GetRecipeController::class)->name('recipes.show');
+
+// Planes nutricionales: alta manual de un plan completo (HEXM-0021). La
+// consulta (nutrition-plans.show) llegará con el histórico en HEXM-0023.
+Route::post('/nutrition-plans', RegisterNutritionPlanController::class)->name('nutrition-plans.store');
