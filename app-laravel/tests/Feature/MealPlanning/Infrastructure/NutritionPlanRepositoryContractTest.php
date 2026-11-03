@@ -85,6 +85,20 @@ it('returns the plan with exactly the same content, part by part', function (Nut
     expect($repository->find($plan->id()))->toEqual($plan);
 })->with('nutrition plan repositories');
 
+it('keeps the recipe each dish points to', function (NutritionPlanRepository $repository) {
+    // HEXM-0024: la referencia a una receta viaja con el plato, en los dos
+    // formatos (semana 1 y semana 2); los platos sin receta siguen sin ella.
+    $plan = NutritionPlanMother::planWithRecipes();
+
+    $repository->save($plan);
+    $found = $repository->find($plan->id());
+
+    expect($found)->toEqual($plan)
+        ->and($found?->week(1)->day(Weekday::Sunday)?->lunch()->recipe()?->value())->toBe(NutritionPlanMother::STEW_RECIPE)
+        ->and($found?->week(2)->day(Weekday::Wednesday)?->lunch()->recipe()?->value())->toBe(NutritionPlanMother::STEW_RECIPE)
+        ->and($found?->week(2)->day(Weekday::Wednesday)?->dinner()->recipe())->toBeNull();
+})->with('nutrition plan repositories');
+
 it('replaces a plan when it is saved again with the same id', function (NutritionPlanRepository $repository) {
     // Mismo id: es el mismo plan (una corrección del número, por ejemplo).
     // No cuenta como "otro plan que empieza el mismo día".

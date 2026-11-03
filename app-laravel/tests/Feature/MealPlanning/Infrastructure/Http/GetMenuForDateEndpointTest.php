@@ -45,8 +45,9 @@ it('tells what is on the menu today, according to the clock', function () {
                 'name' => 'Comida del día 10',
                 'description' => null,
                 'ingredients' => [['name' => 'Pasta integral', 'quantity' => '80 g']],
+                'recipe_id' => null,
             ],
-            'dinner' => ['name' => 'Cena del día 10', 'description' => null, 'ingredients' => []],
+            'dinner' => ['name' => 'Cena del día 10', 'description' => null, 'ingredients' => [], 'recipe_id' => null],
         ]]);
 });
 
@@ -57,7 +58,7 @@ it('shows a nutritionist dish as free text', function () {
         ->assertOk()
         ->assertJsonPath('data.week_number', 1)
         ->assertJsonPath('data.weekday', 'martes')
-        ->assertJsonPath('data.lunch', ['name' => null, 'description' => 'Comida del menú 2', 'ingredients' => []]);
+        ->assertJsonPath('data.lunch', ['name' => null, 'description' => 'Comida del menú 2', 'ingredients' => [], 'recipe_id' => null]);
 });
 
 it('answers for the requested date without asking the clock', function () {

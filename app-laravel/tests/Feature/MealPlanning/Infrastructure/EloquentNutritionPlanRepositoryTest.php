@@ -15,6 +15,8 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use MealPlanning\Domain\InvalidMenuWeek;
+use MealPlanning\Domain\InvalidRecipeReference;
+use MealPlanning\Domain\Weekday;
 use MealPlanning\Infrastructure\Persistence\Eloquent\EloquentNutritionPlanRepository;
 use Tests\Support\MealPlanning\NutritionPlanMother;
 
@@ -52,10 +54,10 @@ it('stores the whole plan in a single row with JSON documents', function () {
             'weekday' => 3,
             'lunch' => ['name' => 'Comida del día 10', 'description' => null, 'ingredients' => [
                 ['name' => 'Pasta integral', 'quantity' => '80 g'],
-            ]],
-            'dinner' => ['name' => 'Cena del día 10', 'description' => null, 'ingredients' => []],
+            ], 'recipe_id' => null],
+            'dinner' => ['name' => 'Cena del día 10', 'description' => null, 'ingredients' => [], 'recipe_id' => null],
         ])
-        ->and($weeks[0]['days'][5]['lunch'])->toEqual(['name' => null, 'description' => 'Comida del menú 6', 'ingredients' => []]);
+        ->and($weeks[0]['days'][5]['lunch'])->toEqual(['name' => null, 'description' => 'Comida del menú 6', 'ingredients' => [], 'recipe_id' => null]);
 });
 
 it('stores the exchange table and the fixed meals as documents too', function () {
@@ -138,4 +140,55 @@ it('refuses to load a document that breaks a business rule', function () {
     );
 
     expect(fn () => $repository->find($plan->id()))->toThrow(InvalidMenuWeek::class);
+});
+
+it('stores the recipe of a dish as recipe_id inside the document', function () {
+    $plan = NutritionPlanMother::planWithRecipes();
+
+    (new EloquentNutritionPlanRepository)->save($plan);
+    $weeks = storedDocument($plan->id()->value(), 'weeks');
+
+    expect($weeks[0]['days'][5]['lunch']['recipe_id'])->toBe(NutritionPlanMother::STEW_RECIPE)
+        ->and($weeks[0]['days'][5]['dinner']['recipe_id'])->toBeNull();
+});
+
+it('still reads a plan saved before dishes could point to recipes', function () {
+    // CONCEPTO: evolución compatible de un documento (ADR 0016)
+    // Un plan guardado antes de HEXM-0024 no tiene la clave recipe_id en sus
+    // platos. Se simula quitándola de TODOS los platos con SQL: el plan se
+    // sigue cargando, con los platos sin receta, sin migrar ningún dato.
+    $repository = new EloquentNutritionPlanRepository;
+    $plan = NutritionPlanMother::plan();
+    $repository->save($plan);
+
+    DB::statement(<<<'SQL'
+        UPDATE nutrition_plans SET weeks = (
+            SELECT jsonb_agg(jsonb_set(week, '{days}', (
+                SELECT jsonb_agg(jsonb_set(jsonb_set(day, '{lunch}', (day->'lunch') - 'recipe_id'), '{dinner}', (day->'dinner') - 'recipe_id'))
+                FROM jsonb_array_elements(week->'days') AS day
+            )))
+            FROM jsonb_array_elements(weeks) AS week
+        ) WHERE id = ?
+        SQL, [$plan->id()->value()]);
+
+    expect(json_encode(storedDocument($plan->id()->value(), 'weeks')))->not->toContain('recipe_id');
+
+    $found = $repository->find($plan->id());
+
+    expect($found)->toEqual($plan)
+        ->and($found?->week(1)->day(Weekday::Monday)?->lunch()->recipe())->toBeNull();
+});
+
+it('refuses to load a dish whose recipe_id is not a reference', function () {
+    $repository = new EloquentNutritionPlanRepository;
+    $plan = NutritionPlanMother::plan();
+    $repository->save($plan);
+
+    DB::statement(
+        "UPDATE nutrition_plans SET weeks = jsonb_set(weeks, '{0,days,0,lunch,recipe_id}', '\"guiso\"') WHERE id = ?",
+        [$plan->id()->value()],
+    );
+
+    expect(fn () => $repository->find($plan->id()))
+        ->toThrow(InvalidRecipeReference::class, '"guiso" no es una referencia de receta válida.');
 });

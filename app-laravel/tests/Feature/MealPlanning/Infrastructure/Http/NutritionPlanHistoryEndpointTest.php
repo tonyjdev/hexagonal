@@ -74,10 +74,11 @@ it('returns a whole plan from the history', function () {
         ->assertJsonCount(2, 'data.weeks')
         ->assertJsonCount(6, 'data.weeks.0.days')
         ->assertJsonPath('data.weeks.0.days.5.weekday', 'domingo')
-        ->assertJsonPath('data.weeks.0.days.5.lunch', ['name' => null, 'description' => 'Comida del menú 6', 'ingredients' => []])
+        ->assertJsonPath('data.weeks.0.days.5.lunch', ['name' => null, 'description' => 'Comida del menú 6', 'ingredients' => [], 'recipe_id' => null])
         ->assertJsonPath('data.weeks.1.days.2.lunch', [
             'name' => 'Comida del día 10', 'description' => null,
             'ingredients' => [['name' => 'Pasta integral', 'quantity' => '80 g']],
+            'recipe_id' => null,
         ]);
 });
 
@@ -105,4 +106,22 @@ it('rejects registering a second plan with the same number', function () {
     $this->postJson('/api/nutrition-plans', $payload)
         ->assertUnprocessable()
         ->assertExactJson(['message' => 'Ya existe un plan 27 (empieza el 02/11/2026): no puede haber dos planes con el mismo número.']);
+});
+
+it('shows the recipe each dish points to', function () {
+    // HEXM-0024: recipe_id en los platos, en la consulta de un plan y en el
+    // menú de un día; null en los platos sin receta.
+    $plan = NutritionPlanMother::planWithRecipes();
+    app(NutritionPlanRepository::class)->save($plan);
+
+    $this->getJson('/api/nutrition-plans/'.$plan->id()->value())
+        ->assertOk()
+        ->assertJsonPath('data.weeks.0.days.5.lunch.recipe_id', NutritionPlanMother::STEW_RECIPE)
+        ->assertJsonPath('data.weeks.0.days.5.dinner.recipe_id', null);
+
+    // El domingo 08/11/2026 es el día del menú 6 (semana 1).
+    $this->getJson('/api/menu?date=2026-11-08')
+        ->assertOk()
+        ->assertJsonPath('data.lunch.recipe_id', NutritionPlanMother::STEW_RECIPE)
+        ->assertJsonPath('data.dinner.recipe_id', null);
 });
