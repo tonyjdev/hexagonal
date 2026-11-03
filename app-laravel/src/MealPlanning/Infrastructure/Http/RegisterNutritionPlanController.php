@@ -20,8 +20,9 @@ use MealPlanning\Application\RegisterNutritionPlan;
  * 422 el manejador global de bootstrap/app.php, sin que este controlador los
  * conozca (ADR 0007).
  *
- * Sin cabecera Location por ahora: todavía no existe GET /api/nutrition-plans/{id}
- * (llegará en HEXM-0023, con el histórico de planes).
+ * Como el alta de recetas, la respuesta lleva la cabecera Location con la URL
+ * del plan creado (GET /api/nutrition-plans/{id}, HEXM-0023): la convención
+ * REST para decir "aquí está lo que acabas de crear".
  *
  * CAPA: Infraestructura (MealPlanning\Infrastructure\Http).
  */
@@ -33,6 +34,10 @@ final readonly class RegisterNutritionPlanController
     {
         $id = ($this->registerNutritionPlan)($request->toCommand());
 
-        return new JsonResponse(['id' => $id->value()], JsonResponse::HTTP_CREATED);
+        return new JsonResponse(
+            ['id' => $id->value()],
+            JsonResponse::HTTP_CREATED,
+            ['Location' => route('nutrition-plans.show', ['id' => $id->value()])],
+        );
     }
 }

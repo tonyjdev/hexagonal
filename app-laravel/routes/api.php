@@ -30,6 +30,8 @@
 
 use Illuminate\Support\Facades\Route;
 use MealPlanning\Infrastructure\Http\GetMenuForDateController;
+use MealPlanning\Infrastructure\Http\GetNutritionPlanController;
+use MealPlanning\Infrastructure\Http\ListNutritionPlansController;
 use MealPlanning\Infrastructure\Http\RegisterNutritionPlanController;
 use Recipes\Infrastructure\Http\CreateRecipeController;
 use Recipes\Infrastructure\Http\GetRecipeController;
@@ -47,9 +49,12 @@ use Recipes\Infrastructure\Http\GetRecipeController;
 Route::post('/recipes', CreateRecipeController::class)->name('recipes.store');
 Route::get('/recipes/{id}', GetRecipeController::class)->name('recipes.show');
 
-// Planes nutricionales: alta manual de un plan completo (HEXM-0021). La
-// consulta (nutrition-plans.show) llegará con el histórico en HEXM-0023.
+// Planes nutricionales: alta manual de un plan completo (HEXM-0021), el
+// histórico y la consulta de un plan (HEXM-0023). Como en las recetas, sin
+// whereUuid() en {id}: la forma del id la valida el dominio (422 en español).
+Route::get('/nutrition-plans', ListNutritionPlansController::class)->name('nutrition-plans.index');
 Route::post('/nutrition-plans', RegisterNutritionPlanController::class)->name('nutrition-plans.store');
+Route::get('/nutrition-plans/{id}', GetNutritionPlanController::class)->name('nutrition-plans.show');
 
 // "¿Qué me toca comer hoy?" (HEXM-0022): sin parámetros, hoy según el reloj
 // (Clock → SystemClock en la zona del usuario); con ?date=AAAA-MM-DD, ese día.

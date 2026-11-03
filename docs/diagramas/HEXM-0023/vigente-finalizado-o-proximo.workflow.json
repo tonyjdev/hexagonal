@@ -1,0 +1,246 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "¿Vigente, finalizado o próximo? El histórico de planes",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0023/vigente-finalizado-o-proximo.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "6df9d7ebde93525f92039486fdd7b535ad8fa820"
+    },
+    "legend": {
+      "entries": {
+        "external": {
+          "label": "Lo que llega (planes y hoy)"
+        },
+        "backend": {
+          "label": "Regla del dominio (vigencia)"
+        },
+        "security": {
+          "label": "Pregunta respecto a hoy"
+        },
+        "database": {
+          "label": "Estado del plan (no se guarda)"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "input",
+      "label": "Repositorio y reloj"
+    },
+    {
+      "id": "domain",
+      "label": "Dominio: NutritionPlanHistory y ValidityPeriod"
+    },
+    {
+      "id": "query",
+      "label": "Consulta: NutritionPlanSummaryView"
+    },
+    {
+      "id": "status",
+      "label": "Estado (PlanStatus)"
+    }
+  ],
+  "mainPath": [
+    "plans",
+    "sort",
+    "derive",
+    "upcoming_check",
+    "finished_check",
+    "in_force"
+  ],
+  "nodes": [
+    {
+      "id": "plans",
+      "lane": "input",
+      "col": 0,
+      "type": "external",
+      "label": "history() + hoy",
+      "sublabel": "planes 26 y 27 · Clock: 11/11/2026",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/ListNutritionPlans.php",
+          "line": 36,
+          "end_line": 45
+        }
+      ]
+    },
+    {
+      "id": "sort",
+      "lane": "domain",
+      "col": 1,
+      "type": "backend",
+      "label": "Ordenar por inicio",
+      "sublabel": "del más reciente: 27, 26",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlanHistory.php",
+          "line": 47,
+          "end_line": 50
+        }
+      ]
+    },
+    {
+      "id": "derive",
+      "lane": "domain",
+      "col": 2,
+      "type": "backend",
+      "label": "Periodo de cada plan",
+      "sublabel": "fin = día antes del siguiente · 26: 07/09 → 01/11",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlanHistory.php",
+          "line": 51,
+          "end_line": 65
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/ValidityPeriod.php",
+          "line": 43,
+          "end_line": 54
+        }
+      ]
+    },
+    {
+      "id": "upcoming_check",
+      "lane": "query",
+      "col": 3,
+      "type": "security",
+      "label": "¿Empieza después de hoy?",
+      "sublabel": "startsAfter(hoy)",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/NutritionPlanSummaryView.php",
+          "line": 41,
+          "end_line": 42
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/ValidityPeriod.php",
+          "line": 88,
+          "end_line": 91
+        }
+      ]
+    },
+    {
+      "id": "finished_check",
+      "lane": "query",
+      "col": 4,
+      "type": "security",
+      "label": "¿Terminó antes de hoy?",
+      "sublabel": "hasEndedBefore(hoy)",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/NutritionPlanSummaryView.php",
+          "line": 43,
+          "end_line": 43
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/ValidityPeriod.php",
+          "line": 80,
+          "end_line": 83
+        }
+      ]
+    },
+    {
+      "id": "in_force",
+      "lane": "status",
+      "col": 5,
+      "type": "database",
+      "label": "Vigente",
+      "sublabel": "plan 27 (02/11 → …)",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/NutritionPlanSummaryView.php",
+          "line": 44,
+          "end_line": 44
+        }
+      ]
+    },
+    {
+      "id": "upcoming",
+      "lane": "status",
+      "col": 3,
+      "type": "database",
+      "label": "Próximo",
+      "sublabel": "registrado, aún no empieza"
+    },
+    {
+      "id": "finished",
+      "lane": "status",
+      "col": 4,
+      "type": "database",
+      "label": "Finalizado",
+      "sublabel": "plan 26 (07/09 → 01/11)"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "plans",
+      "to": "sort",
+      "label": "list<NutritionPlan>",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e2",
+      "from": "sort",
+      "to": "derive",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e3",
+      "from": "derive",
+      "to": "upcoming_check",
+      "label": "ValidityPeriod",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e4",
+      "from": "upcoming_check",
+      "to": "finished_check",
+      "label": "no",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e5",
+      "from": "finished_check",
+      "to": "in_force",
+      "label": "no",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e6",
+      "from": "upcoming_check",
+      "to": "upcoming",
+      "label": "sí"
+    },
+    {
+      "id": "e7",
+      "from": "finished_check",
+      "to": "finished",
+      "label": "sí"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "La vigencia se deriva, no se guarda (ADR 0010 y 0015)",
+      "items": [
+        "Cada plan rige del lunes en que empieza al día antes del siguiente; el más reciente, sin fin.",
+        "Registrar un plan nuevo cierra el anterior sin tocarlo: no hay fecha de fin que actualizar."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "El estado depende de hoy",
+      "items": [
+        "El 01/11 el 26 está vigente y el 27 es próximo; el 02/11, el 26 está finalizado.",
+        "Por eso no se guarda: lo calcula la consulta con la fecha del Clock."
+      ]
+    }
+  ]
+}

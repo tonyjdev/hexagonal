@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MealPlanning\Infrastructure;
 
 use DateTimeImmutable;
+use MealPlanning\Domain\DuplicatedPlanNumber;
 use MealPlanning\Domain\DuplicatedPlanStart;
 use MealPlanning\Domain\NutritionPlan;
 use MealPlanning\Domain\NutritionPlanId;
@@ -43,9 +44,19 @@ final class InMemoryNutritionPlanRepository implements NutritionPlanRepository
 
     public function save(NutritionPlan $plan): void
     {
-        foreach ($this->plans as $existing) {
-            if (! $existing->equals($plan) && self::calendarDate($existing->startsOn()) === self::calendarDate($plan->startsOn())) {
+        $others = array_filter($this->plans, fn (NutritionPlan $existing): bool => ! $existing->equals($plan));
+
+        // Primero el inicio y luego el número: el orden forma parte del
+        // contrato (si choca por las dos cosas, DuplicatedPlanStart).
+        foreach ($others as $existing) {
+            if (self::calendarDate($existing->startsOn()) === self::calendarDate($plan->startsOn())) {
                 throw DuplicatedPlanStart::between($plan, $existing);
+            }
+        }
+
+        foreach ($others as $existing) {
+            if ($existing->number()->equals($plan->number())) {
+                throw DuplicatedPlanNumber::between($plan, $existing);
             }
         }
 
@@ -77,6 +88,18 @@ final class InMemoryNutritionPlanRepository implements NutritionPlanRepository
         }
 
         return $inForce;
+    }
+
+    /**
+     * Ordena por fecha de inicio, del más reciente al más antiguo. En SQL será
+     * ORDER BY starts_on DESC.
+     */
+    public function history(): array
+    {
+        $plans = array_values($this->plans);
+        usort($plans, fn (NutritionPlan $a, NutritionPlan $b): int => self::calendarDate($b->startsOn()) <=> self::calendarDate($a->startsOn()));
+
+        return $plans;
     }
 
     /**

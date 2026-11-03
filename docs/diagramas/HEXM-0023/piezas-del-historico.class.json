@@ -1,0 +1,390 @@
+{
+  "schema_version": 1,
+  "diagram_type": "class",
+  "meta": {
+    "title": "Las piezas del histórico de planes",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0023/piezas-del-historico.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "6df9d7ebde93525f92039486fdd7b535ad8fa820"
+    },
+    "legend": {
+      "entries": {
+        "association": {
+          "label": "Usa o devuelve"
+        },
+        "dependency": {
+          "label": "Lanza (error de dominio o no encontrado)"
+        },
+        "realization": {
+          "label": "Implementa"
+        }
+      }
+    }
+  },
+  "layout": {
+    "mode": "grid"
+  },
+  "types": [
+    {
+      "id": "repo",
+      "label": "NutritionPlanRepository",
+      "kind": "interface",
+      "sublabel": "Puerto · dominio",
+      "row": 0,
+      "col": 0,
+      "methods": [
+        {
+          "name": "save",
+          "parameters": "plan",
+          "returns": "void",
+          "visibility": "public"
+        },
+        {
+          "name": "inForceOn",
+          "parameters": "date",
+          "returns": "?NutritionPlan",
+          "visibility": "public"
+        },
+        {
+          "name": "history",
+          "returns": "list<NutritionPlan>",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlanRepository.php",
+          "line": 55,
+          "end_line": 85
+        }
+      ]
+    },
+    {
+      "id": "dup_number",
+      "label": "DuplicatedPlanNumber",
+      "kind": "class",
+      "sublabel": "Error de dominio · regla 22",
+      "row": 1,
+      "col": 0,
+      "methods": [
+        {
+          "name": "between",
+          "parameters": "new, existing",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/DuplicatedPlanNumber.php",
+          "line": 26,
+          "end_line": 36
+        }
+      ]
+    },
+    {
+      "id": "history",
+      "label": "NutritionPlanHistory",
+      "kind": "class",
+      "sublabel": "Value object · dominio",
+      "row": 0,
+      "col": 1,
+      "methods": [
+        {
+          "name": "of",
+          "parameters": "plans",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "plans",
+          "returns": "list<NutritionPlan>",
+          "visibility": "public"
+        },
+        {
+          "name": "periodOf",
+          "parameters": "plan",
+          "returns": "ValidityPeriod",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlanHistory.php",
+          "line": 29,
+          "end_line": 83
+        }
+      ]
+    },
+    {
+      "id": "period",
+      "label": "ValidityPeriod",
+      "kind": "class",
+      "sublabel": "Value object · dominio",
+      "row": 1,
+      "col": 1,
+      "methods": [
+        {
+          "name": "between",
+          "parameters": "startsOn, endsOn",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "from",
+          "parameters": "startsOn",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        },
+        {
+          "name": "includes",
+          "parameters": "date",
+          "returns": "bool",
+          "visibility": "public"
+        },
+        {
+          "name": "hasEndedBefore",
+          "parameters": "date",
+          "returns": "bool",
+          "visibility": "public"
+        },
+        {
+          "name": "startsAfter",
+          "parameters": "date",
+          "returns": "bool",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/ValidityPeriod.php",
+          "line": 33,
+          "end_line": 100
+        }
+      ]
+    },
+    {
+      "id": "list",
+      "label": "ListNutritionPlans",
+      "kind": "class",
+      "sublabel": "Consulta · aplicación",
+      "row": 0,
+      "col": 2,
+      "methods": [
+        {
+          "name": "__invoke",
+          "returns": "list<NutritionPlanSummaryView>",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/ListNutritionPlans.php",
+          "line": 26,
+          "end_line": 46
+        }
+      ]
+    },
+    {
+      "id": "summary",
+      "label": "NutritionPlanSummaryView",
+      "kind": "class",
+      "sublabel": "DTO de lectura",
+      "row": 1,
+      "col": 2,
+      "methods": [
+        {
+          "name": "fromPlan",
+          "parameters": "plan, period, today",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/NutritionPlanSummaryView.php",
+          "line": 24,
+          "end_line": 56
+        }
+      ]
+    },
+    {
+      "id": "status",
+      "label": "PlanStatus",
+      "kind": "enum",
+      "sublabel": "vigente · finalizado · próximo",
+      "row": 2,
+      "col": 2,
+      "methods": [
+        {
+          "name": "label",
+          "returns": "string",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/PlanStatus.php",
+          "line": 23,
+          "end_line": 40
+        }
+      ]
+    },
+    {
+      "id": "get",
+      "label": "GetNutritionPlan",
+      "kind": "class",
+      "sublabel": "Consulta · aplicación",
+      "row": 0,
+      "col": 3,
+      "methods": [
+        {
+          "name": "__invoke",
+          "parameters": "id: string",
+          "returns": "NutritionPlanView",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/GetNutritionPlan.php",
+          "line": 22,
+          "end_line": 34
+        }
+      ]
+    },
+    {
+      "id": "view",
+      "label": "NutritionPlanView",
+      "kind": "class",
+      "sublabel": "DTO de lectura · plan entero",
+      "row": 1,
+      "col": 3,
+      "methods": [
+        {
+          "name": "fromPlan",
+          "parameters": "plan",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/NutritionPlanView.php",
+          "line": 33,
+          "end_line": 118
+        }
+      ]
+    },
+    {
+      "id": "notfound",
+      "label": "PlanNotFound",
+      "kind": "class",
+      "sublabel": "NotFound → 404",
+      "row": 2,
+      "col": 3,
+      "methods": [
+        {
+          "name": "withId",
+          "parameters": "id",
+          "returns": "self",
+          "visibility": "public",
+          "static": true
+        }
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/PlanNotFound.php",
+          "line": 19,
+          "end_line": 25
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "r1",
+      "from": "repo",
+      "to": "dup_number",
+      "kind": "dependency",
+      "label": "save() lanza"
+    },
+    {
+      "id": "r2",
+      "from": "history",
+      "to": "period",
+      "kind": "association",
+      "label": "un periodo por plan"
+    },
+    {
+      "id": "r3",
+      "from": "list",
+      "to": "repo",
+      "kind": "association",
+      "label": "history()"
+    },
+    {
+      "id": "r4",
+      "from": "list",
+      "to": "history",
+      "kind": "association",
+      "label": "of()"
+    },
+    {
+      "id": "r5",
+      "from": "list",
+      "to": "summary",
+      "kind": "association",
+      "label": "devuelve"
+    },
+    {
+      "id": "r6",
+      "from": "summary",
+      "to": "status",
+      "kind": "association",
+      "label": "según hoy"
+    },
+    {
+      "id": "r7",
+      "from": "get",
+      "to": "view",
+      "kind": "association",
+      "label": "devuelve"
+    },
+    {
+      "id": "r8",
+      "from": "get",
+      "to": "notfound",
+      "kind": "dependency",
+      "label": "lanza"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Dominio: la regla; aplicación: la presentación",
+      "items": [
+        "NutritionPlanHistory y ValidityPeriod escriben la regla 19 una vez, sin Laravel.",
+        "PlanStatus solo presenta el periodo respecto a hoy, con el Clock."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Dos reglas entre planes en el contrato",
+      "items": [
+        "Un inicio por día (DuplicatedPlanStart) y un número por plan (DuplicatedPlanNumber).",
+        "Si un plan choca por las dos, gana el inicio en los dos adaptadores."
+      ]
+    }
+  ]
+}

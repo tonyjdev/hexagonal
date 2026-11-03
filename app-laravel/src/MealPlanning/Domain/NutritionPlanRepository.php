@@ -44,7 +44,13 @@ interface NutritionPlanRepository
      * mismo día que uno ya guardado: así nunca hay dos planes vigentes a la
      * vez (regla 5). Decisión de HEXM-0018.
      *
+     * Rechaza con DuplicatedPlanNumber otro plan (distinto id) con el mismo
+     * número que uno ya guardado (regla 22, HEXM-0023). Si un plan choca por
+     * las dos cosas, gana DuplicatedPlanStart: así todos los adaptadores dan
+     * el mismo error para el mismo caso.
+     *
      * @throws DuplicatedPlanStart
+     * @throws DuplicatedPlanNumber
      */
     public function save(NutritionPlan $plan): void;
 
@@ -63,4 +69,18 @@ interface NutritionPlanRepository
      * es el mismo día.
      */
     public function inForceOn(DateTimeImmutable $date): ?NutritionPlan;
+
+    /**
+     * Todos los planes guardados, del más reciente al más antiguo (por fecha
+     * de inicio). Lista vacía si no hay ninguno.
+     *
+     * Devuelve los agregados completos y no un resumen (decisión de
+     * HEXM-0023): una persona tiene unos pocos planes al año, y así el
+     * puerto no necesita un segundo modelo de lectura (CQS y no CQRS, como
+     * el recetario, ADR 0008). Los periodos de vigencia NO los calcula el
+     * repositorio: los deriva NutritionPlanHistory, en el dominio.
+     *
+     * @return list<NutritionPlan>
+     */
+    public function history(): array;
 }

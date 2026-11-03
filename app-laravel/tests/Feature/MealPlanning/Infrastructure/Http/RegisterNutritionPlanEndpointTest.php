@@ -59,6 +59,9 @@ it('registers a plan and returns its id', function () {
     $id = $response->json('id');
     expect($id)->toBeString();
 
+    // La cabecera Location apunta a la consulta del plan (HEXM-0023).
+    $response->assertHeader('Location', route('nutrition-plans.show', ['id' => $id]));
+
     // Leído de PostgreSQL a través del puerto, con el binding real.
     $plan = app(NutritionPlanRepository::class)->find(NutritionPlanId::fromString($id));
 

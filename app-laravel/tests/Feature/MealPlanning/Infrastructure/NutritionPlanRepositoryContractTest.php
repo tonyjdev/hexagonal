@@ -19,6 +19,7 @@
 */
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use MealPlanning\Domain\DuplicatedPlanNumber;
 use MealPlanning\Domain\DuplicatedPlanStart;
 use MealPlanning\Domain\MealType;
 use MealPlanning\Domain\NutritionPlan;
@@ -171,4 +172,60 @@ it('keeps the first plan when the duplicate is rejected', function (NutritionPla
     }
 
     expect(planInForceOn($repository, '2026-11-02'))->toBe(27);
+})->with('nutrition plan repositories');
+
+// --- Dos planes no pueden tener el mismo número (regla 22, HEXM-0023) --------
+
+it('rejects another plan with the same number', function (NutritionPlanRepository $repository) {
+    $repository->save(NutritionPlanMother::plan(27, '2026-11-02'));
+
+    $repository->save(NutritionPlanMother::plan(27, '2027-01-04'));
+})->with('nutrition plan repositories')
+    ->throws(DuplicatedPlanNumber::class, 'Ya existe un plan 27 (empieza el 02/11/2026): no puede haber dos planes con el mismo número.');
+
+it('rejects renumbering a saved plan with the number of another one', function (NutritionPlanRepository $repository) {
+    // El camino del UPDATE: corregir el número de un plan es legítimo, pero
+    // no al de otro plan.
+    $repository->save(NutritionPlanMother::plan(26, '2026-09-07'));
+    $id = NutritionPlanId::generate();
+    $repository->save(NutritionPlanMother::plan(27, '2026-11-02', $id));
+
+    expect(fn () => $repository->save(NutritionPlanMother::plan(26, '2026-11-02', $id)))
+        ->toThrow(DuplicatedPlanNumber::class, 'Ya existe un plan 26 (empieza el 07/09/2026)');
+
+    expect($repository->find($id)?->number()->value())->toBe(27);
+})->with('nutrition plan repositories');
+
+it('reports the same start first when a plan clashes on both', function (NutritionPlanRepository $repository) {
+    // Mismo día y mismo número: el contrato fija qué error gana, para que
+    // los dos adaptadores respondan igual.
+    $repository->save(NutritionPlanMother::plan(27, '2026-11-02'));
+
+    $repository->save(NutritionPlanMother::plan(27, '2026-11-02'));
+})->with('nutrition plan repositories')
+    ->throws(DuplicatedPlanStart::class, 'El plan 27 no puede empezar el 02/11/2026: ese día ya empieza el plan 27.');
+
+// --- history(): el histórico de planes (HEXM-0023) -----------------------------
+
+it('has an empty history when nothing is saved', function (NutritionPlanRepository $repository) {
+    expect($repository->history())->toBe([]);
+})->with('nutrition plan repositories');
+
+it('lists the history from the most recent plan to the oldest', function (NutritionPlanRepository $repository) {
+    // Guardados en desorden: el orden lo da la fecha de inicio, no el alta.
+    $repository->save(NutritionPlanMother::plan(26, '2026-09-07'));
+    $repository->save(NutritionPlanMother::plan(28, '2027-01-04'));
+    $repository->save(NutritionPlanMother::plan(25, '2026-07-06'));
+    $repository->save(NutritionPlanMother::plan(27, '2026-11-02'));
+
+    $numbers = array_map(fn (NutritionPlan $plan): int => $plan->number()->value(), $repository->history());
+
+    expect($numbers)->toBe([28, 27, 26, 25]);
+})->with('nutrition plan repositories');
+
+it('returns complete plans in the history', function (NutritionPlanRepository $repository) {
+    $plan = NutritionPlanMother::plan();
+    $repository->save($plan);
+
+    expect($repository->history())->toEqual([$plan]);
 })->with('nutrition plan repositories');

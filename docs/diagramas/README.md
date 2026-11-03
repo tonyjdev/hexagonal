@@ -94,6 +94,8 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 | HEXM-0021 | [Hexágono de MealPlanning](HEXM-0021/hexagono-mealplanning.architecture.json) (`architecture`) | El primer recorrido completo del contexto: controlador y *Form Request*, caso de uso, agregado y puerto en el dominio, Eloquent y el `MealPlanningServiceProvider` que los enchufa. |
 | HEXM-0022 | [¿Qué me toca hoy? por HTTP](HEXM-0022/menu-de-hoy-por-http.sequence.json) (`sequence`) | `GET /api/menu` en sus tres caminos: hoy según el reloj real (`SystemClock` en Europe/Madrid, martes de la semana 1), un día concreto sin consultar el reloj (sábado libre) y el 404 sin plan vigente. |
 | HEXM-0022 | [Tres raíces de composición](HEXM-0022/raices-de-composicion.architecture.json) (`architecture`) | Quién enchufa cada puerto: `SharedServiceProvider` (el reloj, con la zona de `config/clock.php`), `MealPlanningServiceProvider` y `RecipesServiceProvider`, y cómo los tests sustituyen el reloj en el contenedor. |
+| HEXM-0023 | [¿Vigente, finalizado o próximo?](HEXM-0023/vigente-finalizado-o-proximo.workflow.json) (`workflow`) | Cómo sale cada plan del histórico: el dominio ordena los planes y deriva el periodo de cada uno del inicio del siguiente, y la consulta lo compara con hoy (`Clock`) para decir si está vigente, finalizado o es próximo. |
+| HEXM-0023 | [Las piezas del histórico](HEXM-0023/piezas-del-historico.class.json) (`class`) | `NutritionPlanHistory` y `ValidityPeriod` en el dominio, el puerto con `history()` y `DuplicatedPlanNumber`, y las consultas `ListNutritionPlans` y `GetNutritionPlan` con sus vistas, `PlanStatus` y `PlanNotFound`. |
 
 ### Transversal
 

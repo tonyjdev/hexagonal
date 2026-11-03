@@ -6,6 +6,7 @@ namespace MealPlanning\Infrastructure\Persistence\Eloquent;
 
 use DateTimeImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
+use MealPlanning\Domain\DuplicatedPlanNumber;
 use MealPlanning\Domain\DuplicatedPlanStart;
 use MealPlanning\Domain\NutritionPlan;
 use MealPlanning\Domain\NutritionPlanId;
@@ -23,9 +24,10 @@ use MealPlanning\Domain\NutritionPlanRepository;
  * CONCEPTO: las reglas del contrato, a la manera de SQL (ADR 0011)
  *   - La vigencia: WHERE starts_on <= fecha ORDER BY starts_on DESC LIMIT 1.
  *     El adaptador en memoria hace lo mismo con un bucle.
- *   - "Dos planes no empiezan el mismo día": un índice único en starts_on.
- *     Lo cumple PostgreSQL, también con dos guardados a la vez. Aquí solo se
- *     traduce su violación (un error técnico) a la excepción del dominio.
+ *   - "Dos planes no empiezan el mismo día" y "dos planes no tienen el
+ *     mismo número" (HEXM-0023): índices únicos en starts_on y en number.
+ *     Los cumple PostgreSQL, también con dos guardados a la vez. Aquí solo
+ *     se traduce su violación (un error técnico) a la excepción del dominio.
  *
  * CAPA: Infraestructura (MealPlanning\Infrastructure).
  */
@@ -74,8 +76,17 @@ final readonly class EloquentNutritionPlanRepository implements NutritionPlanRep
             });
         } catch (UniqueConstraintViolationException $violation) {
             // Ya fuera del savepoint deshecho: la conexión vuelve a estar
-            // usable y se puede buscar el plan que ocupa ese día.
-            throw DuplicatedPlanStart::between($plan, $this->startingOn($row['starts_on']) ?? throw $violation);
+            // usable y se puede buscar qué plan ocupa ese día o ese número.
+            // Primero el día, luego el número: el orden es parte del contrato
+            // (el mismo que el adaptador en memoria), y no depende de qué
+            // índice compruebe PostgreSQL antes.
+            $sameStart = $this->otherPlan('starts_on', $row['starts_on'], $row['id']);
+
+            if ($sameStart !== null) {
+                throw DuplicatedPlanStart::between($plan, $sameStart);
+            }
+
+            throw DuplicatedPlanNumber::between($plan, $this->otherPlan('number', $row['number'], $row['id']) ?? throw $violation);
         }
     }
 
@@ -103,14 +114,27 @@ final readonly class EloquentNutritionPlanRepository implements NutritionPlanRep
     }
 
     /**
-     * El plan que ya empieza ese día, para el mensaje de DuplicatedPlanStart.
-     * Si no hay ninguno, la violación era de otro índice único (hoy no hay
-     * otro), y se relanza tal cual: no se disfraza un error que no se
-     * entiende.
+     * Del más reciente al más antiguo. Reconstruye cada plan entero (una sola
+     * consulta; unos pocos planes al año), decisión de HEXM-0023.
      */
-    private function startingOn(string $date): ?NutritionPlan
+    public function history(): array
     {
-        $model = NutritionPlanModel::query()->where('starts_on', $date)->first();
+        return array_values(NutritionPlanModel::query()
+            ->orderByDesc('starts_on')
+            ->get()
+            ->map(fn (NutritionPlanModel $model): NutritionPlan => $this->mapper->toDomain($model))
+            ->all());
+    }
+
+    /**
+     * Otro plan (distinto id) con ese valor en una columna única, para el
+     * mensaje del error de dominio. Si no hay ninguno, la violación era de
+     * otro índice que este repositorio no conoce, y se relanza tal cual: no
+     * se disfraza un error que no se entiende.
+     */
+    private function otherPlan(string $column, string|int $value, string $exceptId): ?NutritionPlan
+    {
+        $model = NutritionPlanModel::query()->where($column, $value)->whereKeyNot($exceptId)->first();
 
         return $model === null ? null : $this->mapper->toDomain($model);
     }
