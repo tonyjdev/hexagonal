@@ -19,6 +19,7 @@ use MealPlanning\Domain\NutritionPlan;
 use MealPlanning\Domain\NutritionPlanId;
 use MealPlanning\Domain\OptionGroup;
 use MealPlanning\Domain\PlanNumber;
+use MealPlanning\Domain\RecipeReference;
 use MealPlanning\Domain\Weekday;
 use MealPlanning\Domain\WeekSource;
 use UnexpectedValueException;
@@ -144,7 +145,8 @@ final class NutritionPlanMapper
     /**
      * Los dos formatos de un plato (HEXM-0012) se guardan con la misma forma:
      * el de la semana 1 tiene `description` y el de la semana 2, `name` (e
-     * ingredientes opcionales). El que no aplica va a null.
+     * ingredientes opcionales). El que no aplica va a null. `recipe_id`, la
+     * receta enlazada o null (HEXM-0024).
      *
      * @return array<string, mixed>
      */
@@ -157,6 +159,9 @@ final class NutritionPlanMapper
                 'name' => $ingredient->name(),
                 'quantity' => $ingredient->quantity(),
             ], $dish->ingredients()),
+            // La receta del recetario (HEXM-0024), o null. Solo el id: el plan
+            // no guarda nada más de la receta.
+            'recipe_id' => $dish->recipe()?->value(),
         ];
     }
 
@@ -262,10 +267,21 @@ final class NutritionPlanMapper
         $dish = self::object($document, $path);
         $name = self::nullableString($dish['name'] ?? null, "{$path}.name");
 
+        // CONCEPTO: evolución compatible de un documento (HEXM-0024, ADR 0016)
+        // Los planes guardados antes de HEXM-0024 no tienen la clave
+        // recipe_id en sus platos. `?? null` trata la clave ausente igual que
+        // un null: un plato sin receta. Así los documentos antiguos se siguen
+        // leyendo sin migrar datos. Si la clave está, tiene que ser un texto
+        // con forma de UUID (si no, el documento está corrupto).
+        $recipeId = self::nullableString($dish['recipe_id'] ?? null, "{$path}.recipe_id");
+        $recipe = $recipeId === null ? null : RecipeReference::fromString($recipeId);
+
         // Con nombre, es un plato de la semana 2 (nombre + ingredientes); si
         // no, uno de la semana 1 (descripción en texto libre).
         if ($name === null) {
-            return Dish::described(self::string($dish['description'] ?? null, "{$path}.description"));
+            $described = Dish::described(self::string($dish['description'] ?? null, "{$path}.description"));
+
+            return $recipe === null ? $described : $described->withRecipe($recipe);
         }
 
         $ingredients = [];
@@ -280,7 +296,9 @@ final class NutritionPlanMapper
             );
         }
 
-        return Dish::named($name, $ingredients);
+        $named = Dish::named($name, $ingredients);
+
+        return $recipe === null ? $named : $named->withRecipe($recipe);
     }
 
     // --- Lectura defensiva del JSON -------------------------------------------

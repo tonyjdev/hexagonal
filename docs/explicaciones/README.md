@@ -48,6 +48,10 @@ Los diagramas Archify de cada tarea están en [`../diagramas/`](../diagramas/REA
 - [HEXM-0022: Menú de hoy por API y reloj real](HEXM-0022-menu-de-hoy-por-api-y-reloj-real.md): por qué un caso de uso de consulta se publica por HTTP sin tocar el núcleo, por qué el reloj se enchufa en una raíz de composición compartida con la zona horaria como configuración (y no `app.timezone`), y por qué en los tests «hoy» se fija sustituyendo el puerto en el contenedor en lugar de usar `travelTo()`. Diagramas: [¿qué me toca hoy? por HTTP](../diagramas/HEXM-0022/menu-de-hoy-por-http.sequence.json) y [tres raíces de composición](../diagramas/HEXM-0022/raices-de-composicion.architecture.json).
 - [HEXM-0023: Histórico de planes](HEXM-0023-historico-de-planes.md): por qué la vigencia de cada plan se deriva en el dominio del inicio del siguiente y no se guarda, por qué el estado (vigente, finalizado, próximo) depende de hoy y se calcula al consultar, por qué el histórico devuelve agregados completos (CQS) y por qué el número de plan pasa a ser único con una migración nueva. Diagramas: [¿vigente, finalizado o próximo?](../diagramas/HEXM-0023/vigente-finalizado-o-proximo.workflow.json) y [las piezas del histórico](../diagramas/HEXM-0023/piezas-del-historico.class.json).
 
+### Nivel 6: Relación con recetas
+
+- [HEXM-0024: Referencia a receta en un plato](HEXM-0024-referencia-a-receta-en-un-plato.md): por qué `MealPlanning` nombra a una receta con un value object propio (`RecipeReference`) y no con el `RecipeId` del recetario ni con uno compartido, por qué el plato la guarda solo por identidad y por qué el documento `jsonb` evoluciona de forma compatible, sin migrar datos. Diagramas: [un UUID, dos tipos](../diagramas/HEXM-0024/un-uuid-dos-tipos.class.json) y [leer el recipe_id de un plato](../diagramas/HEXM-0024/leer-el-recipe-id.workflow.json).
+
 ### Transversal
 
 - [HEXM-0008: Diagramas Archify en las tareas](HEXM-0008-diagramas-archify-en-las-tareas.md): por qué los diagramas se generan desde una fuente versionada, respaldados por el código en un commit fijo, y por qué el cierre de una tarea tiene dos commits.

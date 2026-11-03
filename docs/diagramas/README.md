@@ -97,6 +97,13 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 | HEXM-0023 | [¿Vigente, finalizado o próximo?](HEXM-0023/vigente-finalizado-o-proximo.workflow.json) (`workflow`) | Cómo sale cada plan del histórico: el dominio ordena los planes y deriva el periodo de cada uno del inicio del siguiente, y la consulta lo compara con hoy (`Clock`) para decir si está vigente, finalizado o es próximo. |
 | HEXM-0023 | [Las piezas del histórico](HEXM-0023/piezas-del-historico.class.json) (`class`) | `NutritionPlanHistory` y `ValidityPeriod` en el dominio, el puerto con `history()` y `DuplicatedPlanNumber`, y las consultas `ListNutritionPlans` y `GetNutritionPlan` con sus vistas, `PlanStatus` y `PlanNotFound`. |
 
+### Nivel 6: Relación con recetas
+
+| Tarea | Diagrama | Qué muestra |
+|---|---|---|
+| HEXM-0024 | [Un UUID, dos tipos](HEXM-0024/un-uuid-dos-tipos.class.json) (`class`) | `RecipeId` (identidad en `Recipes`) y `RecipeReference` (referencia en `MealPlanning`) envuelven el mismo `Uuid` del shared kernel sin depender uno del otro; el `Dish` que apunta a 0..1 receta y el error `InvalidRecipeReference`. |
+| HEXM-0024 | [Leer el recipe_id de un plato](HEXM-0024/leer-el-recipe-id.workflow.json) (`workflow`) | La lectura compatible del documento `weeks`: clave ausente o `null` (planes anteriores) → plato sin receta; UUID → plato con receta; otro valor → datos corruptos, no se carga (ADR 0016). |
+
 ### Transversal
 
 | Tarea | Diagrama | Qué muestra |

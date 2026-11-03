@@ -30,6 +30,8 @@ final readonly class DishView
         public ?string $name,
         public ?string $description,
         public array $ingredients,
+        /** El id de la receta del recetario a la que apunta, o null (HEXM-0024). */
+        public ?string $recipeId = null,
     ) {}
 
     public static function fromDish(Dish $dish): self
@@ -38,6 +40,7 @@ final readonly class DishView
             name: $dish->name(),
             description: $dish->description(),
             ingredients: array_map(DishIngredientView::fromIngredient(...), $dish->ingredients()),
+            recipeId: $dish->recipe()?->value(),
         );
     }
 }

@@ -2,7 +2,7 @@
 
 Hoja de ruta del proyecto organizada en **niveles**. Cada nivel es pequeño, termina con tests en verde y una etiqueta git (`nivel-NN`), y añade **un concepto nuevo** cada vez.
 
-**Estado actual:** ✅ Nivel 5 (Planes: adaptadores) terminado (`nivel-05`): los planes se dan de alta por la API, se guardan en PostgreSQL, «¿qué me toca hoy?» responde con el reloj real y se conserva el histórico. Siguiente: nivel 6, la relación de los platos con las recetas.
+**Estado actual:** 🟡 Nivel 6 (Relación con recetas) en curso: un plato ya puede apuntar a una receta con su propia `RecipeReference` (HEXM-0024). Siguiente: validar la receta entre contextos a través de un puerto propio (HEXM-0025).
 
 Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado
 
@@ -46,7 +46,7 @@ El roadmap tiene tres bloques:
 | ✅ | **3. Planes: dominio** (HEXM-0012 a 0015) | `NutritionPlan`, `MenuWeek`, `MenuDay`, `Dish`, `FixedMeal`, `OptionGroup`, `ExchangeTable`. Reglas: dos semanas, 6 días con menú, comida + cena. | Agregados y sus límites, enums, colecciones inmutables |
 | ✅ | **4. Calendario** (HEXM-0017 a 0019) | `MealCalendar` y el caso de uso `GetMenuForDate` ("¿qué me toca hoy?"): alternancia de semanas, sábado libre y plan vigente. Puerto `Clock`. | Servicio de dominio, tiempo testeable, casos de uso de consulta |
 | ✅ | **5. Planes: adaptadores** (HEXM-0020 a 0023) | Persistencia de planes, histórico de planes, API REST y alta manual de un plan. | Repositorio de agregados complejos, transacciones |
-| ⬜ | **6. Relación con recetas** | Un `Dish` puede referenciar un `RecipeId`; validación entre contextos a través de un puerto propio de `MealPlanning`; evento `RecipeDeleted` y cómo reacciona `MealPlanning`. | Comunicación entre *bounded contexts*, capa anticorrupción, eventos de dominio |
+| 🟡 | **6. Relación con recetas** (HEXM-0024 a 0027) | Un `Dish` puede referenciar un `RecipeId`; validación entre contextos a través de un puerto propio de `MealPlanning`; evento `RecipeDeleted` y cómo reacciona `MealPlanning`. | Comunicación entre *bounded contexts*, capa anticorrupción, eventos de dominio |
 
 ## Bloque B: Python y FastAPI
 
@@ -107,3 +107,4 @@ El roadmap tiene tres bloques:
 | 2026-11-04 | 5 | HEXM-0021: alta manual de un plan, primer comando de `MealPlanning`: `RegisterNutritionPlan` (traduce sin decidir, con los constructores de formato de `MenuWeek`) y `POST /api/nutrition-plans` con una *Form Request* que solo valida la forma; JSON con el formato de los documentos (menús 1-6 y días 8-14), contrato natural del importador del nivel 7 (ADR 0014); `MealPlanningServiceProvider` enchufa el puerto a Eloquent; errores de traducción (tipo de comida, categoría, menú o día repetidos) como errores del dominio. |
 | 2026-11-04 | 5 | HEXM-0022: `GET /api/menu[?date=AAAA-MM-DD]` sobre `GetMenuForDate` sin tocar el núcleo (`GetMenuForDateRequest`, `ScheduledDayResource` con el día libre); `SharedServiceProvider` enchufa `Clock` → `SystemClock` con la zona de `config/clock.php` (Europe/Madrid, `APP_USER_TIMEZONE`), sin cambiar `app.timezone`; en los tests, «hoy» se fija sustituyendo el puerto en el contenedor (actualización del ADR 0012). |
 | 2026-11-05 | 5 | HEXM-0023: histórico de planes: `ValidityPeriod` y `NutritionPlanHistory` derivan en el dominio la vigencia de cada plan del inicio del siguiente; `history()` en el puerto (agregados completos, CQS); número de plan único (`DuplicatedPlanNumber`, índice único en una migración nueva; resuelve el `domain_issue` de HEXM-0021); `ListNutritionPlans` (vigente/finalizado/próximo con el `Clock`) y `GetNutritionPlan` (`PlanNotFound`), con `GET /api/nutrition-plans[/{id}]`; `Location` en el alta (ADR 0015). **Nivel 5 terminado** (`nivel-05`, diario `05-planes-adaptadores.md`). |
+| 2026-11-05 | 6 | HEXM-0024: un `Dish` puede apuntar a una receta del recetario con `RecipeReference`, value object propio de `MealPlanning` sobre el `Uuid` del shared kernel (no el `RecipeId` de `Recipes`: los contextos solo comparten el valor); `withRecipe()` inmutable; `recipe_id` en el documento `weeks` con lectura compatible de los planes antiguos, sin migrar datos; expuesto en la API (ADR 0016). |

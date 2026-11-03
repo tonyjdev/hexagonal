@@ -58,7 +58,7 @@ final class NutritionPlanResource extends JsonResource
     }
 
     /**
-     * @return array{name: string|null, description: string|null, ingredients: list<array{name: string, quantity: string|null}>}
+     * @return array{name: string|null, description: string|null, ingredients: list<array{name: string, quantity: string|null}>, recipe_id: string|null}
      */
     private static function dish(DishView $dish): array
     {
@@ -69,6 +69,7 @@ final class NutritionPlanResource extends JsonResource
                 fn (DishIngredientView $ingredient): array => ['name' => $ingredient->name, 'quantity' => $ingredient->quantity],
                 $dish->ingredients,
             ),
+            'recipe_id' => $dish->recipeId,
         ];
     }
 }

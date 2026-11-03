@@ -1,0 +1,188 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Leer el recipe_id de un plato guardado: documentos viejos y nuevos",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0024/leer-el-recipe-id.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "ce28553be5c50bc6ae28ed943e757d84693081cf"
+    },
+    "legend": {
+      "entries": {
+        "external": {
+          "label": "Documento jsonb guardado"
+        },
+        "backend": {
+          "label": "Lectura del mapper"
+        },
+        "security": {
+          "label": "Comprobación o error"
+        },
+        "database": {
+          "label": "Plato del dominio"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "doc",
+      "label": "Documento weeks (jsonb)"
+    },
+    {
+      "id": "mapper",
+      "label": "NutritionPlanMapper::dishToDomain()"
+    },
+    {
+      "id": "dish",
+      "label": "Dish (dominio)"
+    },
+    {
+      "id": "errors",
+      "label": "Datos corruptos",
+      "variant": "exception"
+    }
+  ],
+  "mainPath": [
+    "plato",
+    "clave",
+    "uuid",
+    "con_receta"
+  ],
+  "nodes": [
+    {
+      "id": "plato",
+      "lane": "doc",
+      "col": 0,
+      "type": "external",
+      "label": "Plato del documento",
+      "sublabel": "name · description · ingredients · recipe_id?",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/NutritionPlanMapper.php",
+          "line": 164,
+          "end_line": 164,
+          "label": "se escribe"
+        }
+      ]
+    },
+    {
+      "id": "clave",
+      "lane": "mapper",
+      "col": 1,
+      "type": "security",
+      "label": "¿recipe_id con valor?",
+      "sublabel": "clave ausente o null → sin receta",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/NutritionPlanMapper.php",
+          "line": 276,
+          "end_line": 276
+        }
+      ]
+    },
+    {
+      "id": "uuid",
+      "lane": "mapper",
+      "col": 2,
+      "type": "security",
+      "label": "¿Es una referencia?",
+      "sublabel": "RecipeReference::fromString()",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/NutritionPlanMapper.php",
+          "line": 277,
+          "end_line": 277
+        }
+      ]
+    },
+    {
+      "id": "con_receta",
+      "lane": "dish",
+      "col": 3,
+      "type": "database",
+      "label": "Plato con receta",
+      "sublabel": "withRecipe(referencia)",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/NutritionPlanMapper.php",
+          "line": 284,
+          "end_line": 301
+        }
+      ]
+    },
+    {
+      "id": "sin_receta",
+      "lane": "dish",
+      "col": 1,
+      "type": "database",
+      "label": "Plato sin receta",
+      "sublabel": "planes anteriores a HEXM-0024"
+    },
+    {
+      "id": "corrupto",
+      "lane": "errors",
+      "col": 2,
+      "type": "security",
+      "label": "No se carga",
+      "sublabel": "InvalidRecipeReference: \"guiso\" no es una referencia"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "plato",
+      "to": "clave",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e2",
+      "from": "clave",
+      "to": "uuid",
+      "label": "sí",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e3",
+      "from": "uuid",
+      "to": "con_receta",
+      "label": "sí",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e4",
+      "from": "clave",
+      "to": "sin_receta",
+      "label": "no"
+    },
+    {
+      "id": "e5",
+      "from": "uuid",
+      "to": "corrupto",
+      "label": "no",
+      "variant": "security",
+      "role": "error"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Evolución compatible, sin migrar datos",
+      "items": [
+        "Los planes guardados antes de HEXM-0024 no tienen la clave: se leen como platos sin receta.",
+        "Los nuevos guardan recipe_id siempre (un UUID o null)."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Un valor que no es un UUID es corrupción",
+      "items": [
+        "Si la clave existe, tiene que ser una referencia válida: si no, el plan no se carga (como cualquier otro dato corrupto, ADR 0013)."
+      ]
+    }
+  ]
+}

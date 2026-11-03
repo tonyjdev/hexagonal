@@ -32,8 +32,13 @@ namespace MealPlanning\Domain;
  * descripción (semana 1). Los ingredientes son opcionales: algunos platos
  * propios ("Sobras del sábado") no los detallan.
  *
- * Fuera de alcance (nivel 6): la referencia opcional a una receta del
- * recetario (RecipeId). Llegará con su propia validación entre contextos.
+ * CONCEPTO: referencia opcional a una receta (HEXM-0024)
+ * Un plato puede apuntar a una receta del recetario (RecipeReference): el
+ * guiso de alubias del menú 6 tiene su receta. Es opcional y vale para los
+ * dos formatos. Se añade con withRecipe(), que devuelve un plato NUEVO: el
+ * value object sigue siendo inmutable. Que la receta exista no lo comprueba
+ * el plato (no puede saberlo): lo hará el alta a través de un puerto
+ * (HEXM-0025).
  *
  * CAPA: Dominio (MealPlanning\Domain).
  */
@@ -46,6 +51,7 @@ final readonly class Dish
         private ?string $name,
         private ?string $description,
         private array $ingredients,
+        private ?RecipeReference $recipe = null,
     ) {}
 
     /**
@@ -83,6 +89,27 @@ final readonly class Dish
     }
 
     /**
+     * El mismo plato, apuntando a una receta del recetario.
+     *
+     * CONCEPTO: "wither" en un value object inmutable
+     * No cambia este plato (es readonly): devuelve uno nuevo con la
+     * referencia. Es el equivalente inmutable de un setter, y por eso se
+     * llama with…(), como DateTimeImmutable::modify() devuelve otra fecha.
+     */
+    public function withRecipe(RecipeReference $recipe): self
+    {
+        return new self($this->name, $this->description, $this->ingredients, $recipe);
+    }
+
+    /**
+     * La receta a la que apunta el plato, o null si no tiene.
+     */
+    public function recipe(): ?RecipeReference
+    {
+        return $this->recipe;
+    }
+
+    /**
      * Nombre corto ("Pasta con salmón y pesto"), o null en la semana 1.
      */
     public function name(): ?string
@@ -107,14 +134,15 @@ final readonly class Dish
     }
 
     /**
-     * Igualdad por valor: mismo nombre, misma descripción y los mismos
-     * ingredientes en el mismo orden.
+     * Igualdad por valor: mismo nombre, misma descripción, los mismos
+     * ingredientes en el mismo orden y la misma receta (o ninguna).
      */
     public function equals(self $other): bool
     {
         if ($this->name !== $other->name
             || $this->description !== $other->description
-            || count($this->ingredients) !== count($other->ingredients)) {
+            || count($this->ingredients) !== count($other->ingredients)
+            || ! self::sameRecipe($this->recipe, $other->recipe)) {
             return false;
         }
 
@@ -125,5 +153,10 @@ final readonly class Dish
         }
 
         return true;
+    }
+
+    private static function sameRecipe(?RecipeReference $a, ?RecipeReference $b): bool
+    {
+        return $a === null || $b === null ? $a === $b : $a->equals($b);
     }
 }

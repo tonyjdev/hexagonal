@@ -19,6 +19,7 @@ use MealPlanning\Domain\NutritionPlan;
 use MealPlanning\Domain\NutritionPlanId;
 use MealPlanning\Domain\OptionGroup;
 use MealPlanning\Domain\PlanNumber;
+use MealPlanning\Domain\RecipeReference;
 
 /**
  * NutritionPlanMother: planes nutricionales de ejemplo para los tests.
@@ -52,6 +53,47 @@ final class NutritionPlanMother
             self::fixedMeals(),
             self::exchangeTable(),
             [self::nutritionistWeek(), self::selfWeek()],
+        );
+    }
+
+    /**
+     * La receta de ejemplo del recetario (ficticia): el guiso del menú 6.
+     */
+    public const string STEW_RECIPE = '0190a2a0-7c1e-7000-8000-00000000abcd';
+
+    /**
+     * El plan 27 con platos enlazados a recetas (HEXM-0024): la comida del
+     * menú 6 (semana 1, domingo) y la del día 10 (semana 2, miércoles)
+     * apuntan a STEW_RECIPE. El resto, sin receta.
+     */
+    public static function planWithRecipes(int $number = 27, string $startsOn = '2026-11-02'): NutritionPlan
+    {
+        $recipe = RecipeReference::fromString(self::STEW_RECIPE);
+
+        $menus = [];
+
+        foreach (range(1, 6) as $menu) {
+            $lunch = Dish::described("Comida del menú {$menu}");
+            $menus[$menu] = ['lunch' => $menu === 6 ? $lunch->withRecipe($recipe) : $lunch, 'dinner' => Dish::described("Cena del menú {$menu}")];
+        }
+
+        $days = [];
+
+        foreach (range(8, 14) as $day) {
+            $lunch = Dish::named("Comida del día {$day}", [DishIngredient::of('Pasta integral', '80 g')]);
+            $days[$day] = $day === 13 ? null : [
+                'lunch' => $day === 10 ? $lunch->withRecipe($recipe) : $lunch,
+                'dinner' => Dish::named("Cena del día {$day}"),
+            ];
+        }
+
+        return NutritionPlan::create(
+            NutritionPlanId::generate(),
+            PlanNumber::of($number),
+            new DateTimeImmutable($startsOn),
+            self::fixedMeals(),
+            self::exchangeTable(),
+            [MenuWeek::fromNutritionistMenus($menus), MenuWeek::fromSelfDays($days)],
         );
     }
 
