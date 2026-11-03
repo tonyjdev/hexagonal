@@ -1,0 +1,350 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "De los documentos a la semana: menús 1-6 y días 8-14 en un único MenuWeek",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0013/de-los-documentos-a-la-semana.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "f383a2ce0d0a7a3f52d1a6a6cf01266918d29c5d"
+    },
+    "legend": {
+      "entries": {
+        "backend": {
+          "label": "Formato del documento → días de la semana"
+        },
+        "security": {
+          "label": "Regla de negocio o error"
+        },
+        "database": {
+          "label": "Semana válida"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "week1",
+      "label": "Semana 1 (nutricionista)"
+    },
+    {
+      "id": "week2",
+      "label": "Semana 2 (usuario)"
+    },
+    {
+      "id": "rules",
+      "label": "Reglas del dominio"
+    },
+    {
+      "id": "errors",
+      "label": "Errores en español",
+      "variant": "exception"
+    }
+  ],
+  "mainPath": [
+    "w1_map",
+    "day_check",
+    "number_check",
+    "unique_check",
+    "count_check",
+    "week_ok"
+  ],
+  "nodes": [
+    {
+      "id": "w1_map",
+      "lane": "week1",
+      "col": 0,
+      "type": "backend",
+      "label": "Menús 1 a 6",
+      "sublabel": "menú N → N-ésimo día con menú (6 → domingo)",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MenuWeek.php",
+          "line": 114,
+          "end_line": 134,
+          "label": "fromNutritionistMenus()"
+        }
+      ]
+    },
+    {
+      "id": "w2_map",
+      "lane": "week2",
+      "col": 0,
+      "type": "backend",
+      "label": "Días 8 a 14",
+      "sublabel": "día N → Weekday N − 7 (13 vacío)",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MenuWeek.php",
+          "line": 153,
+          "end_line": 169,
+          "label": "fromSelfDays()"
+        }
+      ]
+    },
+    {
+      "id": "day_check",
+      "lane": "rules",
+      "col": 1,
+      "type": "security",
+      "label": "MenuDay::of()",
+      "sublabel": "¿sábado? ¿comida? ¿cena?",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MenuDay.php",
+          "line": 53,
+          "end_line": 68
+        }
+      ]
+    },
+    {
+      "id": "number_check",
+      "lane": "rules",
+      "col": 2,
+      "type": "security",
+      "label": "¿Semana 1 o 2?",
+      "sublabel": "create()",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MenuWeek.php",
+          "line": 77,
+          "end_line": 81
+        }
+      ]
+    },
+    {
+      "id": "unique_check",
+      "lane": "rules",
+      "col": 3,
+      "type": "security",
+      "label": "¿Algún día repetido?",
+      "sublabel": "antes de contar",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MenuWeek.php",
+          "line": 214,
+          "end_line": 227
+        }
+      ]
+    },
+    {
+      "id": "count_check",
+      "lane": "rules",
+      "col": 4,
+      "type": "security",
+      "label": "¿Exactamente 6 días?",
+      "sublabel": "lunes a viernes y domingo",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MenuWeek.php",
+          "line": 89,
+          "end_line": 91
+        }
+      ]
+    },
+    {
+      "id": "week_ok",
+      "lane": "rules",
+      "col": 5,
+      "type": "database",
+      "label": "MenuWeek",
+      "sublabel": "ordenada lunes → domingo",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MenuWeek.php",
+          "line": 93,
+          "end_line": 97
+        }
+      ]
+    },
+    {
+      "id": "err_range",
+      "lane": "errors",
+      "col": 0,
+      "type": "security",
+      "label": "Fuera de rango",
+      "sublabel": "\"el menú 7 no existe\"",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/InvalidMenuWeek.php",
+          "line": 35,
+          "end_line": 43
+        }
+      ]
+    },
+    {
+      "id": "err_day",
+      "lane": "errors",
+      "col": 1,
+      "type": "security",
+      "label": "InvalidMenuDay",
+      "sublabel": "\"le falta la cena\" · \"día libre\"",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/InvalidMenuDay.php",
+          "line": 17,
+          "end_line": 25
+        }
+      ]
+    },
+    {
+      "id": "err_number",
+      "lane": "errors",
+      "col": 2,
+      "type": "security",
+      "label": "Semana inexistente",
+      "sublabel": "\"la semana 3 no existe\"",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/InvalidMenuWeek.php",
+          "line": 17,
+          "end_line": 20
+        }
+      ]
+    },
+    {
+      "id": "err_dup",
+      "lane": "errors",
+      "col": 3,
+      "type": "security",
+      "label": "Día repetido",
+      "sublabel": "\"el lunes aparece más de una vez\"",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/InvalidMenuWeek.php",
+          "line": 30,
+          "end_line": 33
+        }
+      ]
+    },
+    {
+      "id": "err_count",
+      "lane": "errors",
+      "col": 4,
+      "type": "security",
+      "label": "Faltan días",
+      "sublabel": "\"y esta tiene 5\"",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/InvalidMenuWeek.php",
+          "line": 22,
+          "end_line": 28
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "w1_days",
+      "from": "w1_map",
+      "to": "day_check",
+      "label": "cada menú",
+      "variant": "emphasis"
+    },
+    {
+      "id": "w2_days",
+      "from": "w2_map",
+      "to": "day_check",
+      "label": "cada día",
+      "variant": "default"
+    },
+    {
+      "id": "days_ok",
+      "from": "day_check",
+      "to": "number_check",
+      "label": "días válidos",
+      "variant": "emphasis"
+    },
+    {
+      "id": "number_ok",
+      "from": "number_check",
+      "to": "unique_check",
+      "label": "sí",
+      "variant": "emphasis"
+    },
+    {
+      "id": "unique_ok",
+      "from": "unique_check",
+      "to": "count_check",
+      "label": "ninguno",
+      "variant": "emphasis"
+    },
+    {
+      "id": "count_ok",
+      "from": "count_check",
+      "to": "week_ok",
+      "label": "sí",
+      "variant": "emphasis"
+    },
+    {
+      "id": "w1_range",
+      "from": "w1_map",
+      "to": "err_range",
+      "label": "menú 7",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "w2_range",
+      "from": "w2_map",
+      "to": "err_range",
+      "label": "día 15",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "day_bad",
+      "from": "day_check",
+      "to": "err_day",
+      "label": "no",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "number_bad",
+      "from": "number_check",
+      "to": "err_number",
+      "label": "3",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "unique_bad",
+      "from": "unique_check",
+      "to": "err_dup",
+      "label": "sí",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "count_bad",
+      "from": "count_check",
+      "to": "err_count",
+      "label": "no",
+      "variant": "security",
+      "role": "error"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Dos formatos, un modelo",
+      "items": [
+        "La numeración (menús 1-6, días 8-14) es del documento; el dominio solo habla de Weekday.",
+        "\"El menú 6 es el domingo\" es una regla del negocio: por eso la traducción vive en el dominio y no en el importador.",
+        "Los dos caminos acaban en create(): las reglas se comprueban en un único sitio."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "¿Y el sábado?",
+      "items": [
+        "Nunca llega a MenuWeek: MenuDay::of() rechaza un menú en sábado (el día 13 relleno).",
+        "Por eso \"más de 6 días\" siempre se detecta como día repetido."
+      ]
+    }
+  ]
+}

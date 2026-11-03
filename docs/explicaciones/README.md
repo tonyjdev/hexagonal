@@ -31,6 +31,7 @@ Los diagramas Archify de cada tarea están en [`../diagramas/`](../diagramas/REA
 ### Nivel 3: Planes (dominio)
 
 - [HEXM-0012: Value objects de los planes](HEXM-0012-value-objects-de-los-planes.md): por qué el UUID pasa al *shared kernel* y la cantidad no, por qué los identificadores envuelven un `Uuid` en vez de heredar de él y cómo un mismo `Dish` admite los formatos de la semana 1 y de la semana 2. Diagramas: [piezas del plan](../diagramas/HEXM-0012/piezas-del-plan.class.json) y [shared kernel entre dos contextos](../diagramas/HEXM-0012/shared-kernel-entre-contextos.architecture.json).
+- [HEXM-0013: Días y semanas de menú](HEXM-0013-dias-y-semanas-de-menu.md): por qué un día de menú es un value object y la semana una entidad local, qué reglas vigila cada uno sobre la colección de días y por qué la traducción de los menús 1-6 y los días 8-14 vive en el dominio. Diagramas: [semana de menú](../diagramas/HEXM-0013/semana-de-menu.class.json) y [de los documentos a la semana](../diagramas/HEXM-0013/de-los-documentos-a-la-semana.workflow.json).
 
 ### Transversal
 
