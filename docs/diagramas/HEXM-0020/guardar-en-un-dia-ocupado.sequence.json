@@ -1,0 +1,265 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Guardar un plan en un día ocupado: índice único y SAVEPOINT",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0020/guardar-en-un-dia-ocupado.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "fafb98bad578766b96d381603d2d935312c59ff8"
+    },
+    "legend": {
+      "entries": {
+        "default": {
+          "label": "Llamada o consulta"
+        },
+        "emphasis": {
+          "label": "Camino que protege la transacción"
+        },
+        "security": {
+          "label": "La regla 5: violación y error de dominio"
+        },
+        "return": {
+          "label": "Respuesta"
+        }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "caller",
+      "type": "external",
+      "label": "Quien guarda",
+      "sublabel": "test de contrato; caso de uso en HEXM-0021",
+      "sources": [
+        {
+          "path": "app-laravel/tests/Feature/MealPlanning/Infrastructure/NutritionPlanRepositoryContractTest.php",
+          "line": 148,
+          "end_line": 162,
+          "label": "mover a un día ocupado"
+        }
+      ]
+    },
+    {
+      "id": "repo",
+      "type": "backend",
+      "label": "Repositorio Eloquent",
+      "sublabel": "EloquentNutritionPlanRepository",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/EloquentNutritionPlanRepository.php",
+          "line": 66,
+          "end_line": 80,
+          "label": "save()"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/EloquentNutritionPlanRepository.php",
+          "line": 111,
+          "end_line": 116,
+          "label": "startingOn()"
+        }
+      ]
+    },
+    {
+      "id": "mapper",
+      "type": "security",
+      "label": "NutritionPlanMapper",
+      "sublabel": "agregado ↔ fila jsonb",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/NutritionPlanMapper.php",
+          "line": 73,
+          "end_line": 84,
+          "label": "toRow()"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/NutritionPlanMapper.php",
+          "line": 165,
+          "end_line": 187,
+          "label": "toDomain()"
+        }
+      ]
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "PostgreSQL",
+      "sublabel": "nutrition_plans",
+      "sources": [
+        {
+          "path": "app-laravel/database/migrations/2026_11_04_000000_create_nutrition_plans_table.php",
+          "line": 52,
+          "end_line": 52,
+          "label": "starts_on único"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 140,
+      "to": 935,
+      "label": "El plan 27 (ya guardado) se mueve al 07/09, el inicio del plan 26"
+    }
+  ],
+  "messages": [
+    {
+      "id": "save",
+      "from": "caller",
+      "to": "repo",
+      "y": 165,
+      "label": "save(plan 27, inicio 07/09)",
+      "variant": "emphasis",
+      "note": "mismo id que el plan 27 guardado; el 07/09 ya lo ocupa el 26"
+    },
+    {
+      "id": "to_row",
+      "from": "repo",
+      "to": "mapper",
+      "y": 240,
+      "label": "toRow(plan)",
+      "variant": "default"
+    },
+    {
+      "id": "row",
+      "from": "mapper",
+      "to": "repo",
+      "y": 285,
+      "label": "fila: id, number, starts_on, 3 documentos",
+      "variant": "return"
+    },
+    {
+      "id": "savepoint",
+      "from": "repo",
+      "to": "db",
+      "y": 330,
+      "label": "SAVEPOINT (transaction() anidada)",
+      "variant": "emphasis",
+      "note": "dentro de la transacción de RefreshDatabase o de un caso de uso"
+    },
+    {
+      "id": "update",
+      "from": "repo",
+      "to": "db",
+      "y": 405,
+      "label": "UPDATE nutrition_plans SET starts_on = '2026-09-07' …",
+      "variant": "default",
+      "note": "updateOrCreate(): el id existe → UPDATE"
+    },
+    {
+      "id": "violation",
+      "from": "db",
+      "to": "repo",
+      "y": 480,
+      "label": "unique violation: nutrition_plans_starts_on_unique",
+      "variant": "security",
+      "note": "la regla 5 la cumple PostgreSQL"
+    },
+    {
+      "id": "rollback",
+      "from": "repo",
+      "to": "db",
+      "y": 555,
+      "label": "ROLLBACK TO SAVEPOINT",
+      "variant": "emphasis",
+      "note": "sin él: SQLSTATE[25P02] current transaction is aborted"
+    },
+    {
+      "id": "lookup",
+      "from": "repo",
+      "to": "db",
+      "y": 630,
+      "label": "SELECT … WHERE starts_on = '2026-09-07'",
+      "variant": "default",
+      "note": "la conexión vuelve a estar usable"
+    },
+    {
+      "id": "plan26",
+      "from": "db",
+      "to": "repo",
+      "y": 705,
+      "label": "fila del plan 26",
+      "variant": "return"
+    },
+    {
+      "id": "to_domain",
+      "from": "repo",
+      "to": "mapper",
+      "y": 750,
+      "label": "toDomain(fila)",
+      "variant": "default",
+      "note": "valida el JSON y reconstruye con los constructores del dominio"
+    },
+    {
+      "id": "plan26_domain",
+      "from": "mapper",
+      "to": "repo",
+      "y": 825,
+      "label": "NutritionPlan 26",
+      "variant": "return"
+    },
+    {
+      "id": "duplicated",
+      "from": "repo",
+      "to": "caller",
+      "y": 870,
+      "label": "throw DuplicatedPlanStart",
+      "variant": "security",
+      "note": "«El plan 27 no puede empezar el 07/09/2026: ese día ya empieza el plan 26.»"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "repo",
+      "from": 165,
+      "to": 870,
+      "type": "backend"
+    },
+    {
+      "participant": "mapper",
+      "from": 240,
+      "to": 285,
+      "type": "security"
+    },
+    {
+      "participant": "db",
+      "from": 330,
+      "to": 555,
+      "type": "database"
+    },
+    {
+      "participant": "db",
+      "from": 630,
+      "to": 705,
+      "type": "database"
+    },
+    {
+      "participant": "mapper",
+      "from": 750,
+      "to": 825,
+      "type": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "El índice único es la regla",
+      "items": [
+        "Dos planes distintos no pueden empezar el mismo día (regla 5, ADR 0011): lo garantiza PostgreSQL, también con dos guardados a la vez.",
+        "El adaptador solo traduce la violación técnica al error de dominio, con el mismo mensaje que el adaptador en memoria."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Por qué hay transacción con una sola fila (ADR 0013)",
+      "items": [
+        "Una fila es una sentencia: la atomicidad ya la da PostgreSQL.",
+        "Pero un error aborta la transacción de fuera; el SAVEPOINT permite deshacer solo el UPDATE y consultar después el plan 26.",
+        "Comprobado: sin la transacción, este camino falla con SQLSTATE[25P02]. El INSERT de un plan nuevo ya lo protege createOrFirst() de Laravel."
+      ]
+    }
+  ]
+}

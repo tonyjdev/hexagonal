@@ -2,7 +2,7 @@
 
 Hoja de ruta del proyecto organizada en **niveles**. Cada nivel es pequeño, termina con tests en verde y una etiqueta git (`nivel-NN`), y añade **un concepto nuevo** cada vez.
 
-**Estado actual:** ✅ Nivel 4 (Calendario) terminado (`nivel-04`): la aplicación ya responde "¿qué me toca comer hoy?" con `GetMenuForDate`, el plan vigente y el puerto `Clock`, todavía sin HTTP ni base de datos. Siguiente: nivel 5, persistencia, API y alta manual de los planes.
+**Estado actual:** 🟡 Nivel 5 (Planes: adaptadores) en curso: los planes ya se guardan en PostgreSQL con `EloquentNutritionPlanRepository` (HEXM-0020). Siguiente: el alta manual de un plan por API (HEXM-0021).
 
 Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado
 
@@ -45,7 +45,7 @@ El roadmap tiene tres bloques:
 | ✅ | **2. Recetario: adaptadores** (HEXM-0009 a 0011) | Repositorio con Eloquent/PostgreSQL (con su *mapper* dominio ↔ modelo), API REST (`/api/recipes`) y binding de puertos en un *service provider*. | Adaptadores *driven* y *driving*, inyección de dependencias, mapeo de persistencia |
 | ✅ | **3. Planes: dominio** (HEXM-0012 a 0015) | `NutritionPlan`, `MenuWeek`, `MenuDay`, `Dish`, `FixedMeal`, `OptionGroup`, `ExchangeTable`. Reglas: dos semanas, 6 días con menú, comida + cena. | Agregados y sus límites, enums, colecciones inmutables |
 | ✅ | **4. Calendario** (HEXM-0017 a 0019) | `MealCalendar` y el caso de uso `GetMenuForDate` ("¿qué me toca hoy?"): alternancia de semanas, sábado libre y plan vigente. Puerto `Clock`. | Servicio de dominio, tiempo testeable, casos de uso de consulta |
-| ⬜ | **5. Planes: adaptadores** | Persistencia de planes, histórico de planes, API REST y alta manual de un plan. | Repositorio de agregados complejos, transacciones |
+| 🟡 | **5. Planes: adaptadores** (HEXM-0020 a 0023) | Persistencia de planes, histórico de planes, API REST y alta manual de un plan. | Repositorio de agregados complejos, transacciones |
 | ⬜ | **6. Relación con recetas** | Un `Dish` puede referenciar un `RecipeId`; validación entre contextos a través de un puerto propio de `MealPlanning`; evento `RecipeDeleted` y cómo reacciona `MealPlanning`. | Comunicación entre *bounded contexts*, capa anticorrupción, eventos de dominio |
 
 ## Bloque B: Python y FastAPI
@@ -103,3 +103,4 @@ El roadmap tiene tres bloques:
 | 2026-11-03 | 4 | HEXM-0017: servicio de dominio `MealCalendar` (`dayOn(plan, fecha)`) y value object `ScheduledDay`: alternancia de semanas desde el lunes de inicio, sábado libre y sin menú antes del inicio; cuenta días del calendario (ni la hora, ni la zona horaria, ni el horario de verano cambian el resultado). |
 | 2026-11-03 | 4 | HEXM-0018: puerto `NutritionPlanRepository` (`save`, `find`, `inForceOn`) con `InMemoryNutritionPlanRepository`, tests de contrato y `NutritionPlanMother`; vigencia por fechas del calendario y `DuplicatedPlanStart` si otro plan empieza el mismo día: reglas entre agregados en el contrato del puerto (ADR 0011). |
 | 2026-11-03 | 4 | HEXM-0019: caso de uso `GetMenuForDate` ("¿qué me toca hoy?"), primero de `MealPlanning`: orquesta `inForceOn()`, `MealCalendar` y el puerto `Shared\Application\Clock` (`today()`, interfaz propia y no PSR-20; `SystemClock` con la zona inyectada y `FrozenClock`), y devuelve el DTO `ScheduledDayView`; sin plan vigente, `NoPlanInForce` (un `NotFound`). Tests de arquitectura: el núcleo no lee el reloj del sistema (ADR 0012). **Nivel 4 terminado** (`nivel-04`, diario `04-calendario.md`). |
+| 2026-11-04 | 5 | HEXM-0020: `EloquentNutritionPlanRepository`, segundo adaptador del puerto de planes: una fila por plan en `nutrition_plans` con el contenido en documentos `jsonb` (`NutritionPlanMapper`, que valida el JSON al leerlo), índice único en `starts_on` traducido a `DuplicatedPlanStart` y transacción como `SAVEPOINT` para que un duplicado no aborte la transacción de fuera; tests de contrato con los dos adaptadores, sin tocar el dominio ni la aplicación (ADR 0013). |

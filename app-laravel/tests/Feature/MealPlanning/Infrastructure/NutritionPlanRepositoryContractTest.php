@@ -9,15 +9,16 @@
 | contrato, y estos tests lo escriben como especificación ejecutable. La
 | misma batería se ejecuta contra todos los adaptadores del dataset.
 |
-| Hoy solo hay uno, el de memoria, y por eso el test vive en tests/Unit (no
-| necesita Laravel). En el nivel 5 se añadirá 'eloquent' al dataset y el
-| fichero pasará a tests/Feature, con RefreshDatabase, como el del
-| recetario: un adaptador nuevo es una línea más, no tests nuevos.
+| Desde HEXM-0020 hay dos adaptadores: el de memoria y el de Eloquent
+| (PostgreSQL, una fila por plan con documentos jsonb, ADR 0013). Por eso el
+| test vive en tests/Feature, con RefreshDatabase, como el del recetario: el
+| adaptador nuevo fue una línea más en el dataset, no tests nuevos.
 |
 | Planes de ejemplo: el 26 empieza el lunes 2026-09-07 y el 27, el lunes
 | 2026-11-02.
 */
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use MealPlanning\Domain\DuplicatedPlanStart;
 use MealPlanning\Domain\MealType;
 use MealPlanning\Domain\NutritionPlan;
@@ -25,10 +26,15 @@ use MealPlanning\Domain\NutritionPlanId;
 use MealPlanning\Domain\NutritionPlanRepository;
 use MealPlanning\Domain\Weekday;
 use MealPlanning\Infrastructure\InMemoryNutritionPlanRepository;
+use MealPlanning\Infrastructure\Persistence\Eloquent\EloquentNutritionPlanRepository;
 use Tests\Support\MealPlanning\NutritionPlanMother;
+
+// Cada test empieza con las tablas vacías (ver RecipeRepositoryContractTest).
+uses(RefreshDatabase::class);
 
 dataset('nutrition plan repositories', [
     'in memory' => fn () => new InMemoryNutritionPlanRepository,
+    'eloquent' => fn () => new EloquentNutritionPlanRepository,
 ]);
 
 /**
@@ -62,6 +68,20 @@ it('finds a saved plan complete: weeks, fixed meals and exchanges', function (Nu
         ->and($found?->exchangeTable()->equals($plan->exchangeTable()))->toBeTrue()
         ->and($found?->week(1)->day(Weekday::Sunday)?->lunch()->description())->toBe('Comida del menú 6')
         ->and($found?->week(2)->day(Weekday::Wednesday)?->lunch()->name())->toBe('Comida del día 10');
+})->with('nutrition plan repositories');
+
+it('returns the plan with exactly the same content, part by part', function (NutritionPlanRepository $repository) {
+    // equals() de un agregado compara solo la IDENTIDAD (el id). Para saber
+    // que el plan vuelve entero, toEqual() compara objeto a objeto todas las
+    // propiedades: pautas fijas con sus grupos "elige N", intercambios con
+    // sus reglas en orden, las dos semanas con sus seis días y cada plato en
+    // su formato (texto libre o nombre con ingredientes). Si el mapper
+    // perdiera un solo dato, este test fallaría con el adaptador de Eloquent.
+    $plan = NutritionPlanMother::plan();
+
+    $repository->save($plan);
+
+    expect($repository->find($plan->id()))->toEqual($plan);
 })->with('nutrition plan repositories');
 
 it('replaces a plan when it is saved again with the same id', function (NutritionPlanRepository $repository) {
@@ -124,6 +144,22 @@ it('rejects another plan that starts on the same day', function (NutritionPlanRe
     $repository->save(NutritionPlanMother::plan(28, '2026-11-02'));
 })->with('nutrition plan repositories')
     ->throws(DuplicatedPlanStart::class, 'El plan 28 no puede empezar el 02/11/2026: ese día ya empieza el plan 27.');
+
+it('rejects moving a saved plan to a day on which another plan starts', function (NutritionPlanRepository $repository) {
+    // El otro camino del duplicado: no es un plan nuevo (INSERT), sino uno ya
+    // guardado al que se le cambia la fecha (UPDATE). Corregir la fecha de
+    // un plan es legítimo, pero no a un día que ya ocupa otro.
+    $repository->save(NutritionPlanMother::plan(26, '2026-09-07'));
+    $id = NutritionPlanId::generate();
+    $repository->save(NutritionPlanMother::plan(27, '2026-11-02', $id));
+
+    expect(fn () => $repository->save(NutritionPlanMother::plan(27, '2026-09-07', $id)))
+        ->toThrow(DuplicatedPlanStart::class, 'El plan 27 no puede empezar el 07/09/2026: ese día ya empieza el plan 26.');
+
+    // Los dos planes siguen como estaban.
+    expect(planInForceOn($repository, '2026-10-15'))->toBe(26)
+        ->and(planInForceOn($repository, '2026-11-02'))->toBe(27);
+})->with('nutrition plan repositories');
 
 it('keeps the first plan when the duplicate is rejected', function (NutritionPlanRepository $repository) {
     $repository->save(NutritionPlanMother::plan(27, '2026-11-02'));
