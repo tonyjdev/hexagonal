@@ -30,7 +30,7 @@ Después se abre `docs/diagramas/HEXM-NNNN/<slug>.html` en el navegador. Requier
 | Entidades, value objects y sus relaciones (agregados) | `class` | [Agregado Recipe](HEXM-0006/agregado-recipe.class.json) |
 | Estados y transiciones (un plan vigente, una importación…) | `lifecycle` | — |
 | Tablas, claves y relaciones de la base de datos (nivel 2 en adelante) | `erd` | [Tablas del recetario](HEXM-0009/tablas-del-recetario.erd.json) |
-| Datos que fluyen entre servicios (Laravel ↔ FastAPI, embeddings…) | `dataflow` | — |
+| Datos que fluyen entre servicios o capas y cambian de forma (Laravel ↔ FastAPI, embeddings…) | `dataflow` | [Del papel a la base de datos](HEXM-0021/del-papel-a-la-base-de-datos.dataflow.json) |
 | Qué pasa en cada fecha, sobre un eje de tiempo proporcional (calendario, historial) | `timeline` | [Alternancia de semanas](HEXM-0017/alternancia-de-semanas.timeline.json) |
 | Una estructura de contención (qué está dentro de qué): la forma de un documento, un árbol de módulos | `tree` | [Un plan, una fila](HEXM-0020/un-plan-una-fila.tree.json) |
 
@@ -90,6 +90,8 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 |---|---|---|
 | HEXM-0020 | [Un plan, una fila](HEXM-0020/un-plan-una-fila.tree.json) (`tree`) | Cómo queda guardado un plan en `nutrition_plans`: las tres columnas que consulta el repositorio (`starts_on` con índice único) y la estructura de los documentos `jsonb` `fixed_meals`, `exchange_table` y `weeks`, hasta los ingredientes de un plato (ADR 0013). |
 | HEXM-0020 | [Guardar un plan en un día ocupado](HEXM-0020/guardar-en-un-dia-ocupado.sequence.json) (`sequence`) | `save()` de un plan ya guardado movido al inicio de otro: `SAVEPOINT`, violación del índice único, `ROLLBACK TO SAVEPOINT`, consulta del plan que ocupa el día y `DuplicatedPlanStart`. |
+| HEXM-0021 | [Del papel a la base de datos](HEXM-0021/del-papel-a-la-base-de-datos.dataflow.json) (`dataflow`) | Las tres formas del mismo plan al cruzar las capas: menús 1-6 y días 8-14 en el JSON, días de la semana en el dominio (`MenuWeek`) y documentos `jsonb` en `nutrition_plans`; y dónde se rechaza cada error (422 de forma o del dominio). |
+| HEXM-0021 | [Hexágono de MealPlanning](HEXM-0021/hexagono-mealplanning.architecture.json) (`architecture`) | El primer recorrido completo del contexto: controlador y *Form Request*, caso de uso, agregado y puerto en el dominio, Eloquent y el `MealPlanningServiceProvider` que los enchufa. |
 
 ### Transversal
 

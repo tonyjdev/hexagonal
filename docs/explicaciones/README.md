@@ -44,6 +44,7 @@ Los diagramas Archify de cada tarea están en [`../diagramas/`](../diagramas/REA
 ### Nivel 5: Planes (adaptadores)
 
 - [HEXM-0020: Repositorio Eloquent de planes](HEXM-0020-repositorio-eloquent-de-planes.md): por qué el agregado se guarda como una fila con documentos `jsonb` y no en tablas, por qué el JSON guardado se lee como una entrada no confiable, cómo un índice único garantiza la regla 5 y por qué hace falta una transacción (un `SAVEPOINT`) aunque solo haya una fila. Diagramas: [un plan, una fila](../diagramas/HEXM-0020/un-plan-una-fila.tree.json) y [guardar un plan en un día ocupado](../diagramas/HEXM-0020/guardar-en-un-dia-ocupado.sequence.json).
+- [HEXM-0021: Alta manual de un plan por API](HEXM-0021-alta-manual-de-un-plan-por-api.md): por qué el JSON de entrada copia el formato de los documentos (menús 1-6 y días 8-14) y la traducción a días de la semana se queda en el dominio, por qué la *Form Request* solo valida la forma, por qué el caso de uso traduce sin decidir y lanza errores de traducción del dominio, y por qué cada contexto tiene su raíz de composición. Diagramas: [del papel a la base de datos](../diagramas/HEXM-0021/del-papel-a-la-base-de-datos.dataflow.json) y [hexágono de MealPlanning](../diagramas/HEXM-0021/hexagono-mealplanning.architecture.json).
 
 ### Transversal
 

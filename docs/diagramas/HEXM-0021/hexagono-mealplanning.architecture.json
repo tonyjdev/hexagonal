@@ -1,0 +1,290 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Hexágono de MealPlanning: el primer recorrido completo",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0021/hexagono-mealplanning.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "ea595ac3ed01578a9bd15575ccb798cade739bc3"
+    },
+    "legend": {
+      "entries": {
+        "external": {
+          "label": "Cliente HTTP"
+        },
+        "backend": {
+          "label": "Adaptador de entrada o caso de uso"
+        },
+        "security": {
+          "label": "Dominio: agregado y reglas"
+        },
+        "messagebus": {
+          "label": "Puerto (interfaz)"
+        },
+        "database": {
+          "label": "Adaptador de salida"
+        },
+        "cloud": {
+          "label": "Raíz de composición"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Cliente HTTP",
+      "sublabel": "curl · tests de feature",
+      "pos": [
+        40,
+        210
+      ],
+      "size": [
+        180,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/routes/api.php",
+          "line": 51,
+          "end_line": 51,
+          "label": "POST /api/nutrition-plans"
+        }
+      ]
+    },
+    {
+      "id": "controller",
+      "type": "backend",
+      "label": "RegisterNutritionPlanController",
+      "sublabel": "+ Form Request (forma)",
+      "pos": [
+        290,
+        210
+      ],
+      "size": [
+        240,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Http/RegisterNutritionPlanController.php",
+          "line": 28,
+          "end_line": 38
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Http/RegisterNutritionPlanRequest.php",
+          "line": 36,
+          "end_line": 172
+        }
+      ]
+    },
+    {
+      "id": "usecase",
+      "type": "backend",
+      "label": "RegisterNutritionPlan",
+      "sublabel": "comando · traduce",
+      "pos": [
+        620,
+        210
+      ],
+      "size": [
+        210,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/RegisterNutritionPlan.php",
+          "line": 61,
+          "end_line": 192
+        }
+      ]
+    },
+    {
+      "id": "plan",
+      "type": "security",
+      "label": "NutritionPlan",
+      "sublabel": "MenuWeek · reglas",
+      "pos": [
+        920,
+        120
+      ],
+      "size": [
+        210,
+        64
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlan.php",
+          "line": 103,
+          "end_line": 126
+        }
+      ]
+    },
+    {
+      "id": "port",
+      "type": "messagebus",
+      "label": "NutritionPlanRepository",
+      "sublabel": "save · find · inForceOn",
+      "pos": [
+        920,
+        300
+      ],
+      "size": [
+        210,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlanRepository.php",
+          "line": 37,
+          "end_line": 66
+        }
+      ]
+    },
+    {
+      "id": "eloquent",
+      "type": "database",
+      "label": "EloquentNutritionPlanRepository",
+      "sublabel": "PostgreSQL · jsonb",
+      "pos": [
+        1250,
+        300
+      ],
+      "size": [
+        250,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/EloquentNutritionPlanRepository.php",
+          "line": 32,
+          "end_line": 117
+        }
+      ]
+    },
+    {
+      "id": "provider",
+      "type": "cloud",
+      "label": "MealPlanningServiceProvider",
+      "sublabel": "puerto → Eloquent",
+      "pos": [
+        1250,
+        120
+      ],
+      "size": [
+        250,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/MealPlanningServiceProvider.php",
+          "line": 31,
+          "end_line": 38
+        },
+        {
+          "path": "app-laravel/bootstrap/providers.php",
+          "line": 17,
+          "end_line": 17
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "MealPlanning\\Infrastructure (entrada)",
+      "wraps": [
+        "controller"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "MealPlanning\\Application",
+      "wraps": [
+        "usecase"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "MealPlanning\\Domain",
+      "wraps": [
+        "plan",
+        "port"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "MealPlanning\\Infrastructure (salida y cableado)",
+      "wraps": [
+        "provider",
+        "eloquent"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "request",
+      "from": "client",
+      "to": "controller",
+      "label": "JSON del plan",
+      "variant": "emphasis"
+    },
+    {
+      "id": "command",
+      "from": "controller",
+      "to": "usecase",
+      "label": "comando",
+      "variant": "emphasis"
+    },
+    {
+      "id": "builds",
+      "from": "usecase",
+      "to": "plan",
+      "label": "create()"
+    },
+    {
+      "id": "saves",
+      "from": "usecase",
+      "to": "port",
+      "label": "save(plan)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "implements",
+      "from": "eloquent",
+      "to": "port",
+      "label": "implementa",
+      "variant": "dashed"
+    },
+    {
+      "id": "binds",
+      "from": "provider",
+      "to": "eloquent",
+      "label": "bind()",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Las flechas apuntan hacia dentro",
+      "items": [
+        "El controlador conoce el caso de uso; el caso de uso, el dominio y su puerto. Nadie del núcleo conoce HTTP ni Eloquent.",
+        "Eloquent implementa el puerto del dominio: la dependencia se invierte."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "La raíz de composición",
+      "items": [
+        "MealPlanningServiceProvider es el único sitio que dice qué adaptador hay detrás del puerto.",
+        "Los tests unitarios no pasan por aquí: usan el adaptador en memoria. En HEXM-0022 se añadirá el reloj."
+      ]
+    }
+  ]
+}
