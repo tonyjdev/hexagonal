@@ -262,3 +262,146 @@ arch('service providers only live in infrastructure', function () {
     // en el corazón de la aplicación.
     expect('Illuminate\Support\ServiceProvider')->toOnlyBeUsedIn(laravelAdapterNamespaces());
 });
+
+// ---------------------------------------------------------------------------
+// El tiempo: el núcleo no lee el reloj del sistema (HEXM-0019)
+// ---------------------------------------------------------------------------
+
+/**
+ * Funciones nativas de PHP que leen el reloj del sistema (o que, sin todos
+ * sus argumentos, toman la fecha actual por defecto).
+ *
+ * @return list<string>
+ */
+function systemClockFunctions(): array
+{
+    return [
+        'time', 'microtime', 'hrtime', 'date', 'gmdate', 'idate', 'getdate', 'localtime',
+        'mktime', 'gmmktime', 'strtotime', 'date_create', 'date_create_immutable',
+        'strftime', 'gmstrftime',
+    ];
+}
+
+/**
+ * Las únicas clases del núcleo que pueden leer el reloj del sistema, cada
+ * una con su porqué.
+ *
+ * - Shared\Domain\Uuid: un UUID v7 lleva dentro los milisegundos en que se
+ *   genera (ADR 0005). Ese instante no es un dato del negocio ("hoy"), sino
+ *   una marca técnica para ordenar los identificadores, y Uuid::v7() ya es no
+ *   determinista por diseño (random_bytes): ningún test depende de su valor.
+ *   Pasarle el Clock tampoco encaja: el puerto está en Application (el
+ *   dominio no lo ve) y da una fecha, no milisegundos (ADR 0012).
+ *
+ * @return list<string>
+ */
+function allowedSystemClockReaders(): array
+{
+    return ['Shared\\Domain\\Uuid'];
+}
+
+arch('the core does not read the system clock through functions', function (string $context, string $layer) {
+    // CONCEPTO: el tiempo como dependencia (puerto Shared\Application\Clock)
+    // Un caso de uso que llama a time() o a date() da un resultado distinto
+    // cada día, y sus tests dejan de ser deterministas. "Hoy" se pide al
+    // puerto Clock; quien lee de verdad el reloj es SystemClock, en
+    // Infrastructure. Los now() y today() de Laravel ya están prohibidos por
+    // la lista negra laravel(). Las clases de fecha (DateTimeImmutable) sí
+    // están permitidas: ver el test siguiente.
+    expect("{$context}\\{$layer}")->not->toUse(systemClockFunctions())->ignoring(allowedSystemClockReaders());
+})->with(fn () => [...businessContexts(), 'Shared'])->with(['Domain', 'Application']);
+
+/**
+ * Los `new DateTime(...)` / `new DateTimeImmutable(...)` de un fichero que
+ * leen el reloj del sistema: sin argumentos, o con un texto literal ('now',
+ * 'today', '+1 day'...). Devuelve "línea: código" de cada uno.
+ *
+ * CONCEPTO: análisis por tokens (token_get_all)
+ * PHP puede trocear su propio código en tokens, como hace el intérprete
+ * antes de ejecutarlo. Así se distinguen el código de los comentarios (que
+ * en este proyecto citan mucho `new DateTimeImmutable('now')`), y lo que hay
+ * después del `new` y del paréntesis.
+ *
+ * @return list<string>
+ */
+function systemClockInstantiations(string $file): array
+{
+    // Sin espacios ni comentarios: solo el código que se ejecuta.
+    $tokens = array_values(array_filter(
+        PhpToken::tokenize((string) file_get_contents($file)),
+        fn (PhpToken $token) => ! $token->isIgnorable(),
+    ));
+    $found = [];
+
+    foreach ($tokens as $i => $token) {
+        $class = $tokens[$i + 1] ?? null;
+        $open = $tokens[$i + 2] ?? null;
+        $argument = $tokens[$i + 3] ?? null;
+
+        if (! $token->is(T_NEW) || $class === null || $open === null || $argument === null) {
+            continue;
+        }
+
+        $isDateClass = in_array(ltrim($class->text, '\\'), ['DateTime', 'DateTimeImmutable'], true);
+        $readsTheClock = $open->text === '(' && ($argument->text === ')' || $argument->is(T_CONSTANT_ENCAPSED_STRING));
+        // `new DateTimeImmutable;` (sin paréntesis) también es "ahora".
+        $readsTheClock = $readsTheClock || ! in_array($open->text, ['(', '::'], true);
+
+        if ($isDateClass && $readsTheClock) {
+            $call = match (true) {
+                $open->text !== '(' => '',                // new DateTime;
+                $argument->text === ')' => '()',          // new DateTime()
+                default => "({$argument->text})",         // new DateTime('now')
+            };
+            $found[] = "{$token->line}: new {$class->text}{$call}";
+        }
+    }
+
+    return $found;
+}
+
+/**
+ * Los ficheros PHP de una capa del núcleo.
+ *
+ * @return list<string>
+ */
+function coreFiles(string $context, string $layer): array
+{
+    $directory = dirname(__DIR__, 2)."/src/{$context}/{$layer}";
+
+    if (! is_dir($directory)) {
+        return [];
+    }
+
+    $files = [];
+
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS)) as $file) {
+        if ($file instanceof SplFileInfo && $file->getExtension() === 'php') {
+            $files[] = $file->getPathname();
+        }
+    }
+
+    return $files;
+}
+
+it('the core does not create dates from the system clock', function (string $context, string $layer) {
+    // Lo que arch() no puede ver: `new DateTimeImmutable('now')` y
+    // `new DateTimeImmutable($fecha)` usan la misma clase, pero solo el
+    // primero lee el reloj. La regla: en el núcleo, una fecha se crea A
+    // PARTIR DE OTRA (como hace MealCalendar con format('Y-m-d')), nunca sin
+    // argumentos ni desde un texto escrito a mano. Una fecha fija en el
+    // núcleo tampoco tiene sentido: las fechas llegan de fuera.
+    //
+    // Límite conocido (como en la lista blanca): el análisis es estático. Un
+    // texto en una variable (new DateTimeImmutable($now) con $now = 'now')
+    // no se detecta; queda para la revisión de código.
+    $violations = [];
+
+    foreach (coreFiles($context, $layer) as $file) {
+        foreach (systemClockInstantiations($file) as $violation) {
+            $violations[] = basename($file).":{$violation}";
+        }
+    }
+
+    expect($violations)->toBe([], 'Usa el puerto Shared\Application\Clock en lugar de leer el reloj del sistema.');
+})->with(fn () => [...businessContexts(), 'Shared'])->with(['Domain', 'Application']);

@@ -1,0 +1,304 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "El reloj como puerto: quién sabe qué día es hoy",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0019/el-reloj-como-puerto.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "5227d3a9ea4f26f69778fdf0ea40f7823f8acf6d"
+    },
+    "legend": {
+      "entries": {
+        "external": {
+          "label": "Tests (cliente y guardián)"
+        },
+        "backend": {
+          "label": "Caso de uso (aplicación)"
+        },
+        "security": {
+          "label": "Dominio: reglas de negocio"
+        },
+        "messagebus": {
+          "label": "Puerto (interfaz)"
+        },
+        "database": {
+          "label": "Adaptador del reloj"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "usecase_tests",
+      "type": "external",
+      "label": "GetMenuForDateTest",
+      "sublabel": "FrozenClock::on('2026-11-11')",
+      "pos": [
+        40,
+        200
+      ],
+      "size": [
+        210,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/tests/Unit/MealPlanning/Application/GetMenuForDateTest.php",
+          "line": 30,
+          "end_line": 53,
+          "label": "montaje con FrozenClock"
+        }
+      ]
+    },
+    {
+      "id": "arch_test",
+      "type": "external",
+      "label": "Test de arquitectura",
+      "sublabel": "funciones y tokens de PHP",
+      "pos": [
+        40,
+        380
+      ],
+      "size": [
+        210,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/tests/Architecture/HexagonalLayersTest.php",
+          "line": 276,
+          "end_line": 314,
+          "label": "funciones del reloj"
+        },
+        {
+          "path": "app-laravel/tests/Architecture/HexagonalLayersTest.php",
+          "line": 327,
+          "end_line": 407,
+          "label": "new DateTimeImmutable('now')"
+        }
+      ]
+    },
+    {
+      "id": "usecase",
+      "type": "backend",
+      "label": "GetMenuForDate",
+      "sublabel": "fecha ?? clock.today()",
+      "pos": [
+        410,
+        200
+      ],
+      "size": [
+        200,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/GetMenuForDate.php",
+          "line": 56,
+          "end_line": 73
+        }
+      ]
+    },
+    {
+      "id": "calendar",
+      "type": "security",
+      "label": "MealCalendar",
+      "sublabel": "recibe la fecha, no la busca",
+      "pos": [
+        410,
+        380
+      ],
+      "size": [
+        200,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MealCalendar.php",
+          "line": 59,
+          "end_line": 83,
+          "label": "dayOn(plan, fecha)"
+        }
+      ]
+    },
+    {
+      "id": "clock",
+      "type": "messagebus",
+      "label": "Clock",
+      "sublabel": "today(): fecha a medianoche",
+      "tag": "puerto propio",
+      "pos": [
+        710,
+        200
+      ],
+      "size": [
+        200,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Application/Clock.php",
+          "line": 46,
+          "end_line": 56
+        }
+      ]
+    },
+    {
+      "id": "frozen",
+      "type": "database",
+      "label": "FrozenClock",
+      "sublabel": "fecha fija · tests",
+      "pos": [
+        1010,
+        110
+      ],
+      "size": [
+        210,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Infrastructure/FrozenClock.php",
+          "line": 28,
+          "end_line": 53
+        }
+      ]
+    },
+    {
+      "id": "system",
+      "type": "database",
+      "label": "SystemClock",
+      "sublabel": "reloj real · Europe/Madrid inyectada",
+      "pos": [
+        1010,
+        290
+      ],
+      "size": [
+        230,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Infrastructure/SystemClock.php",
+          "line": 31,
+          "end_line": 41
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "tests",
+      "wraps": [
+        "usecase_tests",
+        "arch_test"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "MealPlanning\\Application",
+      "wraps": [
+        "usecase"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "MealPlanning\\Domain",
+      "wraps": [
+        "calendar"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Shared\\Application",
+      "wraps": [
+        "clock"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Shared\\Infrastructure",
+      "wraps": [
+        "frozen",
+        "system"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ask",
+      "from": "usecase_tests",
+      "to": "usecase",
+      "label": "__invoke()",
+      "variant": "emphasis"
+    },
+    {
+      "id": "today",
+      "from": "usecase",
+      "to": "clock",
+      "label": "today()",
+      "variant": "emphasis"
+    },
+    {
+      "id": "day_on",
+      "from": "usecase",
+      "to": "calendar",
+      "label": "dayOn(plan, fecha)"
+    },
+    {
+      "id": "frozen_implements",
+      "from": "frozen",
+      "to": "clock",
+      "label": "implementa",
+      "variant": "dashed"
+    },
+    {
+      "id": "system_implements",
+      "from": "system",
+      "to": "clock",
+      "label": "implementa",
+      "variant": "dashed"
+    },
+    {
+      "id": "guards",
+      "from": "arch_test",
+      "to": "calendar",
+      "label": "el núcleo no lee el reloj",
+      "variant": "security",
+      "fromSide": "right",
+      "toSide": "left"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Por qué en Shared\\Application (ADR 0012)",
+      "items": [
+        "Ninguna regla del negocio necesita saber qué día es hoy: lo decide el caso de uso.",
+        "La lista blanca del dominio no incluye Application: MealCalendar no puede pedir la fecha, siempre la recibe.",
+        "Es Shared porque el tiempo no es de ningún contexto: Recipes lo podrá usar igual."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Interfaz propia y zona inyectada",
+      "items": [
+        "today() da una fecha del calendario; PSR-20 da un instante (now()) y exigiría autorizar psr/clock.",
+        "La zona horaria la elige la raíz de composición (nivel 5), no el núcleo ni app.timezone."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "El guardián y su única excepción",
+      "items": [
+        "Prohíbe time(), date(), strtotime()… y new DateTime sin argumentos o con un texto ('now').",
+        "Uuid::v7() sí usa microtime(): su marca de tiempo es técnica, no del negocio."
+      ]
+    }
+  ]
+}
