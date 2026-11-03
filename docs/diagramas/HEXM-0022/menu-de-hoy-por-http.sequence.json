@@ -1,0 +1,416 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "¿Qué me toca hoy? GET /api/menu con el reloj real",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0022/menu-de-hoy-por-http.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "b592b1d482429867cb4dabc3304694b0714eaaa6"
+    },
+    "legend": {
+      "entries": {
+        "default": {
+          "label": "Llamada"
+        },
+        "emphasis": {
+          "label": "Camino de «hoy»"
+        },
+        "security": {
+          "label": "Sin plan vigente (404)"
+        },
+        "return": {
+          "label": "Respuesta"
+        }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Cliente HTTP",
+      "sublabel": "curl · tests de feature",
+      "sources": [
+        {
+          "path": "app-laravel/tests/Feature/MealPlanning/Infrastructure/Http/GetMenuForDateEndpointTest.php",
+          "line": 31,
+          "end_line": 90
+        }
+      ]
+    },
+    {
+      "id": "http",
+      "type": "backend",
+      "label": "Adaptador HTTP",
+      "sublabel": "controlador + Request",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Http/GetMenuForDateController.php",
+          "line": 21,
+          "end_line": 29
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Http/GetMenuForDateRequest.php",
+          "line": 52,
+          "end_line": 66,
+          "label": "requestedDate()"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Http/ScheduledDayResource.php",
+          "line": 40,
+          "end_line": 55,
+          "label": "toArray()"
+        }
+      ]
+    },
+    {
+      "id": "usecase",
+      "type": "backend",
+      "label": "GetMenuForDate",
+      "sublabel": "consulta",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/GetMenuForDate.php",
+          "line": 64,
+          "end_line": 72
+        }
+      ]
+    },
+    {
+      "id": "clock",
+      "type": "messagebus",
+      "label": "Clock",
+      "sublabel": "SystemClock",
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Infrastructure/SystemClock.php",
+          "line": 31,
+          "end_line": 41
+        },
+        {
+          "path": "app-laravel/src/Shared/Infrastructure/SharedServiceProvider.php",
+          "line": 40,
+          "end_line": 52,
+          "label": "binding"
+        }
+      ]
+    },
+    {
+      "id": "repo",
+      "type": "database",
+      "label": "Repositorio",
+      "sublabel": "Eloquent",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/EloquentNutritionPlanRepository.php",
+          "line": 95,
+          "end_line": 103,
+          "label": "inForceOn()"
+        }
+      ]
+    },
+    {
+      "id": "calendar",
+      "type": "security",
+      "label": "MealCalendar",
+      "sublabel": "servicio de dominio",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MealCalendar.php",
+          "line": 59,
+          "end_line": 83
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 140,
+      "to": 665,
+      "label": "1. Hoy, según el reloj real"
+    },
+    {
+      "from": 695,
+      "to": 1035,
+      "label": "2. Un día concreto: sábado 14/11"
+    },
+    {
+      "from": 1065,
+      "to": 1320,
+      "label": "3. Antes del primer plan"
+    }
+  ],
+  "messages": [
+    {
+      "id": "get",
+      "from": "client",
+      "to": "http",
+      "y": 165,
+      "label": "GET /api/menu",
+      "variant": "emphasis",
+      "note": "sin ?date: la Form Request da null"
+    },
+    {
+      "id": "invoke",
+      "from": "http",
+      "to": "usecase",
+      "y": 235,
+      "label": "__invoke(null)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "today",
+      "from": "usecase",
+      "to": "clock",
+      "y": 280,
+      "label": "today()",
+      "variant": "emphasis",
+      "note": "SystemClock en Europe/Madrid (config/clock.php)"
+    },
+    {
+      "id": "today_back",
+      "from": "clock",
+      "to": "usecase",
+      "y": 350,
+      "label": "2026-11-03 00:00",
+      "variant": "return"
+    },
+    {
+      "id": "in_force",
+      "from": "usecase",
+      "to": "repo",
+      "y": 395,
+      "label": "inForceOn(03/11)",
+      "variant": "default"
+    },
+    {
+      "id": "plan",
+      "from": "repo",
+      "to": "usecase",
+      "y": 440,
+      "label": "plan 27",
+      "variant": "return"
+    },
+    {
+      "id": "day_on",
+      "from": "usecase",
+      "to": "calendar",
+      "y": 485,
+      "label": "dayOn(plan, 03/11)",
+      "variant": "default"
+    },
+    {
+      "id": "day",
+      "from": "calendar",
+      "to": "usecase",
+      "y": 530,
+      "label": "semana 1 · martes · menú 2",
+      "variant": "return"
+    },
+    {
+      "id": "view",
+      "from": "usecase",
+      "to": "http",
+      "y": 575,
+      "label": "ScheduledDayView",
+      "variant": "return",
+      "note": "ScheduledDayResource le da forma JSON"
+    },
+    {
+      "id": "ok",
+      "from": "http",
+      "to": "client",
+      "y": 645,
+      "label": "200 {\"data\": {…, \"is_free_day\": false}}",
+      "variant": "return"
+    },
+    {
+      "id": "get_date",
+      "from": "client",
+      "to": "http",
+      "y": 720,
+      "label": "GET /api/menu?date=2026-11-14",
+      "variant": "default",
+      "note": "date_format:Y-m-d; el reloj ni se consulta"
+    },
+    {
+      "id": "invoke_date",
+      "from": "http",
+      "to": "usecase",
+      "y": 790,
+      "label": "__invoke(14/11)",
+      "variant": "default"
+    },
+    {
+      "id": "in_force2",
+      "from": "usecase",
+      "to": "repo",
+      "y": 835,
+      "label": "inForceOn(14/11)",
+      "variant": "default"
+    },
+    {
+      "id": "plan2",
+      "from": "repo",
+      "to": "usecase",
+      "y": 880,
+      "label": "plan 27",
+      "variant": "return"
+    },
+    {
+      "id": "day_on2",
+      "from": "usecase",
+      "to": "calendar",
+      "y": 925,
+      "label": "dayOn(plan, 14/11)",
+      "variant": "default"
+    },
+    {
+      "id": "free",
+      "from": "calendar",
+      "to": "usecase",
+      "y": 970,
+      "label": "día libre (semana 2)",
+      "variant": "return"
+    },
+    {
+      "id": "ok2",
+      "from": "http",
+      "to": "client",
+      "y": 1015,
+      "label": "200 {\"is_free_day\": true, \"lunch\": null}",
+      "variant": "return"
+    },
+    {
+      "id": "get_none",
+      "from": "client",
+      "to": "http",
+      "y": 1090,
+      "label": "GET /api/menu?date=2026-11-01",
+      "variant": "default"
+    },
+    {
+      "id": "invoke_none",
+      "from": "http",
+      "to": "usecase",
+      "y": 1135,
+      "label": "__invoke(01/11)",
+      "variant": "default"
+    },
+    {
+      "id": "in_force3",
+      "from": "usecase",
+      "to": "repo",
+      "y": 1180,
+      "label": "inForceOn(01/11)",
+      "variant": "default"
+    },
+    {
+      "id": "none",
+      "from": "repo",
+      "to": "usecase",
+      "y": 1225,
+      "label": "null",
+      "variant": "return"
+    },
+    {
+      "id": "not_found",
+      "from": "usecase",
+      "to": "client",
+      "y": 1270,
+      "label": "throw NoPlanInForce → 404",
+      "variant": "security",
+      "note": "el manejador global de NotFound, sin código nuevo"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "http",
+      "from": 165,
+      "to": 645,
+      "type": "backend"
+    },
+    {
+      "participant": "usecase",
+      "from": 235,
+      "to": 575,
+      "type": "backend"
+    },
+    {
+      "participant": "clock",
+      "from": 280,
+      "to": 350,
+      "type": "messagebus"
+    },
+    {
+      "participant": "repo",
+      "from": 395,
+      "to": 440,
+      "type": "database"
+    },
+    {
+      "participant": "calendar",
+      "from": 485,
+      "to": 530,
+      "type": "security"
+    },
+    {
+      "participant": "http",
+      "from": 720,
+      "to": 1015,
+      "type": "backend"
+    },
+    {
+      "participant": "usecase",
+      "from": 790,
+      "to": 970,
+      "type": "backend"
+    },
+    {
+      "participant": "repo",
+      "from": 835,
+      "to": 880,
+      "type": "database"
+    },
+    {
+      "participant": "calendar",
+      "from": 925,
+      "to": 970,
+      "type": "security"
+    },
+    {
+      "participant": "usecase",
+      "from": 1135,
+      "to": 1270,
+      "type": "backend"
+    },
+    {
+      "participant": "repo",
+      "from": 1180,
+      "to": 1225,
+      "type": "database"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Un adaptador nuevo, el núcleo intacto",
+      "items": [
+        "GetMenuForDate se escribió en HEXM-0019 sin HTTP; ahora lo publica un controlador sin cambiar ni una línea del dominio ni de la aplicación.",
+        "La Form Request solo valida la forma de ?date; un día sin plan lo responde el caso de uso (404)."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Hoy, con el reloj real",
+      "items": [
+        "El 3/11 en Madrid es martes de la semana 1: el menú 2.",
+        "En los tests, el contenedor recibe un FrozenClock; con ?date, un reloj que falla si se le consulta prueba que no se usa."
+      ]
+    }
+  ]
+}

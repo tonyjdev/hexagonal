@@ -1,0 +1,356 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Tres raíces de composición: quién enchufa cada puerto",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0022/raices-de-composicion.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "b592b1d482429867cb4dabc3304694b0714eaaa6"
+    },
+    "legend": {
+      "entries": {
+        "external": {
+          "label": "Configuración y tests"
+        },
+        "cloud": {
+          "label": "Raíz de composición (service provider)"
+        },
+        "messagebus": {
+          "label": "Puerto (interfaz)"
+        },
+        "database": {
+          "label": "Adaptador"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "config",
+      "type": "external",
+      "label": "config/clock.php",
+      "sublabel": "timezone · APP_USER_TIMEZONE",
+      "pos": [
+        40,
+        220
+      ],
+      "size": [
+        220,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/config/clock.php",
+          "line": 25,
+          "end_line": 27
+        }
+      ]
+    },
+    {
+      "id": "tests",
+      "type": "external",
+      "label": "Tests de feature",
+      "sublabel": "instance(Clock, FrozenClock)",
+      "pos": [
+        690,
+        20
+      ],
+      "size": [
+        210,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/tests/Feature/MealPlanning/Infrastructure/Http/GetMenuForDateEndpointTest.php",
+          "line": 31,
+          "end_line": 35
+        }
+      ]
+    },
+    {
+      "id": "shared_sp",
+      "type": "cloud",
+      "label": "SharedServiceProvider",
+      "sublabel": "singleton",
+      "pos": [
+        360,
+        220
+      ],
+      "size": [
+        230,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Infrastructure/SharedServiceProvider.php",
+          "line": 31,
+          "end_line": 54
+        },
+        {
+          "path": "app-laravel/bootstrap/providers.php",
+          "line": 17,
+          "end_line": 17
+        }
+      ]
+    },
+    {
+      "id": "mp_sp",
+      "type": "cloud",
+      "label": "MealPlanningServiceProvider",
+      "sublabel": "bind",
+      "pos": [
+        360,
+        400
+      ],
+      "size": [
+        230,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/MealPlanningServiceProvider.php",
+          "line": 31,
+          "end_line": 38
+        }
+      ]
+    },
+    {
+      "id": "rp_sp",
+      "type": "cloud",
+      "label": "RecipesServiceProvider",
+      "sublabel": "bind",
+      "pos": [
+        360,
+        580
+      ],
+      "size": [
+        230,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Recipes/Infrastructure/RecipesServiceProvider.php",
+          "line": 61,
+          "end_line": 72
+        }
+      ]
+    },
+    {
+      "id": "clock",
+      "type": "messagebus",
+      "label": "Clock",
+      "sublabel": "Shared\\Application",
+      "pos": [
+        690,
+        220
+      ],
+      "size": [
+        210,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Application/Clock.php",
+          "line": 46,
+          "end_line": 56
+        }
+      ]
+    },
+    {
+      "id": "plans",
+      "type": "messagebus",
+      "label": "NutritionPlanRepository",
+      "sublabel": "MealPlanning\\Domain",
+      "pos": [
+        690,
+        400
+      ],
+      "size": [
+        210,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/NutritionPlanRepository.php",
+          "line": 37,
+          "end_line": 66
+        }
+      ]
+    },
+    {
+      "id": "recipes",
+      "type": "messagebus",
+      "label": "RecipeRepository",
+      "sublabel": "Recipes\\Domain",
+      "pos": [
+        690,
+        580
+      ],
+      "size": [
+        210,
+        72
+      ]
+    },
+    {
+      "id": "system",
+      "type": "database",
+      "label": "SystemClock",
+      "sublabel": "Europe/Madrid",
+      "pos": [
+        1000,
+        220
+      ],
+      "size": [
+        230,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Infrastructure/SystemClock.php",
+          "line": 31,
+          "end_line": 41
+        }
+      ]
+    },
+    {
+      "id": "eplans",
+      "type": "database",
+      "label": "EloquentNutritionPlanRepository",
+      "sublabel": "PostgreSQL · jsonb",
+      "pos": [
+        1000,
+        400
+      ],
+      "size": [
+        230,
+        72
+      ],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/EloquentNutritionPlanRepository.php",
+          "line": 32,
+          "end_line": 117
+        }
+      ]
+    },
+    {
+      "id": "erecipes",
+      "type": "database",
+      "label": "EloquentRecipeRepository",
+      "sublabel": "PostgreSQL · 3 tablas",
+      "pos": [
+        1000,
+        580
+      ],
+      "size": [
+        230,
+        72
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "bootstrap/providers.php",
+      "wraps": [
+        "shared_sp",
+        "mp_sp",
+        "rp_sp"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Puertos del núcleo",
+      "wraps": [
+        "clock",
+        "plans",
+        "recipes"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Adaptadores (Infrastructure)",
+      "wraps": [
+        "system",
+        "eplans",
+        "erecipes"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "reads",
+      "from": "config",
+      "to": "shared_sp",
+      "label": "zona horaria",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c1",
+      "from": "shared_sp",
+      "to": "clock",
+      "label": "Clock →",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c2",
+      "from": "clock",
+      "to": "system",
+      "label": "SystemClock",
+      "variant": "emphasis"
+    },
+    {
+      "id": "p1",
+      "from": "mp_sp",
+      "to": "plans",
+      "label": "puerto →"
+    },
+    {
+      "id": "p2",
+      "from": "plans",
+      "to": "eplans",
+      "label": "Eloquent"
+    },
+    {
+      "id": "r1",
+      "from": "rp_sp",
+      "to": "recipes",
+      "label": "puerto →"
+    },
+    {
+      "id": "r2",
+      "from": "recipes",
+      "to": "erecipes",
+      "label": "Eloquent"
+    },
+    {
+      "id": "swap",
+      "from": "tests",
+      "to": "clock",
+      "label": "FrozenClock en el contenedor",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "El reloj, en el provider compartido",
+      "items": [
+        "El tiempo no es de ningún contexto: si lo registrara MealPlanning, el recetario dependería de él para saber qué día es.",
+        "La zona del usuario sale de config/clock.php; app.timezone sigue en UTC."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Una raíz por contexto",
+      "items": [
+        "Cada provider es el único sitio que decide el adaptador de sus puertos; el núcleo no los conoce.",
+        "En los tests, el contenedor recibe otro adaptador (FrozenClock) sin tocar ni el caso de uso ni el provider."
+      ]
+    }
+  ]
+}
