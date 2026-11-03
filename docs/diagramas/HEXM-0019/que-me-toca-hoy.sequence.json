@@ -1,0 +1,407 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "¿Qué me toca hoy? GetMenuForDate paso a paso",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0019/que-me-toca-hoy.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "5227d3a9ea4f26f69778fdf0ea40f7823f8acf6d"
+    },
+    "legend": {
+      "entries": {
+        "default": {
+          "label": "Llamada"
+        },
+        "emphasis": {
+          "label": "Camino principal"
+        },
+        "security": {
+          "label": "Sin plan vigente (NotFound → 404)"
+        },
+        "return": {
+          "label": "Respuesta"
+        }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "caller",
+      "type": "external",
+      "label": "Quien pregunta",
+      "sublabel": "tests hoy; HTTP en el nivel 5",
+      "sources": [
+        {
+          "path": "app-laravel/tests/Unit/MealPlanning/Application/GetMenuForDateTest.php",
+          "line": 55,
+          "end_line": 69,
+          "label": "miércoles 11/11"
+        },
+        {
+          "path": "app-laravel/tests/Unit/MealPlanning/Application/GetMenuForDateTest.php",
+          "line": 81,
+          "end_line": 102,
+          "label": "fecha explícita y sábado"
+        },
+        {
+          "path": "app-laravel/tests/Unit/MealPlanning/Application/GetMenuForDateTest.php",
+          "line": 117,
+          "end_line": 121,
+          "label": "sin plan vigente"
+        }
+      ]
+    },
+    {
+      "id": "usecase",
+      "type": "backend",
+      "label": "GetMenuForDate",
+      "sublabel": "consulta que orquesta",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/GetMenuForDate.php",
+          "line": 58,
+          "end_line": 72,
+          "label": "__invoke()"
+        }
+      ]
+    },
+    {
+      "id": "clock",
+      "type": "messagebus",
+      "label": "Clock",
+      "sublabel": "FrozenClock en los tests",
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Application/Clock.php",
+          "line": 46,
+          "end_line": 56,
+          "label": "puerto today()"
+        },
+        {
+          "path": "app-laravel/src/Shared/Infrastructure/FrozenClock.php",
+          "line": 28,
+          "end_line": 53
+        }
+      ]
+    },
+    {
+      "id": "repository",
+      "type": "database",
+      "label": "Repositorio de planes",
+      "sublabel": "InMemoryNutritionPlanRepository",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/InMemoryNutritionPlanRepository.php",
+          "line": 65,
+          "end_line": 79,
+          "label": "inForceOn()"
+        }
+      ]
+    },
+    {
+      "id": "calendar",
+      "type": "security",
+      "label": "MealCalendar",
+      "sublabel": "servicio de dominio",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Domain/MealCalendar.php",
+          "line": 59,
+          "end_line": 83,
+          "label": "dayOn()"
+        }
+      ]
+    },
+    {
+      "id": "view",
+      "type": "backend",
+      "label": "Vista de lectura",
+      "sublabel": "ScheduledDayView",
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/ScheduledDayView.php",
+          "line": 55,
+          "end_line": 72,
+          "label": "fromScheduledDay()"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 140,
+      "to": 700,
+      "label": "1. Sin fecha: hoy es el miércoles 11/11 → semana 2"
+    },
+    {
+      "from": 735,
+      "to": 1065,
+      "label": "2. Fecha explícita, sábado 14/11 → día libre"
+    },
+    {
+      "from": 1100,
+      "to": 1315,
+      "label": "3. Domingo 01/11, antes del plan 27 → sin plan vigente"
+    }
+  ],
+  "messages": [
+    {
+      "id": "ask_today",
+      "from": "caller",
+      "to": "usecase",
+      "y": 165,
+      "label": "__invoke() sin fecha",
+      "variant": "emphasis"
+    },
+    {
+      "id": "today",
+      "from": "usecase",
+      "to": "clock",
+      "y": 210,
+      "label": "today()",
+      "variant": "emphasis",
+      "note": "el caso de uso nunca lee el reloj del sistema"
+    },
+    {
+      "id": "today_back",
+      "from": "clock",
+      "to": "usecase",
+      "y": 280,
+      "label": "2026-11-11 00:00",
+      "variant": "return"
+    },
+    {
+      "id": "in_force",
+      "from": "usecase",
+      "to": "repository",
+      "y": 325,
+      "label": "inForceOn(11/11)",
+      "variant": "default",
+      "note": "inicio más reciente que no pasa de la fecha"
+    },
+    {
+      "id": "plan",
+      "from": "repository",
+      "to": "usecase",
+      "y": 395,
+      "label": "plan 27 (inicio 02/11)",
+      "variant": "return"
+    },
+    {
+      "id": "day_on",
+      "from": "usecase",
+      "to": "calendar",
+      "y": 440,
+      "label": "dayOn(plan, 11/11)",
+      "variant": "emphasis",
+      "note": "9 días desde el inicio → 1 semana completa (impar) → semana 2"
+    },
+    {
+      "id": "scheduled",
+      "from": "calendar",
+      "to": "usecase",
+      "y": 510,
+      "label": "ScheduledDay (miércoles, menú del día 10)",
+      "variant": "return"
+    },
+    {
+      "id": "to_view",
+      "from": "usecase",
+      "to": "view",
+      "y": 555,
+      "label": "fromScheduledDay(plan, día)",
+      "variant": "default",
+      "note": "solo primitivos: plan, semana, \"miércoles\", platos"
+    },
+    {
+      "id": "view_back",
+      "from": "view",
+      "to": "usecase",
+      "y": 625,
+      "label": "ScheduledDayView",
+      "variant": "return"
+    },
+    {
+      "id": "answer",
+      "from": "usecase",
+      "to": "caller",
+      "y": 670,
+      "label": "plan 27 · semana 2 · comida y cena del día 10",
+      "variant": "return"
+    },
+    {
+      "id": "ask_date",
+      "from": "caller",
+      "to": "usecase",
+      "y": 760,
+      "label": "__invoke(2026-11-14)",
+      "variant": "default",
+      "note": "con fecha, el Clock ni se consulta"
+    },
+    {
+      "id": "in_force_sat",
+      "from": "usecase",
+      "to": "repository",
+      "y": 830,
+      "label": "inForceOn(14/11)",
+      "variant": "default"
+    },
+    {
+      "id": "plan_sat",
+      "from": "repository",
+      "to": "usecase",
+      "y": 875,
+      "label": "plan 27",
+      "variant": "return"
+    },
+    {
+      "id": "day_on_sat",
+      "from": "usecase",
+      "to": "calendar",
+      "y": 920,
+      "label": "dayOn(plan, 14/11)",
+      "variant": "default"
+    },
+    {
+      "id": "free",
+      "from": "calendar",
+      "to": "usecase",
+      "y": 965,
+      "label": "ScheduledDay::freeDay (semana 2)",
+      "variant": "return",
+      "note": "el sábado es libre en las dos semanas"
+    },
+    {
+      "id": "free_answer",
+      "from": "usecase",
+      "to": "caller",
+      "y": 1035,
+      "label": "isFreeDay: true · comida y cena: null",
+      "variant": "return"
+    },
+    {
+      "id": "ask_before",
+      "from": "caller",
+      "to": "usecase",
+      "y": 1125,
+      "label": "__invoke() con el reloj en 01/11",
+      "variant": "default"
+    },
+    {
+      "id": "in_force_before",
+      "from": "usecase",
+      "to": "repository",
+      "y": 1170,
+      "label": "inForceOn(01/11)",
+      "variant": "default"
+    },
+    {
+      "id": "none",
+      "from": "repository",
+      "to": "usecase",
+      "y": 1215,
+      "label": "null",
+      "variant": "return"
+    },
+    {
+      "id": "not_found",
+      "from": "usecase",
+      "to": "caller",
+      "y": 1260,
+      "label": "throw NoPlanInForce",
+      "variant": "security",
+      "note": "\"No hay ningún plan nutricional vigente el 01/11/2026.\" Un NotFound, no una DomainException"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "usecase",
+      "from": 165,
+      "to": 670,
+      "type": "backend"
+    },
+    {
+      "participant": "clock",
+      "from": 210,
+      "to": 280,
+      "type": "messagebus"
+    },
+    {
+      "participant": "repository",
+      "from": 325,
+      "to": 395,
+      "type": "database"
+    },
+    {
+      "participant": "calendar",
+      "from": 440,
+      "to": 510,
+      "type": "security"
+    },
+    {
+      "participant": "view",
+      "from": 555,
+      "to": 625,
+      "type": "backend"
+    },
+    {
+      "participant": "usecase",
+      "from": 760,
+      "to": 1035,
+      "type": "backend"
+    },
+    {
+      "participant": "repository",
+      "from": 830,
+      "to": 875,
+      "type": "database"
+    },
+    {
+      "participant": "calendar",
+      "from": 920,
+      "to": 965,
+      "type": "security"
+    },
+    {
+      "participant": "usecase",
+      "from": 1125,
+      "to": 1260,
+      "type": "backend"
+    },
+    {
+      "participant": "repository",
+      "from": 1170,
+      "to": 1215,
+      "type": "database"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Un caso de uso que solo orquesta",
+      "items": [
+        "La vigencia la sabe el repositorio y el calendario MealCalendar: GetMenuForDate no tiene reglas propias.",
+        "Devuelve un ScheduledDayView con primitivos; ni el plan ni el ScheduledDay salen de la aplicación."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Hoy, a través de un puerto",
+      "items": [
+        "Sin fecha, el caso de uso pide today() al Clock: los tests fijan el día con FrozenClock.",
+        "Con fecha explícita, el reloj ni se consulta (un test usa un reloj que falla si alguien lo llama)."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Sin plan vigente",
+      "items": [
+        "Antes del primer plan, o sin planes, NoPlanInForce: un NotFound que la API del nivel 5 convertirá en 404."
+      ]
+    }
+  ]
+}
