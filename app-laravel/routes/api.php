@@ -34,6 +34,7 @@ use MealPlanning\Infrastructure\Http\GetNutritionPlanController;
 use MealPlanning\Infrastructure\Http\ListNutritionPlansController;
 use MealPlanning\Infrastructure\Http\RegisterNutritionPlanController;
 use Recipes\Infrastructure\Http\CreateRecipeController;
+use Recipes\Infrastructure\Http\DeleteRecipeController;
 use Recipes\Infrastructure\Http\GetRecipeController;
 
 // Recetario: alta de recetas (HEXM-0010) y consulta (HEXM-0011).
@@ -48,6 +49,7 @@ use Recipes\Infrastructure\Http\GetRecipeController;
 // controlador.
 Route::post('/recipes', CreateRecipeController::class)->name('recipes.store');
 Route::get('/recipes/{id}', GetRecipeController::class)->name('recipes.show');
+Route::delete('/recipes/{id}', DeleteRecipeController::class)->name('recipes.destroy');
 
 // Planes nutricionales: alta manual de un plan completo (HEXM-0021), el
 // histórico y la consulta de un plan (HEXM-0023). Como en las recetas, sin

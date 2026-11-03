@@ -139,3 +139,36 @@ it('keeps different recipes apart', function (RecipeRepository $repository) {
         ->and($repository->find($salad->id())?->name())->toBe('Ensalada de garbanzos')
         ->and($repository->find($salad->id())?->ingredients())->toHaveCount(1);
 })->with('recipe repositories');
+
+// --- delete() (HEXM-0026) -----------------------------------------------------
+
+it('deletes a saved recipe', function (RecipeRepository $repository) {
+    $recipe = RecipeMother::lentilsWithPisto();
+    $repository->save($recipe);
+
+    $repository->delete($recipe->id());
+
+    expect($repository->find($recipe->id()))->toBeNull();
+})->with('recipe repositories');
+
+it('does nothing when deleting a recipe that does not exist', function (RecipeRepository $repository) {
+    // Idempotente: ni lanza ni toca las demás recetas.
+    $salad = RecipeMother::chickpeaSalad();
+    $repository->save($salad);
+
+    $repository->delete(RecipeId::generate());
+
+    expect($repository->find($salad->id())?->name())->toBe('Ensalada de garbanzos');
+})->with('recipe repositories');
+
+it('deletes only the given recipe', function (RecipeRepository $repository) {
+    $lentils = RecipeMother::lentilsWithPisto();
+    $salad = RecipeMother::chickpeaSalad();
+    $repository->save($lentils);
+    $repository->save($salad);
+
+    $repository->delete($lentils->id());
+
+    expect($repository->find($lentils->id()))->toBeNull()
+        ->and($repository->find($salad->id())?->ingredients())->toHaveCount(1);
+})->with('recipe repositories');

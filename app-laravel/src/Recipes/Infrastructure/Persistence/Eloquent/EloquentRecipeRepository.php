@@ -100,4 +100,24 @@ final readonly class EloquentRecipeRepository implements RecipeRepository
 
         return $model === null ? null : $this->mapper->toDomain($model);
     }
+
+    /**
+     * Un único DELETE de la fila de la receta. Los ingredientes y los pasos
+     * se borran solos: sus claves foráneas tienen ON DELETE CASCADE (ver la
+     * migración create_recipes_tables). Por eso no hace falta una
+     * transacción: es UNA sentencia, y PostgreSQL la ejecuta entera o nada.
+     *
+     * CONCEPTO: borrado en cascada en la base de datos
+     * Que las filas hijas no sobrevivan a su receta lo garantiza PostgreSQL,
+     * no el código: aunque alguien borrara la receta con SQL a mano, no
+     * quedarían ingredientes huérfanos. Es la frontera del agregado escrita
+     * en el esquema.
+     *
+     * Se usa la consulta (query()->delete()) y no $model->delete() para no
+     * cargar el modelo antes: si no existe, borra cero filas y no pasa nada.
+     */
+    public function delete(RecipeId $id): void
+    {
+        RecipeModel::query()->whereKey($id->value())->delete();
+    }
 }

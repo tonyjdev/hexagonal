@@ -144,3 +144,21 @@ it('rejects an incomplete or invalid quantity at the database level', function (
     'solo unidad' => [null, null, 'jar'],
     'denominador cero' => [1, 0, 'jar'],
 ]);
+
+it('deletes the ingredients and steps of a deleted recipe in cascade', function () {
+    // El agregado se borra entero: lo garantiza ON DELETE CASCADE en las
+    // claves foráneas, no un DELETE por tabla en el repositorio (HEXM-0026).
+    $repository = new EloquentRecipeRepository;
+    $lentils = RecipeMother::lentilsWithPisto();
+    $salad = RecipeMother::chickpeaSalad();
+    $repository->save($lentils);
+    $repository->save($salad);
+
+    $repository->delete($lentils->id());
+
+    expect(DB::table('recipes')->where('id', $lentils->id()->value())->count())->toBe(0)
+        ->and(DB::table('recipe_ingredients')->where('recipe_id', $lentils->id()->value())->count())->toBe(0)
+        ->and(DB::table('recipe_steps')->where('recipe_id', $lentils->id()->value())->count())->toBe(0)
+        // Las filas de la otra receta siguen ahí.
+        ->and(DB::table('recipe_ingredients')->where('recipe_id', $salad->id()->value())->count())->toBe(1);
+});

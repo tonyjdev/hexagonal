@@ -8,16 +8,19 @@ use DateTimeZone;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Shared\Application\Clock;
+use Shared\Application\EventBus;
 
 /**
  * SharedServiceProvider: la raíz de composición de los puertos compartidos.
  *
  * CONCEPTO: raíz de composición (como RecipesServiceProvider y
  * MealPlanningServiceProvider)
- * Decide qué adaptador hay detrás de cada puerto de Shared. Hoy, uno: el
- * reloj. En la aplicación real, Clock es SystemClock en la zona horaria del
- * usuario (config/clock.php); en los tests, cada test lo sustituye por un
- * FrozenClock en el contenedor.
+ * Decide qué adaptador hay detrás de cada puerto de Shared. Hoy, dos:
+ *   - el reloj: en la aplicación real, Clock es SystemClock en la zona
+ *     horaria del usuario (config/clock.php); en los tests, cada test lo
+ *     sustituye por un FrozenClock en el contenedor;
+ *   - el bus de eventos (HEXM-0026): EventBus es LaravelEventBus, sobre el
+ *     dispatcher de Laravel; los tests unitarios usan InMemoryEventBus.
  *
  * DECISIÓN: el reloj se registra aquí y no en MealPlanningServiceProvider
  * (HEXM-0022)
@@ -50,5 +53,11 @@ final class SharedServiceProvider extends ServiceProvider
             // existe ("Europe/Madird"): también falla al arrancar.
             return new SystemClock(new DateTimeZone($timezone));
         });
+
+        // Puerto de publicación de eventos (Shared\Application) → el
+        // dispatcher de Laravel (HEXM-0026). El contenedor le pasa el
+        // Dispatcher y las conexiones de la base de datos. singleton(): sin
+        // estado propio, basta uno.
+        $this->app->singleton(EventBus::class, LaravelEventBus::class);
     }
 }
