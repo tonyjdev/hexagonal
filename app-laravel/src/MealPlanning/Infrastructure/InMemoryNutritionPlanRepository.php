@@ -15,10 +15,11 @@ use MealPlanning\Domain\NutritionPlanRepository;
  *
  * CONCEPTO: adaptador en memoria (como Recipes\Infrastructure\InMemoryRecipeRepository)
  * Implementa el puerto NutritionPlanRepository y cumple sus tests de
- * contrato. Lo usarán los tests del caso de uso GetMenuForDate (HEXM-0019);
- * en el nivel 5 llegará el de Eloquent, que tendrá que pasar los mismos
- * tests. Vive en Infrastructure aunque no use Laravel: es un DETALLE de cómo
- * se guardan los planes.
+ * contrato. Lo usan los tests del caso de uso GetMenuForDate (HEXM-0019);
+ * el de Eloquent (EloquentNutritionPlanRepository, HEXM-0020) pasa los
+ * mismos tests, y por eso los tests rápidos de los casos de uso valen
+ * también para producción. Vive en Infrastructure aunque no use Laravel: es
+ * un DETALLE de cómo se guardan los planes.
  *
  * DECISIÓN: sin copias defensivas (clone), a diferencia de las recetas
  * InMemoryRecipeRepository clona porque Recipe es mutable (rename()): sin
