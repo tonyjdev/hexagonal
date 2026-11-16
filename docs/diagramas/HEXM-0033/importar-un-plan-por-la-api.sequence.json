@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Importar un plan por la API: de los dos Excel a «¿qué me toca hoy?»",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0033/importar-un-plan-por-la-api.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "0da9ec03c14620c8642237169d1facec92bb15b4"
+    },
+    "legend": {
+      "entries": {
+        "default": { "label": "Llamada" },
+        "emphasis": { "label": "Petición HTTP del cliente" },
+        "return": { "label": "Respuesta" }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Cliente",
+      "sublabel": "curl · prueba e2e",
+      "sources": [
+        { "path": "app-laravel/tests/Feature/MealPlanning/Infrastructure/Http/PlanImportEndToEndTest.php", "line": 83, "end_line": 110, "label": "la secuencia con el servicio real" }
+      ]
+    },
+    {
+      "id": "http",
+      "type": "frontend",
+      "label": "API de Laravel",
+      "sublabel": "controladores · Form Requests",
+      "sources": [
+        { "path": "app-laravel/routes/api.php", "line": 79, "end_line": 83, "label": "las cinco rutas" },
+        { "path": "app-laravel/src/MealPlanning/Infrastructure/Http/PlanDocumentRequest.php", "line": 58, "end_line": 77, "label": ".xlsx ≤ 5 MB → PlanDocument" },
+        { "path": "app-laravel/src/MealPlanning/Infrastructure/Http/StartPlanImportController.php", "line": 43, "end_line": 51 }
+      ]
+    },
+    {
+      "id": "usecases",
+      "type": "backend",
+      "label": "Casos de uso",
+      "sublabel": "MealPlanning\\Application",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Application/StartPlanImport.php", "line": 44, "end_line": 53 },
+        { "path": "app-laravel/src/MealPlanning/Application/AttachSelfWeekToPlanImport.php", "line": 40, "end_line": 48 },
+        { "path": "app-laravel/src/MealPlanning/Application/ConfirmPlanImport.php", "line": 76, "end_line": 99 }
+      ]
+    },
+    {
+      "id": "reader",
+      "type": "messagebus",
+      "label": "PlanReader",
+      "sublabel": "HttpPlanReader (adaptador)",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Infrastructure/Importer/HttpPlanReader.php", "line": 67, "end_line": 103 },
+        { "path": "app-laravel/src/MealPlanning/Infrastructure/MealPlanningServiceProvider.php", "line": 68, "end_line": 72, "label": "URL y timeout de config" }
+      ]
+    },
+    {
+      "id": "importer",
+      "type": "external",
+      "label": "importer",
+      "sublabel": "FastAPI · openpyxl",
+      "sources": [
+        { "path": "services/importer/src/importer/api/nutritionist_plans.py", "line": 23, "end_line": 45 },
+        { "path": "services/importer/src/importer/api/self_weeks.py", "line": 27, "end_line": 38 }
+      ]
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "PostgreSQL",
+      "sublabel": "plan_imports · nutrition_plans",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/EloquentPlanImportRepository.php", "line": 32, "end_line": 44 },
+        { "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/EloquentNutritionPlanRepository.php", "line": 69, "end_line": 92, "label": "save()" },
+        { "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/EloquentNutritionPlanRepository.php", "line": 107, "end_line": 115, "label": "inForceOn()" }
+      ]
+    }
+  ],
+  "segments": [
+    { "from": 140, "to": 580, "label": "1. El Excel de la nutricionista → importación pendiente de la semana 2" },
+    { "from": 615, "to": 1095, "label": "2. El Excel de la semana 2 → lista para confirmar" },
+    { "from": 1130, "to": 1380, "label": "3. Confirmar con la fecha de inicio → el plan 99" },
+    { "from": 1415, "to": 1650, "label": "4. «¿Qué me toca el lunes 09/11?» → semana 2, día 8" }
+  ],
+  "messages": [
+    { "id": "m1", "from": "client", "to": "http", "y": 165, "label": "POST /api/plan-imports (file)", "variant": "emphasis" },
+    { "id": "m2", "from": "http", "to": "usecases", "y": 215, "label": "StartPlanImport(PlanDocument)", "variant": "default", "note": "UploadedFile → PlanDocument" },
+    { "id": "m3", "from": "usecases", "to": "reader", "y": 270, "label": "readNutritionistPlan()", "variant": "default" },
+    { "id": "m4", "from": "reader", "to": "importer", "y": 320, "label": "POST /nutritionist-plans/read", "variant": "default", "note": "multipart" },
+    { "id": "m5", "from": "importer", "to": "reader", "y": 375, "label": "200 · NutritionistPlan (JSON)", "variant": "return" },
+    { "id": "m6", "from": "reader", "to": "usecases", "y": 425, "label": "NutritionistPlanReading", "variant": "return" },
+    { "id": "m7", "from": "usecases", "to": "db", "y": 475, "label": "save(PlanImport)", "variant": "default", "note": "pendiente de la semana 2" },
+    { "id": "m8", "from": "http", "to": "client", "y": 535, "label": "201 + Location · plan 99, pendiente", "variant": "return", "note": "lo consulta GetPlanImport" },
+    { "id": "m9", "from": "client", "to": "http", "y": 640, "label": "PUT …/{id}/self-week (file)", "variant": "emphasis", "note": "multipart en PUT (PHP 8.4)" },
+    { "id": "m10", "from": "http", "to": "usecases", "y": 700, "label": "AttachSelfWeekToPlanImport", "variant": "default" },
+    { "id": "m11", "from": "usecases", "to": "db", "y": 750, "label": "find(id)", "variant": "default", "note": "antes de leer: 404 si no existe" },
+    { "id": "m12", "from": "usecases", "to": "reader", "y": 810, "label": "readSelfWeek()", "variant": "default" },
+    { "id": "m13", "from": "reader", "to": "importer", "y": 860, "label": "POST /self-weeks/read", "variant": "default" },
+    { "id": "m14", "from": "importer", "to": "reader", "y": 910, "label": "200 · SelfWeek (JSON)", "variant": "return" },
+    { "id": "m15", "from": "reader", "to": "usecases", "y": 960, "label": "SelfWeekReading", "variant": "return" },
+    { "id": "m16", "from": "usecases", "to": "db", "y": 1010, "label": "save(lista para confirmar)", "variant": "default" },
+    { "id": "m17", "from": "http", "to": "client", "y": 1060, "label": "200 · lista para confirmar", "variant": "return" },
+    { "id": "m18", "from": "client", "to": "http", "y": 1155, "label": "POST …/{id}/confirm {starts_on}", "variant": "emphasis" },
+    { "id": "m19", "from": "http", "to": "usecases", "y": 1205, "label": "ConfirmPlanImport(id, lunes 02/11)", "variant": "default", "note": "RegisterNutritionPlan: reglas del alta" },
+    { "id": "m20", "from": "usecases", "to": "db", "y": 1275, "label": "save(plan 99) · save(confirmada)", "variant": "default" },
+    { "id": "m21", "from": "http", "to": "client", "y": 1330, "label": "201 {id} + Location del plan", "variant": "return" },
+    { "id": "m22", "from": "client", "to": "http", "y": 1440, "label": "GET /api/menu?date=2026-11-09", "variant": "emphasis" },
+    { "id": "m23", "from": "http", "to": "usecases", "y": 1490, "label": "GetMenuForDate(09/11)", "variant": "default" },
+    { "id": "m24", "from": "usecases", "to": "db", "y": 1540, "label": "inForceOn(09/11)", "variant": "default", "note": "el plan importado" },
+    { "id": "m25", "from": "http", "to": "client", "y": 1600, "label": "semana 2 · «Lentejas estofadas»", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "http", "from": 165, "to": 535, "type": "frontend" },
+    { "participant": "usecases", "from": 215, "to": 475, "type": "backend" },
+    { "participant": "reader", "from": 270, "to": 425, "type": "backend" },
+    { "participant": "http", "from": 640, "to": 1060, "type": "frontend" },
+    { "participant": "usecases", "from": 700, "to": 1010, "type": "backend" },
+    { "participant": "reader", "from": 810, "to": 960, "type": "backend" },
+    { "participant": "http", "from": 1155, "to": 1330, "type": "frontend" },
+    { "participant": "usecases", "from": 1205, "to": 1275, "type": "backend" },
+    { "participant": "http", "from": 1440, "to": 1600, "type": "frontend" },
+    { "participant": "usecases", "from": 1490, "to": 1540, "type": "backend" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Laravel no lee Excel",
+      "items": [
+        "La Form Request solo mira la forma (.xlsx de hasta 5 MB) y entrega un PlanDocument de primitivos.",
+        "Qué hay en las hojas lo decide el servicio importer; el núcleo solo ve el puerto PlanReader."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Un núcleo, otra puerta",
+      "items": [
+        "Los cuatro casos de uso ya existían (HEXM-0032); la única pieza nueva del núcleo es la consulta GetPlanImport.",
+        "Confirmar responde como el alta manual: por debajo es RegisterNutritionPlan."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Los errores, con su código",
+      "items": [
+        "Excel con forma incorrecta o confirmar sin semana 2: 422 en español.",
+        "Importación inexistente: 404. Servicio caído: 503 y al log (ADR 0026)."
+      ]
+    }
+  ]
+}

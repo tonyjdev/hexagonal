@@ -52,4 +52,4 @@ Al terminar HEXM-0032, el núcleo ya sabía importar un plan desde sus dos Excel
   - La prueba de punta a punta solo se ejecuta si alguien levanta el servicio. Sin CI, depende de la disciplina de lanzar `composer test:e2e` antes de cerrar una tarea que toque el importador. Cuando haya CI, puede levantar el servicio y ejecutarla siempre.
   - Se salta en silencio dentro de `composer ci:check`. La salida de Pest lo muestra como *skipped*, pero es fácil no verlo.
   - La prueba de punta a punta usa la base de datos de los tests (`hexagonal_test`), así que, como todo el gate, no se puede ejecutar a la vez desde dos *worktrees*.
-  - Los mensajes de validación de forma («The file field must be a file of type: xlsx») siguen en inglés, como en el resto de la API (deuda ya registrada en HEXM-0022).
+  - Los mensajes de validación de forma («The file field must be a file of type: xlsx») siguen en inglés, como en el resto de la API: la deuda que anotó HEXM-0022 la paga HEXM-0037.

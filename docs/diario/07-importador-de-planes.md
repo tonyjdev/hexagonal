@@ -65,7 +65,7 @@ Tareas: HEXM-0028 (esqueleto del servicio `importer` en FastAPI), HEXM-0029 (lee
 - **PUT con ficheros**: históricamente PHP solo procesaba `multipart/form-data` en POST. Con PHP 8.4, Symfony usa `request_parse_body()` y funciona también en PUT. Los tests de Laravel no lo habrían detectado, porque no pasan por ese código de PHP, así que se comprobó con `curl` contra `php artisan serve` (HEXM-0033).
 - **Una prueba de punta a punta que no se ejecuta sola**: sin CI, depende de que alguien levante el servicio. Se aceptó: dentro del gate se salta, y `composer test:e2e` falla si el servicio no responde.
 - **Pendiente:**
-  - los mensajes de validación de forma en inglés (deuda de HEXM-0022);
+  - los mensajes de validación de forma en inglés (HEXM-0037, la deuda que anotó HEXM-0022);
   - actualizar Laravel y Symfony por los avisos de `composer audit` (HEXM-0036);
   - un CI que levante el servicio y ejecute siempre la prueba de punta a punta;
   - el siguiente nivel: la semana 2 desde la app y las reglas de los intercambios como código (nivel 8).
