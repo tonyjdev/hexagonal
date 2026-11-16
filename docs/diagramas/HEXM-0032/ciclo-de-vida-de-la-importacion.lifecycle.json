@@ -1,0 +1,129 @@
+{
+  "schema_version": 3,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Ciclo de vida de una importación de plan",
+    "subtitle": "PlanImport: de los dos Excel a un NutritionPlan",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0032/ciclo-de-vida-de-la-importacion.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "0b19326104e7be21d49b13567dfd187b83128a45"
+    },
+    "legend": {
+      "entries": {
+        "start": { "label": "Estado inicial (start())" },
+        "waiting": { "label": "Estado de la importación" },
+        "success": { "label": "Confirmada (ya no cambia)" },
+        "failure": { "label": "Rechazo: InvalidPlanImport (422)" },
+        "external": { "label": "Otro agregado (NutritionPlan)" }
+      }
+    }
+  },
+  "mainPath": ["awaiting", "ready", "confirmed"],
+  "states": [
+    {
+      "id": "awaiting",
+      "type": "start",
+      "label": "Pendiente de la semana 2",
+      "sublabel": "AwaitingSelfWeek",
+      "tag": "Excel de la nutricionista",
+      "step": "01",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/PlanImport.php", "line": 71, "end_line": 74, "label": "start()" },
+        { "path": "app-laravel/src/MealPlanning/Domain/PlanImportStatus.php", "line": 35, "end_line": 36 }
+      ]
+    },
+    {
+      "id": "ready",
+      "type": "waiting",
+      "label": "Lista para confirmar",
+      "sublabel": "ReadyToConfirm",
+      "tag": "los dos Excel",
+      "step": "02",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/PlanImport.php", "line": 117, "end_line": 122, "label": "attachSelfWeek()" },
+        { "path": "app-laravel/src/MealPlanning/Domain/PlanImport.php", "line": 135, "end_line": 140, "label": "selfWeekForConfirmation()" }
+      ]
+    },
+    {
+      "id": "confirmed",
+      "type": "success",
+      "label": "Confirmada",
+      "sublabel": "Confirmed · plan()",
+      "tag": "terminal",
+      "step": "03",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/PlanImport.php", "line": 148, "end_line": 153, "label": "confirm()" },
+        { "path": "app-laravel/src/MealPlanning/Domain/PlanImport.php", "line": 192, "end_line": 199, "label": "status()" }
+      ]
+    },
+    {
+      "id": "no_self_week",
+      "type": "failure",
+      "label": "Falta la semana 2",
+      "sublabel": "InvalidPlanImport::missingSelfWeek",
+      "tag": "sin cambios",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/InvalidPlanImport.php", "line": 17, "end_line": 23 }
+      ]
+    },
+    {
+      "id": "plan",
+      "type": "external",
+      "label": "NutritionPlan creado",
+      "sublabel": "RegisterNutritionPlan",
+      "tag": "otro agregado",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Application/ConfirmPlanImport.php", "line": 84, "end_line": 96, "label": "reutiliza el alta" }
+      ]
+    },
+    {
+      "id": "frozen",
+      "type": "failure",
+      "label": "Ya confirmada",
+      "sublabel": "InvalidPlanImport::alreadyConfirmed",
+      "tag": "no cambia",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/PlanImport.php", "line": 212, "end_line": 217, "label": "ensureNotConfirmed()" },
+        { "path": "app-laravel/src/MealPlanning/Domain/InvalidPlanImport.php", "line": 25, "end_line": 31 }
+      ]
+    }
+  ],
+  "transitions": [
+    { "id": "t-attach", "from": "awaiting", "to": "ready", "label": "attachSelfWeek()", "variant": "emphasis", "note": "AttachSelfWeekToPlanImport" },
+    { "id": "t-confirm", "from": "ready", "to": "confirmed", "label": "confirm(planId)", "variant": "emphasis", "note": "con la fecha de inicio" },
+    { "id": "t-no-week", "from": "awaiting", "to": "no_self_week", "label": "confirmar", "variant": "security" },
+    { "id": "t-plan", "from": "ready", "to": "plan", "label": "RegisterNutritionPlan", "variant": "dashed", "note": "antes de confirm()" },
+    { "id": "t-frozen", "from": "confirmed", "to": "frozen", "label": "cambiar o confirmar otra vez", "variant": "security" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Se pueden volver a subir",
+      "items": [
+        "Mientras no está confirmada, replaceNutritionistPlan() sustituye el Excel de la nutricionista y conserva la semana 2.",
+        "attachSelfWeek() añade la semana 2 o sustituye la que había: el estado no cambia.",
+        "Puede haber varias importaciones pendientes a la vez."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Estado deducido",
+      "items": [
+        "PlanImport no guarda un $status: status() lo deduce de si tiene semana 2 y plan.",
+        "La tabla plan_imports sí lo guarda, con un CHECK que impide filas incoherentes."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Los rechazos no cambian nada",
+      "items": [
+        "Confirmar sin semana 2 o cambiar una confirmada es InvalidPlanImport (422).",
+        "Si el plan incumple una regla (no empieza en lunes, número repetido…), no se crea y la importación sigue lista."
+      ]
+    }
+  ]
+}

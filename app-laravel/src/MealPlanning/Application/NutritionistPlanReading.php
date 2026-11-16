@@ -10,7 +10,8 @@ namespace MealPlanning\Application;
  * Su número de plan, las pautas fijas, los intercambios con sus reglas y la
  * semana 1 (menús 1-6). Es la parte del plan que trae ese documento; la
  * semana 2 viene en el otro (SelfWeekReading) y la fecha de inicio no está
- * en ninguno (la dará el usuario al confirmar la importación, HEXM-0033).
+ * en ninguno (la dará el usuario al confirmar la importación: ConfirmPlanImport,
+ * HEXM-0032).
  *
  * CONCEPTO: DTO de salida de un puerto, no el agregado
  * Leer un documento NO es crear un plan: falta la otra semana y la fecha, y

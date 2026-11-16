@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Confirmar una importación: reutilizar el alta de un plan",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0032/confirmar-una-importacion.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "0b19326104e7be21d49b13567dfd187b83128a45"
+    },
+    "legend": {
+      "entries": {
+        "default": { "label": "Llamada" },
+        "emphasis": { "label": "Camino principal" },
+        "security": { "label": "Rechazo (nada se guarda)" },
+        "return": { "label": "Respuesta" }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "caller",
+      "type": "external",
+      "label": "Quien confirma",
+      "sublabel": "tests · HEXM-0033",
+      "sources": [
+        { "path": "app-laravel/tests/Unit/MealPlanning/Application/PlanImportUseCasesTest.php", "line": 190, "end_line": 238, "label": "los tres caminos" }
+      ]
+    },
+    {
+      "id": "confirm",
+      "type": "backend",
+      "label": "Confirmar",
+      "sublabel": "ConfirmPlanImport",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Application/ConfirmPlanImport.php", "line": 76, "end_line": 99 }
+      ]
+    },
+    {
+      "id": "imports",
+      "type": "database",
+      "label": "Importaciones",
+      "sublabel": "PlanImportRepository",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/PlanImportRepository.php", "line": 31, "end_line": 36 },
+        { "path": "app-laravel/src/MealPlanning/Infrastructure/Persistence/Eloquent/EloquentPlanImportRepository.php", "line": 32, "end_line": 44, "label": "Eloquent" }
+      ]
+    },
+    {
+      "id": "import",
+      "type": "security",
+      "label": "PlanImport",
+      "sublabel": "agregado (dominio)",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/PlanImport.php", "line": 135, "end_line": 153, "label": "selfWeekForConfirmation() · confirm()" }
+      ]
+    },
+    {
+      "id": "register",
+      "type": "backend",
+      "label": "Alta de un plan",
+      "sublabel": "RegisterNutritionPlan",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Application/RegisterNutritionPlan.php", "line": 90, "end_line": 106 },
+        { "path": "app-laravel/src/MealPlanning/Domain/NutritionPlan.php", "line": 108, "end_line": 121, "label": "NutritionPlan::create()" }
+      ]
+    },
+    {
+      "id": "plans",
+      "type": "database",
+      "label": "Planes",
+      "sublabel": "NutritionPlanRepository",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Domain/NutritionPlanRepository.php", "line": 55, "end_line": 55, "label": "save()" }
+      ]
+    }
+  ],
+  "segments": [
+    { "from": 140, "to": 720, "label": "1. Lista para confirmar y lunes → se crea el plan 99 y la importación queda confirmada" },
+    { "from": 755, "to": 1010, "label": "2. Sin semana 2 → InvalidPlanImport, ni se intenta crear el plan" },
+    { "from": 1045, "to": 1360, "label": "3. Empieza en martes → el alta lo rechaza; no se guarda nada" }
+  ],
+  "messages": [
+    { "id": "m1", "from": "caller", "to": "confirm", "y": 165, "label": "__invoke(id, lunes 02/11)", "variant": "emphasis" },
+    { "id": "m2", "from": "confirm", "to": "imports", "y": 215, "label": "find(id)", "variant": "default" },
+    { "id": "m3", "from": "imports", "to": "confirm", "y": 260, "label": "PlanImport (lista)", "variant": "return" },
+    { "id": "m4", "from": "confirm", "to": "import", "y": 310, "label": "selfWeekForConfirmation()", "variant": "default" },
+    { "id": "m5", "from": "import", "to": "confirm", "y": 355, "label": "ImportedSelfWeek", "variant": "return" },
+    { "id": "m6", "from": "confirm", "to": "register", "y": 410, "label": "RegisterNutritionPlanCommand", "variant": "emphasis", "note": "contenido copiado, sin traducir" },
+    { "id": "m7", "from": "register", "to": "plans", "y": 465, "label": "save(NutritionPlan)", "variant": "emphasis", "note": "todas las reglas del plan" },
+    { "id": "m8", "from": "register", "to": "confirm", "y": 515, "label": "NutritionPlanId", "variant": "return" },
+    { "id": "m9", "from": "confirm", "to": "import", "y": 565, "label": "confirm(planId)", "variant": "emphasis" },
+    { "id": "m10", "from": "confirm", "to": "imports", "y": 615, "label": "save(confirmada)", "variant": "emphasis", "note": "segundo guardado" },
+    { "id": "m11", "from": "confirm", "to": "caller", "y": 670, "label": "NutritionPlanId", "variant": "return" },
+    { "id": "m12", "from": "caller", "to": "confirm", "y": 780, "label": "__invoke(id, lunes 02/11)", "variant": "default" },
+    { "id": "m13", "from": "confirm", "to": "imports", "y": 830, "label": "find(id)", "variant": "default" },
+    { "id": "m14", "from": "confirm", "to": "import", "y": 885, "label": "selfWeekForConfirmation()", "variant": "default" },
+    { "id": "m15", "from": "import", "to": "caller", "y": 950, "label": "InvalidPlanImport: falta el Excel de la semana 2", "variant": "security" },
+    { "id": "m16", "from": "caller", "to": "confirm", "y": 1070, "label": "__invoke(id, martes 03/11)", "variant": "default" },
+    { "id": "m17", "from": "confirm", "to": "import", "y": 1125, "label": "selfWeekForConfirmation()", "variant": "default", "note": "tras find(id)" },
+    { "id": "m18", "from": "confirm", "to": "register", "y": 1180, "label": "RegisterNutritionPlanCommand", "variant": "default" },
+    { "id": "m19", "from": "register", "to": "caller", "y": 1250, "label": "InvalidNutritionPlan: empieza siempre en lunes", "variant": "security", "note": "antes de save()" }
+  ],
+  "activations": [
+    { "participant": "confirm", "from": 165, "to": 670, "type": "backend" },
+    { "participant": "register", "from": 410, "to": 515, "type": "backend" },
+    { "participant": "confirm", "from": 780, "to": 950, "type": "backend" },
+    { "participant": "confirm", "from": 1070, "to": 1250, "type": "backend" },
+    { "participant": "register", "from": 1180, "to": 1250, "type": "backend" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Mismo plan que el alta manual",
+      "items": [
+        "ConfirmPlanImport no construye el plan: compone el comando de POST /api/nutrition-plans y llama a RegisterNutritionPlan.",
+        "Un test compara el plan importado con el del alta manual con los mismos datos: son iguales."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Dos agregados, dos guardados",
+      "items": [
+        "Primero el plan (sin él no hay id que anotar) y después la importación, cada uno en su repositorio.",
+        "Si fallara el segundo, confirmar otra vez daría DuplicatedPlanNumber: nunca dos planes iguales (ADR 0025)."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Rechazos sin efectos",
+      "items": [
+        "Las reglas de la importación se comprueban antes de crear el plan.",
+        "Las reglas del plan, antes de guardarlo: ni plan ni importación confirmada."
+      ]
+    }
+  ]
+}

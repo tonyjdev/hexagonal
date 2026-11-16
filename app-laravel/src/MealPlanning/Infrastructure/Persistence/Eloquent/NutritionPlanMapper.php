@@ -22,7 +22,6 @@ use MealPlanning\Domain\PlanNumber;
 use MealPlanning\Domain\RecipeReference;
 use MealPlanning\Domain\Weekday;
 use MealPlanning\Domain\WeekSource;
-use UnexpectedValueException;
 
 /**
  * NutritionPlanMapper: traduce entre el agregado NutritionPlan y su fila de
@@ -63,6 +62,8 @@ use UnexpectedValueException;
  */
 final class NutritionPlanMapper
 {
+    use ReadsStoredJson;
+
     // --- Agregado → fila ------------------------------------------------------
 
     /**
@@ -303,116 +304,11 @@ final class NutritionPlanMapper
 
     // --- Lectura defensiva del JSON -------------------------------------------
     //
-    // CONCEPTO: narrowing de tipos (estrechar un mixed)
-    // json_decode devuelve `mixed`: PHPStan (y nosotros) no sabemos qué hay.
-    // Cada función comprueba el tipo en tiempo de ejecución y devuelve un
-    // tipo concreto, o lanza la excepción con la ruta del dato. A partir de
-    // ahí, el resto del código trabaja con tipos seguros.
+    // Las funciones list(), object(), string(), int(), enum()… vienen del
+    // trait ReadsStoredJson (compartido con PlanImportMapper desde HEXM-0032).
 
-    /**
-     * Una lista JSON ([...]): claves 0, 1, 2... sin huecos.
-     *
-     * @return list<mixed>
-     */
-    private static function list(mixed $value, string $path): array
+    private static function corruptionPrefix(): string
     {
-        if (! is_array($value) || ! array_is_list($value)) {
-            throw self::corrupted($path, 'una lista');
-        }
-
-        return $value;
-    }
-
-    /**
-     * Un objeto JSON ({...}), que PHP decodifica como array asociativo.
-     *
-     * @return array<string, mixed>
-     */
-    private static function object(mixed $value, string $path): array
-    {
-        if (! is_array($value) || ($value !== [] && array_is_list($value))) {
-            throw self::corrupted($path, 'un objeto');
-        }
-
-        $object = [];
-
-        foreach ($value as $key => $item) {
-            $object[(string) $key] = $item;
-        }
-
-        return $object;
-    }
-
-    /**
-     * @return list<string>
-     */
-    private static function strings(mixed $value, string $path): array
-    {
-        $strings = [];
-
-        foreach (self::list($value, $path) as $i => $item) {
-            $strings[] = self::string($item, "{$path}[{$i}]");
-        }
-
-        return $strings;
-    }
-
-    private static function string(mixed $value, string $path): string
-    {
-        if (! is_string($value)) {
-            throw self::corrupted($path, 'un texto');
-        }
-
-        return $value;
-    }
-
-    private static function nullableString(mixed $value, string $path): ?string
-    {
-        return $value === null ? null : self::string($value, $path);
-    }
-
-    private static function int(mixed $value, string $path): int
-    {
-        if (! is_int($value)) {
-            throw self::corrupted($path, 'un número entero');
-        }
-
-        return $value;
-    }
-
-    /**
-     * Un caso de un enum respaldado (backed enum), a partir de su valor.
-     *
-     * CONCEPTO: genéricos en PHPDoc (@template)
-     * PHP no tiene genéricos, pero PHPStan sí los entiende en los comentarios:
-     * con enum(MealType::class, ...), sabe que lo que vuelve es un MealType.
-     *
-     * @template T of \BackedEnum
-     *
-     * @param  class-string<T>  $enum
-     * @return T
-     */
-    private static function enum(string $enum, mixed $value, string $path): \BackedEnum
-    {
-        // tryFrom() devuelve null si el valor no es un caso del enum (from()
-        // lanzaría un ValueError sin decir qué dato era).
-        $case = is_int($value) || is_string($value) ? $enum::tryFrom($value) : null;
-
-        if ($case === null) {
-            throw self::corrupted($path, "un valor de {$enum}");
-        }
-
-        return $case;
-    }
-
-    /**
-     * No es un error del usuario ni una regla de negocio: son datos que
-     * nunca debieron llegar a la base de datos. Por eso no es una
-     * DomainException (que la API mostraría como 422), sino una excepción
-     * técnica.
-     */
-    private static function corrupted(string $path, string $expected): UnexpectedValueException
-    {
-        return new UnexpectedValueException("Plan guardado corrupto: «{$path}» debería ser {$expected}.");
+        return 'Plan guardado corrupto';
     }
 }
