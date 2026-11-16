@@ -3,7 +3,7 @@
 /*
 | Tests de los casos de uso de la importación de un plan (HEXM-0032):
 | StartPlanImport, ReplaceImportedNutritionistPlan, AttachSelfWeekToPlanImport
-| y ConfirmPlanImport.
+| y ConfirmPlanImport, y de su consulta, GetPlanImport (HEXM-0033).
 |
 | Sin Laravel, sin PostgreSQL y sin el servicio Python: el lector es el fake
 | InMemoryPlanReader, que devuelve las lecturas del contrato versionado (las
@@ -15,6 +15,7 @@
 
 use MealPlanning\Application\AttachSelfWeekToPlanImport;
 use MealPlanning\Application\ConfirmPlanImport;
+use MealPlanning\Application\GetPlanImport;
 use MealPlanning\Application\PlanDocument;
 use MealPlanning\Application\PlanImportNotFound;
 use MealPlanning\Application\PlanReader;
@@ -82,6 +83,11 @@ final class PlanImportScenario
     public function confirm(): ConfirmPlanImport
     {
         return new ConfirmPlanImport($this->imports, new RegisterNutritionPlan($this->plans, new InMemoryRecipeCatalog));
+    }
+
+    public function get(): GetPlanImport
+    {
+        return new GetPlanImport($this->imports);
     }
 
     /**
@@ -272,3 +278,42 @@ it('allows several pending imports at the same time', function () {
         ->and($scenario->import($first->value())->status())->toBe(PlanImportStatus::AwaitingSelfWeek)
         ->and($scenario->import($second->value())->status())->toBe(PlanImportStatus::AwaitingSelfWeek);
 });
+
+// --- Consultar (HEXM-0033) ------------------------------------------------------
+
+it('tells what an import is missing at each step', function () {
+    $scenario = PlanImportScenario::reading();
+    $id = ($scenario->start())(nutritionistDocument())->value();
+
+    // Recién empezada: falta la semana 2.
+    $awaiting = ($scenario->get())($id);
+    expect($awaiting->id)->toBe($id)
+        ->and($awaiting->number)->toBe(99)
+        ->and($awaiting->status)->toBe('awaiting_self_week')
+        ->and($awaiting->statusLabel)->toBe('pendiente de la semana 2')
+        ->and($awaiting->hasSelfWeek)->toBeFalse()
+        ->and($awaiting->planId)->toBeNull();
+
+    // Con la semana 2: solo falta confirmarla con la fecha de inicio.
+    ($scenario->attachSelfWeek())($id, selfWeekDocument());
+    $ready = ($scenario->get())($id);
+    expect($ready->status)->toBe('ready_to_confirm')
+        ->and($ready->statusLabel)->toBe('lista para confirmar')
+        ->and($ready->hasSelfWeek)->toBeTrue()
+        ->and($ready->planId)->toBeNull();
+
+    // Confirmada: ya no le falta nada y dice qué plan se creó.
+    $planId = ($scenario->confirm())($id, new DateTimeImmutable('2026-11-02'));
+    $confirmed = ($scenario->get())($id);
+    expect($confirmed->status)->toBe('confirmed')
+        ->and($confirmed->statusLabel)->toBe('confirmada')
+        ->and($confirmed->planId)->toBe($planId->value());
+});
+
+it('says when the queried import does not exist', function () {
+    (PlanImportScenario::reading()->get())(PlanImportId::generate()->value());
+})->throws(PlanImportNotFound::class, 'No existe ninguna importación de plan con el identificador');
+
+it('rejects a malformed id when querying an import', function () {
+    (PlanImportScenario::reading()->get())('no-es-un-uuid');
+})->throws(InvalidPlanImportId::class);

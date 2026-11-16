@@ -132,6 +132,8 @@ uv run poe contract  # regenera contracts/importer
 
 `tests/test_contract.py` falla si un modelo o un lector cambia y el contrato no se ha regenerado. Del lado de Laravel, `ImporterContractTest` valida los ejemplos contra los schemas y los pasa por el adaptador. Cambiar la forma de una respuesta es, por tanto: cambiar el modelo, regenerar el contrato, revisar su diff y adaptar Laravel si sus tests se ponen en rojo.
 
+Además del contrato, hay una **prueba de punta a punta** (HEXM-0033): Laravel importa un plan por su API (`/api/plan-imports`) con este servicio levantado y los Excel de `tests/fixtures/`. Con el servicio en marcha (`uv run poe serve`), desde `app-laravel`: `composer test:e2e`.
+
 ## Documentación de la API
 
 FastAPI genera la documentación de la API a partir del código: <http://127.0.0.1:8001/docs> (Swagger UI) y el contrato en <http://127.0.0.1:8001/openapi.json>.

@@ -1,0 +1,165 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "La prueba de punta a punta: ¿se ejecuta, se salta o falla?",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0033/prueba-de-punta-a-punta.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "0da9ec03c14620c8642237169d1facec92bb15b4"
+    },
+    "legend": {
+      "entries": {
+        "frontend": { "label": "Comando o resultado" },
+        "backend": { "label": "Comprobación del test" },
+        "external": { "label": "Servicio importer (Python)" },
+        "security": { "label": "Fallo" }
+      }
+    }
+  },
+  "lanes": [
+    { "id": "launch", "label": "Quién la lanza" },
+    { "id": "check", "label": "beforeEach del grupo e2e" },
+    { "id": "run", "label": "Con el servicio real" },
+    { "id": "failure", "label": "Pedida y sin servicio", "variant": "exception" }
+  ],
+  "mainPath": ["e2e", "health", "available", "run", "pass"],
+  "nodes": [
+    {
+      "id": "gate",
+      "lane": "launch",
+      "col": 0,
+      "yOffset": -36,
+      "type": "frontend",
+      "label": "composer ci:check",
+      "sublabel": "toda la suite (el gate)",
+      "sources": [
+        { "path": "app-laravel/composer.json", "line": 75, "end_line": 80 }
+      ]
+    },
+    {
+      "id": "e2e",
+      "lane": "launch",
+      "col": 0,
+      "yOffset": 36,
+      "type": "frontend",
+      "label": "composer test:e2e",
+      "sublabel": "--group=e2e",
+      "tag": "IMPORTER_E2E_REQUIRED=1",
+      "sources": [
+        { "path": "app-laravel/composer.json", "line": 61, "end_line": 65 }
+      ]
+    },
+    {
+      "id": "health",
+      "lane": "check",
+      "col": 1,
+      "type": "external",
+      "label": "GET /health",
+      "sublabel": "timeout de 1 s",
+      "sources": [
+        { "path": "app-laravel/tests/Feature/MealPlanning/Infrastructure/Http/PlanImportEndToEndTest.php", "line": 49, "end_line": 56 },
+        { "path": "services/importer/src/importer/api/health.py", "line": 49, "end_line": 52 }
+      ]
+    },
+    {
+      "id": "available",
+      "lane": "check",
+      "col": 2,
+      "type": "backend",
+      "label": "¿Responde?",
+      "sublabel": "2xx del servicio",
+      "sources": [
+        { "path": "app-laravel/tests/Feature/MealPlanning/Infrastructure/Http/PlanImportEndToEndTest.php", "line": 58, "end_line": 60 }
+      ]
+    },
+    {
+      "id": "required",
+      "lane": "check",
+      "col": 3,
+      "type": "backend",
+      "label": "¿Pedida expresamente?",
+      "sublabel": "IMPORTER_E2E_REQUIRED",
+      "sources": [
+        { "path": "app-laravel/tests/Feature/MealPlanning/Infrastructure/Http/PlanImportEndToEndTest.php", "line": 62, "end_line": 69 }
+      ]
+    },
+    {
+      "id": "skip",
+      "lane": "check",
+      "col": 4,
+      "type": "frontend",
+      "label": "Se salta",
+      "sublabel": "skipped · el gate sigue verde",
+      "sources": [
+        { "path": "app-laravel/tests/Feature/MealPlanning/Infrastructure/Http/PlanImportEndToEndTest.php", "line": 68, "end_line": 68 }
+      ]
+    },
+    {
+      "id": "fail",
+      "lane": "failure",
+      "col": 4,
+      "type": "security",
+      "label": "Falla",
+      "sublabel": "dice cómo levantar el servicio",
+      "sources": [
+        { "path": "app-laravel/tests/Feature/MealPlanning/Infrastructure/Http/PlanImportEndToEndTest.php", "line": 62, "end_line": 66 }
+      ]
+    },
+    {
+      "id": "run",
+      "lane": "run",
+      "col": 3,
+      "type": "backend",
+      "label": "Importación real",
+      "sublabel": "HttpPlanReader → FastAPI",
+      "sources": [
+        { "path": "app-laravel/tests/Feature/MealPlanning/Infrastructure/Http/PlanImportEndToEndTest.php", "line": 83, "end_line": 110 },
+        { "path": "app-laravel/tests/Feature/MealPlanning/Infrastructure/Http/PlanImportEndToEndTest.php", "line": 112, "end_line": 121, "label": "el Excel equivocado → 422" },
+        { "path": "app-laravel/src/MealPlanning/Infrastructure/MealPlanningServiceProvider.php", "line": 68, "end_line": 72, "label": "el adaptador real" }
+      ]
+    },
+    {
+      "id": "pass",
+      "lane": "run",
+      "col": 4,
+      "type": "frontend",
+      "label": "Pasa",
+      "sublabel": "plan 99 y el menú de las 2 semanas",
+      "sources": [
+        { "path": "app-laravel/tests/Feature/MealPlanning/Infrastructure/Http/PlanImportEndToEndTest.php", "line": 95, "end_line": 109 }
+      ]
+    }
+  ],
+  "edges": [
+    { "id": "from_gate", "from": "gate", "to": "health", "label": "suite", "variant": "default" },
+    { "id": "from_e2e", "from": "e2e", "to": "health", "label": "solo e2e", "variant": "emphasis" },
+    { "id": "ask", "from": "health", "to": "available", "label": "respuesta", "variant": "emphasis" },
+    { "id": "yes", "from": "available", "to": "run", "label": "sí", "variant": "emphasis" },
+    { "id": "green", "from": "run", "to": "pass", "label": "Excel ficticios", "variant": "emphasis" },
+    { "id": "no", "from": "available", "to": "required", "label": "no", "variant": "default" },
+    { "id": "not_required", "from": "required", "to": "skip", "label": "no", "variant": "default" },
+    { "id": "is_required", "from": "required", "to": "fail", "label": "sí", "variant": "security", "role": "error" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "La pirámide de tests (ADR 0026)",
+      "items": [
+        "La suite normal usa el fake InMemoryPlanReader: todos los casos, sin Python y en milisegundos.",
+        "La prueba de punta a punta es una: el camino feliz y el Excel equivocado, con el servicio de verdad."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Por qué saltar y no fallar en el gate",
+      "items": [
+        "El gate no debe depender de que haya un proceso Python levantado; si lo hay, la prueba se ejecuta también.",
+        "Quien pide test:e2e sí quiere probarla: un salto ahí sería un verde que no ha probado nada."
+      ]
+    }
+  ]
+}
