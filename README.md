@@ -26,6 +26,7 @@ Proyecto de aprendizaje de **arquitectura hexagonal** con PHP/Laravel, **Python/
 |---|---|---|
 | PHP (con `pdo_pgsql`) | 8.5 | `php -v` y `php -m \| grep pdo_pgsql` |
 | Composer | 2.x | `composer --version` |
+| uv (servicios Python, desde el nivel 7) | 0.12 | `uv --version` |
 | PostgreSQL | 18 | `psql --version` |
 | pgvector para tu PostgreSQL | 0.8 | Ubuntu: `apt install postgresql-18-pgvector` |
 
@@ -55,10 +56,13 @@ composer ci:check
 php artisan serve                  # http://localhost:8000
 ```
 
+Los servicios Python tienen su propio README con la puesta en marcha y su gate: [`services/importer`](services/importer/README.md) (`uv sync` y `uv run poe serve`, en `http://127.0.0.1:8001`).
+
 Para empezar con la base de desarrollo vacía: `php artisan migrate:fresh`. Para borrarla del todo, `sudo -u postgres dropdb hexagonal` y vuelve al paso 1.
 
 ### Versiones elegidas
 
 - **Laravel 13**: la última versión estable cuando empezó el proyecto, y la misma que usan los demás proyectos del autor.
 - **Pest 5, Larastan 3 (PHPStan al nivel `max`) y Pint** como gate de calidad (`composer ci:check`).
+- **Python 3.14 con uv, FastAPI, ruff, mypy estricto y pytest** en los servicios Python ([ADR 0021](docs/adr/0021-servicio-importer-herramientas-y-estructura.md)); su gate es `uv run poe check`.
 - **PostgreSQL 18 con pgvector**, el nativo de la máquina: pgvector hará falta en el bloque C (embeddings), y tenerlo instalado desde ya evita sorpresas cuando llegue.

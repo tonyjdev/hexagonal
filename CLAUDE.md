@@ -43,7 +43,7 @@ BRANCH_DEVELOP: develop
 BRANCH_STAGING: (pendiente: se creará con el primer despliegue)
 BRANCH_MAIN: main
 BRANCH_FEATURE_PREFIX: feat/
-CHECK_CMD: cd app-laravel && composer ci:check
+CHECK_CMD: (cd app-laravel && composer ci:check) && (cd services/importer && uv run poe check)
 ARCHIFY_CLI: /home/tonyjdev/.agents/skills/archify/bin/archify.mjs
 DIAGRAMS_DIR: docs/diagramas
 ```

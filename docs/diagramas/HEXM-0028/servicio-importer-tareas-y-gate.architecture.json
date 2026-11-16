@@ -1,0 +1,283 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "El servicio importer: sus tareas, su gate y sus piezas",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0028/servicio-importer-tareas-y-gate.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "69dfbfa727fb5ddb2ced55a16333b584c1c3937e"
+    },
+    "legend": {
+      "entries": {
+        "external": {
+          "label": "Configuración del proyecto"
+        },
+        "cloud": {
+          "label": "Tarea (composer / poe)"
+        },
+        "security": {
+          "label": "Herramienta del gate"
+        },
+        "frontend": {
+          "label": "Tests"
+        },
+        "backend": {
+          "label": "Código del servicio"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "laravel_gate",
+      "type": "cloud",
+      "label": "composer ci:check",
+      "sublabel": "Pint · PHPStan · Pest",
+      "pos": [40, 40],
+      "size": [200, 72],
+      "sources": [
+        {
+          "path": "app-laravel/composer.json",
+          "line": 69,
+          "end_line": 74
+        }
+      ]
+    },
+    {
+      "id": "check_cmd",
+      "type": "external",
+      "label": "CHECK_CMD",
+      "sublabel": "CLAUDE.md · los dos gates",
+      "pos": [40, 200],
+      "size": [200, 72],
+      "sources": [
+        {
+          "path": "CLAUDE.md",
+          "line": 46,
+          "end_line": 46
+        }
+      ]
+    },
+    {
+      "id": "poe_check",
+      "type": "cloud",
+      "label": "uv run poe check",
+      "sublabel": "sequence en orden",
+      "pos": [440, 200],
+      "size": [200, 72],
+      "sources": [
+        {
+          "path": "services/importer/pyproject.toml",
+          "line": 69,
+          "end_line": 80
+        }
+      ]
+    },
+    {
+      "id": "ruff",
+      "type": "security",
+      "label": "ruff",
+      "sublabel": "formato + lint (como Pint)",
+      "pos": [840, 40],
+      "size": [200, 72],
+      "sources": [
+        {
+          "path": "services/importer/pyproject.toml",
+          "line": 93,
+          "end_line": 101
+        }
+      ]
+    },
+    {
+      "id": "mypy",
+      "type": "security",
+      "label": "mypy strict",
+      "sublabel": "como PHPStan max",
+      "pos": [840, 200],
+      "size": [200, 72],
+      "sources": [
+        {
+          "path": "services/importer/pyproject.toml",
+          "line": 108,
+          "end_line": 117
+        }
+      ]
+    },
+    {
+      "id": "pytest",
+      "type": "security",
+      "label": "pytest",
+      "sublabel": "como Pest",
+      "pos": [840, 360],
+      "size": [200, 72],
+      "sources": [
+        {
+          "path": "services/importer/pyproject.toml",
+          "line": 122,
+          "end_line": 125
+        }
+      ]
+    },
+    {
+      "id": "tests",
+      "type": "frontend",
+      "label": "test_health.py",
+      "sublabel": "/health y /openapi.json",
+      "pos": [840, 520],
+      "size": [200, 72],
+      "sources": [
+        {
+          "path": "services/importer/tests/test_health.py",
+          "line": 20,
+          "end_line": 40
+        }
+      ]
+    },
+    {
+      "id": "serve",
+      "type": "cloud",
+      "label": "uv run poe serve",
+      "sublabel": "uvicorn · 127.0.0.1:8001",
+      "pos": [40, 520],
+      "size": [200, 72],
+      "sources": [
+        {
+          "path": "services/importer/pyproject.toml",
+          "line": 85,
+          "end_line": 88
+        }
+      ]
+    },
+    {
+      "id": "app",
+      "type": "backend",
+      "label": "main.py",
+      "sublabel": "create_app() · app",
+      "pos": [440, 520],
+      "size": [200, 72],
+      "sources": [
+        {
+          "path": "services/importer/src/importer/main.py",
+          "line": 20,
+          "end_line": 39
+        }
+      ]
+    },
+    {
+      "id": "health",
+      "type": "backend",
+      "label": "api/health.py",
+      "sublabel": "GET /health · HealthResponse",
+      "pos": [440, 680],
+      "size": [200, 72],
+      "sources": [
+        {
+          "path": "services/importer/src/importer/api/health.py",
+          "line": 18,
+          "end_line": 18,
+          "label": "router"
+        },
+        {
+          "path": "services/importer/src/importer/api/health.py",
+          "line": 21,
+          "end_line": 52,
+          "label": "modelo y ruta"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Gate del servicio",
+      "wraps": ["ruff", "mypy", "pytest"]
+    },
+    {
+      "kind": "region",
+      "label": "src/importer (paquete)",
+      "wraps": ["app", "health"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "first",
+      "from": "check_cmd",
+      "to": "laravel_gate",
+      "label": "1º Laravel"
+    },
+    {
+      "id": "second",
+      "from": "check_cmd",
+      "to": "poe_check",
+      "label": "2º uv run poe check",
+      "variant": "emphasis"
+    },
+    {
+      "id": "fmt",
+      "from": "poe_check",
+      "to": "ruff",
+      "label": "1-2 formato y lint",
+      "variant": "emphasis"
+    },
+    {
+      "id": "types",
+      "from": "poe_check",
+      "to": "mypy",
+      "label": "3 tipos",
+      "variant": "emphasis"
+    },
+    {
+      "id": "run_tests",
+      "from": "poe_check",
+      "to": "pytest",
+      "label": "4 tests",
+      "variant": "emphasis"
+    },
+    {
+      "id": "collect",
+      "from": "pytest",
+      "to": "tests",
+      "label": "ejecuta"
+    },
+    {
+      "id": "factory",
+      "from": "tests",
+      "to": "app",
+      "label": "TestClient(create_app())"
+    },
+    {
+      "id": "boot",
+      "from": "serve",
+      "to": "app",
+      "label": "uvicorn importer.main:app"
+    },
+    {
+      "id": "routes",
+      "from": "app",
+      "to": "health",
+      "label": "include_router"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Composer, en Python",
+      "items": [
+        "pyproject.toml ↔ composer.json, uv.lock ↔ composer.lock y .venv/ ↔ vendor/; uv sync es composer install.",
+        "Las tareas de poe se llaman como los scripts de composer.json: poe check es composer ci:check y poe serve es php artisan serve."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Sin hexagonal completa por dentro",
+      "items": [
+        "El servicio entero ya es un adaptador del núcleo de Laravel y solo traduce Excel a JSON (ADR 0021).",
+        "La regla que sí se mantiene: la lectura de los Excel (HEXM-0029) no importará nada de FastAPI; api/ solo traduce HTTP."
+      ]
+    }
+  ]
+}

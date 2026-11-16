@@ -1,0 +1,14 @@
+# Entorno virtual (como vendor/ en PHP): se recrea con `uv sync` a partir de
+# pyproject.toml y uv.lock, que sí se versionan. uv ya mete un .gitignore
+# dentro de .venv/, pero se deja explícito.
+.venv/
+
+# Bytecode que Python compila al importar los módulos (como la caché de
+# OPcache, pero en disco). Se regenera solo.
+__pycache__/
+*.py[cod]
+
+# Cachés de las herramientas del gate.
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
