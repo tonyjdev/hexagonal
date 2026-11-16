@@ -58,3 +58,4 @@ Los diagramas Archify de cada tarea están en [`../diagramas/`](../diagramas/REA
 ### Transversal
 
 - [HEXM-0008: Diagramas Archify en las tareas](HEXM-0008-diagramas-archify-en-las-tareas.md): por qué los diagramas se generan desde una fuente versionada, respaldados por el código en un commit fijo, y por qué el cierre de una tarea tiene dos commits.
+- [HEXM-0034: PostgreSQL nativo en local y retirada de Docker Compose](HEXM-0034-postgresql-nativo-local-retirada-docker-compose.md): por qué Docker no era necesario en desarrollo, qué hacía la imagen por nosotros y cómo lo hace ahora un script idempotente (roles, dueños, extensiones, `peer` frente a contraseña), y por qué mover la base de datos no toca el núcleo. Sin diagramas.

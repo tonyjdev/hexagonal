@@ -9,9 +9,6 @@ datos-personales/
 .idea/
 .vscode/
 
-# Variables locales de docker compose (si se crean)
-/.env
-
 # Diagramas Archify (docs/diagramas): solo se versiona la fuente (*.<tipo>.json)
 # y el README. El HTML (~850 KB, lleva el visor dentro) y los recibos de
 # validación se regeneran con scripts/diagramas.sh (o composer docs:diagrams).

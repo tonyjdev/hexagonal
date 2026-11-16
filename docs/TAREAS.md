@@ -88,8 +88,7 @@ feat/hexm-NNNN-slug ──PR──► develop ──PR──► staging ──PR
 Antes de cerrar una tarea tiene que pasar el gate (`CHECK_CMD` en `CLAUDE.md`):
 
 ```bash
-docker compose up -d                  # los tests usan PostgreSQL (ADR 0002)
-cd app-laravel && composer ci:check
+cd app-laravel && composer ci:check   # los tests usan el PostgreSQL local (ADR 0002 y 0020)
 ```
 
 `ci:check` ejecuta, por orden y parando en el primer fallo (de lo más rápido a lo más lento):
