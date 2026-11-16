@@ -109,6 +109,13 @@ Son dos gates, uno por aplicación, y los dos tienen que pasar.
 
 **Servicio `importer`** (`uv run poe check`, desde HEXM-0028, ADR 0021): ruff format, ruff check, mypy estricto y pytest, con el mismo orden y la misma regla. El detalle, en [`services/importer/README.md`](../services/importer/README.md).
 
+**Prueba de punta a punta** (HEXM-0033, [ADR 0026](adr/0026-api-de-la-importacion-y-prueba-de-punta-a-punta.md)): la importación de un plan por la API de Laravel con el servicio `importer` real y sus Excel ficticios. Dentro de `composer test` se **salta** si el servicio no responde en `/health`, así que el gate no depende de él. Antes de cerrar una tarea que toque la importación, el puerto `PlanReader` o el servicio, lánzala expresamente; así **falla** si el servicio no está levantado:
+
+```bash
+(cd services/importer && uv run poe serve)   # en otra terminal
+(cd app-laravel && composer test:e2e)
+```
+
 La salida exacta del gate se copia siempre en el documento de resultado de la tarea.
 
 ## 6. Configuración y herramientas

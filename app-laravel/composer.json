@@ -58,6 +58,11 @@
             "@php artisan config:clear --ansi @no_additional_args",
             "@php artisan test"
         ],
+        "test:e2e": [
+            "@php artisan config:clear --ansi",
+            "@putenv IMPORTER_E2E_REQUIRED=1",
+            "@php artisan test --group=e2e"
+        ],
         "lint": [
             "pint --parallel"
         ],
@@ -111,6 +116,7 @@
     "prefer-stable": true,
     "scripts-descriptions": {
         "test": "Ejecuta los tests (Pest) contra la base de datos hexagonal_test.",
+        "test:e2e": "Prueba de punta a punta de la importación con el servicio importer real (levántalo antes con `uv run poe serve`); falla si no responde.",
         "lint": "Corrige el formato del código con Pint (escribe en los ficheros).",
         "format:check": "Comprueba el formato con Pint sin modificar nada.",
         "types:check": "Análisis estático con PHPStan + Larastan al nivel máximo.",
