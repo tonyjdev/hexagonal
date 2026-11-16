@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "diagram_type": "class",
+  "meta": {
+    "title": "Dos formatos, un servicio: cada Excel con su lector y su modelo, y lo común en WorkbookReading",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0030/dos-formatos-un-servicio.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "24af6673b41223782159d2d3c9e7b7776a1c1a52"
+    },
+    "legend": {
+      "entries": {
+        "inheritance": { "label": "Hereda (dataclass)" },
+        "composition": { "label": "Contiene (parte del contrato o del estado)" },
+        "dependency": { "label": "Produce (devuelve el modelo)" }
+      }
+    }
+  },
+  "layout": {
+    "mode": "grid"
+  },
+  "types": [
+    {
+      "id": "workbook_reading",
+      "label": "WorkbookReading",
+      "kind": "class",
+      "sublabel": "Lo común: libro, problemas y cabeceras",
+      "row": 0,
+      "col": 1,
+      "attributes": [
+        { "name": "workbook", "type": "Workbook", "visibility": "public" },
+        { "name": "problems", "type": "list[Problem]", "visibility": "public" }
+      ],
+      "methods": [
+        { "name": "problem", "parameters": "sheet, cell, message", "returns": "None", "visibility": "public" },
+        { "name": "raise_if_any", "returns": "None", "visibility": "public" },
+        { "name": "sheet", "parameters": "name, headers", "returns": "Worksheet | None", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "services/importer/src/importer/reading/workbook.py", "line": 56, "end_line": 112 }
+      ]
+    },
+    {
+      "id": "problem",
+      "label": "Problem",
+      "kind": "record",
+      "sublabel": "Qué está mal y en qué hoja y celda",
+      "row": 0,
+      "col": 2,
+      "attributes": [
+        { "name": "sheet", "type": "str | None", "visibility": "public" },
+        { "name": "cell", "type": "str | None", "visibility": "public" },
+        { "name": "message", "type": "str", "visibility": "public" }
+      ],
+      "methods": [
+        { "name": "located_message", "returns": "str", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "services/importer/src/importer/reading/problems.py", "line": 16, "end_line": 42 }
+      ]
+    },
+    {
+      "id": "nutritionist_reading",
+      "label": "_Reading (nutritionist)",
+      "kind": "class",
+      "sublabel": "Excel de la nutricionista (HEXM-0029)",
+      "row": 1,
+      "col": 0,
+      "methods": [
+        { "name": "plan_number", "returns": "int | None", "visibility": "public" },
+        { "name": "nutritionist_week", "returns": "list[NutritionistMenu]", "visibility": "public" },
+        { "name": "fixed_meals", "returns": "list[FixedMeal]", "visibility": "public" },
+        { "name": "exchanges", "returns": "tuple[...]", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "services/importer/src/importer/reading/nutritionist.py", "line": 99, "end_line": 127 }
+      ]
+    },
+    {
+      "id": "self_week_reading",
+      "label": "_Reading (self_week)",
+      "kind": "class",
+      "sublabel": "Excel de la semana 2 (HEXM-0030)",
+      "row": 1,
+      "col": 2,
+      "methods": [
+        { "name": "detail", "returns": "dict[_Key, _Detail]", "visibility": "public" },
+        { "name": "compare_summary", "parameters": "dishes", "returns": "None", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "services/importer/src/importer/reading/self_week.py", "line": 113, "end_line": 129 },
+        { "path": "services/importer/src/importer/reading/self_week.py", "line": 193, "end_line": 203 }
+      ]
+    },
+    {
+      "id": "nutritionist_plan",
+      "label": "NutritionistPlan",
+      "kind": "record",
+      "sublabel": "Semana 1 del contrato del alta",
+      "row": 2,
+      "col": 0,
+      "attributes": [
+        { "name": "number", "type": "int", "visibility": "public" },
+        { "name": "fixed_meals", "type": "list[FixedMeal]", "visibility": "public" },
+        { "name": "exchanges", "type": "list[Exchange]", "visibility": "public" },
+        { "name": "exchange_rules", "type": "list[str]", "visibility": "public" },
+        { "name": "nutritionist_week", "type": "list[NutritionistMenu]", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "services/importer/src/importer/reading/models.py", "line": 127, "end_line": 139 }
+      ]
+    },
+    {
+      "id": "self_week",
+      "label": "SelfWeek",
+      "kind": "record",
+      "sublabel": "self_week del contrato del alta",
+      "row": 2,
+      "col": 2,
+      "attributes": [
+        { "name": "self_week", "type": "list[SelfDay]", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "services/importer/src/importer/reading/models.py", "line": 181, "end_line": 187 }
+      ]
+    },
+    {
+      "id": "ingredient",
+      "label": "Ingredient",
+      "kind": "record",
+      "sublabel": "Texto entero; la cantidad, en el nivel 9",
+      "row": 3,
+      "col": 0,
+      "attributes": [
+        { "name": "name", "type": "str", "visibility": "public" },
+        { "name": "quantity", "type": "str | None = None", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "services/importer/src/importer/reading/models.py", "line": 145, "end_line": 157 }
+      ]
+    },
+    {
+      "id": "self_dish",
+      "label": "SelfDish",
+      "kind": "record",
+      "sublabel": "Nombre corto e ingredientes",
+      "row": 3,
+      "col": 1,
+      "attributes": [
+        { "name": "name", "type": "str", "visibility": "public" },
+        { "name": "ingredients", "type": "list[Ingredient]", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "services/importer/src/importer/reading/models.py", "line": 160, "end_line": 164 }
+      ]
+    },
+    {
+      "id": "self_day",
+      "label": "SelfDay",
+      "kind": "record",
+      "sublabel": "Días 8-14; el 13, sin comida ni cena",
+      "row": 3,
+      "col": 2,
+      "attributes": [
+        { "name": "day", "type": "int (8-14)", "visibility": "public" },
+        { "name": "lunch", "type": "SelfDish | None", "visibility": "public" },
+        { "name": "dinner", "type": "SelfDish | None", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "services/importer/src/importer/reading/models.py", "line": 167, "end_line": 178 }
+      ]
+    }
+  ],
+  "relationships": [
+    { "id": "nutritionist_extends", "from": "nutritionist_reading", "to": "workbook_reading", "kind": "inheritance" },
+    { "id": "self_week_extends", "from": "self_week_reading", "to": "workbook_reading", "kind": "inheritance" },
+    { "id": "collects_problems", "from": "workbook_reading", "to": "problem", "kind": "composition", "label": "problems" },
+    { "id": "returns_plan", "from": "nutritionist_reading", "to": "nutritionist_plan", "kind": "dependency", "label": "produce" },
+    { "id": "returns_week", "from": "self_week_reading", "to": "self_week", "kind": "dependency", "label": "produce" },
+    { "id": "has_days", "from": "self_week", "to": "self_day", "kind": "composition", "label": "7 días" },
+    { "id": "has_dishes", "from": "self_day", "to": "self_dish", "kind": "composition", "label": "comida y cena" },
+    { "id": "has_ingredients", "from": "self_dish", "to": "ingredient", "kind": "composition", "label": "ingredients" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Qué se comparte y qué no",
+      "items": [
+        "Cada lector sabe de su documento y devuelve su modelo; no se conocen entre sí",
+        "WorkbookReading solo aporta la fontanería: reunir problemas y comprobar cabeceras",
+        "Las funciones puras de texto (self_meal, ingredients) viven en text.py"
+      ]
+    }
+  ]
+}
