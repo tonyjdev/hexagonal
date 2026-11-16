@@ -115,7 +115,8 @@ Más adelante pueden aparecer otros (por ejemplo, `Shopping` para la lista de la
 | Vista del día | `ScheduledDayView`, `DishView`, `DishIngredientView` | DTO de lectura | El día listo para mostrar, con primitivos: fecha ISO, número de plan, semana (1 o 2), día de la semana (número ISO y nombre en español), si es día libre, y la comida y la cena (nombre corto o descripción, e ingredientes con su cantidad en texto). Como `RecipeView` ([ADR 0008](adr/0008-consultas-dto-de-lectura-y-no-encontrado.md)). |
 | Sin plan vigente | `NoPlanInForce` | Excepción (`MealPlanning\Application`) | No hay ningún plan vigente en esa fecha (antes del primer plan, o sin planes). Hereda de `NotFound` (HTTP 404), no de `DomainException`. |
 | Importación de plan | `PlanImport` | Caso de uso | Leer un plan desde un fichero externo. |
-| Lector de planes | `PlanReader` | Puerto | Implementado por adaptadores (Excel vía FastAPI, PDF…). |
+| Lector de planes | `PlanReader` | Puerto | Implementado por adaptadores (Excel vía FastAPI, PDF…). El servicio `importer` ya lee el Excel de la nutricionista (`POST /nutritionist-plans/read`, HEXM-0029) y devuelve la parte de la semana 1 del contrato del alta ([ADR 0022](adr/0022-lectura-del-excel-de-la-nutricionista.md)); el puerto en Laravel llega en HEXM-0031. |
+| Momento (de un intercambio) | — | Concepto (no modelado) | Columna «Momento» de la hoja de intercambios del Excel (Comida, Cena, Comida o cena). El dominio no la modela: los intercambios son comunes al plan (regla 4). Al importar se descarta, y su única información propia, la regla de la grasa, viaja como regla en texto (HEXM-0029, [ADR 0022](adr/0022-lectura-del-excel-de-la-nutricionista.md)). |
 
 ### Futuros (se definirán al llegar al nivel correspondiente)
 

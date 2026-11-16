@@ -1,0 +1,339 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Del Excel al contrato: cómo se lee el plan de la nutricionista",
+    "subtitle": "Cada hoja se lee por separado, el texto de las celdas se traduce con funciones puras y el resultado es la parte de la semana 1 del alta de un plan, o un 422 con todos los problemas.",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0029/del-excel-al-contrato.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "02e0366220bdbd3fd8fcf51ad01d95de7d521090"
+    },
+    "legend": {
+      "entries": {
+        "default": {
+          "label": "Datos que pasan a la pieza siguiente"
+        },
+        "emphasis": {
+          "label": "Camino de un Excel válido"
+        },
+        "security": {
+          "label": "Problema de forma: 422"
+        }
+      }
+    }
+  },
+  "stages": [
+    {
+      "label": "El documento"
+    },
+    {
+      "label": "Frontera HTTP"
+    },
+    {
+      "label": "Lector, por hoja"
+    },
+    {
+      "label": "Texto de las celdas"
+    },
+    {
+      "label": "Resultado"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "xlsx",
+      "type": "external",
+      "label": "Excel .xlsx",
+      "sublabel": "4 hojas",
+      "stage": 0,
+      "row": 1,
+      "tag": "paso manual del PDF",
+      "sources": [
+        {
+          "path": "services/importer/tests/workbooks.py",
+          "line": 60,
+          "end_line": 119,
+          "label": "Excel ficticio con la estructura real"
+        }
+      ]
+    },
+    {
+      "id": "route",
+      "type": "backend",
+      "label": "POST /read",
+      "sublabel": "UploadFile",
+      "stage": 1,
+      "row": 1,
+      "tag": "FastAPI",
+      "sources": [
+        {
+          "path": "services/importer/src/importer/api/nutritionist_plans.py",
+          "line": 22,
+          "end_line": 45,
+          "label": "ruta"
+        },
+        {
+          "path": "services/importer/src/importer/reading/nutritionist.py",
+          "line": 68,
+          "end_line": 101,
+          "label": "read_nutritionist_plan()"
+        }
+      ]
+    },
+    {
+      "id": "week",
+      "type": "backend",
+      "label": "«Semana 1»",
+      "sublabel": "título y menús 1-6",
+      "stage": 2,
+      "row": 0,
+      "sources": [
+        {
+          "path": "services/importer/src/importer/reading/nutritionist.py",
+          "line": 165,
+          "end_line": 210,
+          "label": "plan_number() y nutritionist_week()"
+        }
+      ]
+    },
+    {
+      "id": "fixed",
+      "type": "backend",
+      "label": "«Desayunos y snacks»",
+      "sublabel": "pautas fijas",
+      "stage": 2,
+      "row": 1,
+      "width": 150,
+      "sources": [
+        {
+          "path": "services/importer/src/importer/reading/nutritionist.py",
+          "line": 212,
+          "end_line": 252,
+          "label": "fixed_meals()"
+        }
+      ]
+    },
+    {
+      "id": "exchanges",
+      "type": "backend",
+      "label": "«Intercambios»",
+      "sublabel": "sin «Momento»",
+      "stage": 2,
+      "row": 2,
+      "sources": [
+        {
+          "path": "services/importer/src/importer/reading/nutritionist.py",
+          "line": 254,
+          "end_line": 305,
+          "label": "exchanges()"
+        }
+      ]
+    },
+    {
+      "id": "text",
+      "type": "security",
+      "label": "text.py",
+      "sublabel": "funciones puras",
+      "stage": 3,
+      "row": 1,
+      "tag": "ADR 0022",
+      "sources": [
+        {
+          "path": "services/importer/src/importer/reading/text.py",
+          "line": 58,
+          "end_line": 66,
+          "label": "plan_number()"
+        },
+        {
+          "path": "services/importer/src/importer/reading/text.py",
+          "line": 92,
+          "end_line": 139,
+          "label": "options() y choose_count()"
+        },
+        {
+          "path": "services/importer/src/importer/reading/text.py",
+          "line": 158,
+          "end_line": 249,
+          "label": "categoría, celda e intercambio"
+        }
+      ]
+    },
+    {
+      "id": "problems",
+      "type": "security",
+      "label": "Problem[]",
+      "sublabel": "hoja y celda",
+      "stage": 3,
+      "row": 3,
+      "sources": [
+        {
+          "path": "services/importer/src/importer/reading/problems.py",
+          "line": 16,
+          "end_line": 71
+        }
+      ]
+    },
+    {
+      "id": "plan",
+      "type": "messagebus",
+      "label": "NutritionistPlan",
+      "sublabel": "modelo Pydantic",
+      "stage": 4,
+      "row": 1,
+      "tag": "contrato ADR 0014",
+      "width": 140,
+      "sources": [
+        {
+          "path": "services/importer/src/importer/reading/models.py",
+          "line": 122,
+          "end_line": 134
+        }
+      ]
+    },
+    {
+      "id": "unprocessable",
+      "type": "security",
+      "label": "422",
+      "sublabel": "todos los problemas",
+      "stage": 4,
+      "row": 3,
+      "sources": [
+        {
+          "path": "services/importer/src/importer/api/errors.py",
+          "line": 46,
+          "end_line": 68,
+          "label": "invalid_workbook_handler()"
+        }
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "id": "upload",
+      "from": "xlsx",
+      "to": "route",
+      "label": "multipart: file",
+      "classification": "BinaryIO",
+      "variant": "emphasis"
+    },
+    {
+      "id": "to_week",
+      "from": "route",
+      "to": "week",
+      "label": "hoja 1",
+      "variant": "emphasis",
+      "labelAt": [
+        448,
+        148
+      ]
+    },
+    {
+      "id": "to_fixed",
+      "from": "route",
+      "to": "fixed",
+      "label": "hoja 2",
+      "variant": "emphasis",
+      "labelAt": [
+        448,
+        233
+      ]
+    },
+    {
+      "id": "to_exchanges",
+      "from": "route",
+      "to": "exchanges",
+      "label": "hoja 3",
+      "variant": "emphasis",
+      "labelAt": [
+        448,
+        376
+      ]
+    },
+    {
+      "id": "title",
+      "from": "week",
+      "to": "plan",
+      "label": "menús 1-6 y número",
+      "classification": "→ nutritionist_week"
+    },
+    {
+      "id": "bullets",
+      "from": "fixed",
+      "to": "text",
+      "label": "• y «elegir N»",
+      "classification": "→ OptionGroup",
+      "route": "straight",
+      "labelAt": [
+        650,
+        226
+      ]
+    },
+    {
+      "id": "dashes",
+      "from": "exchanges",
+      "to": "text",
+      "label": "alimento (ración) – …",
+      "classification": "→ Exchange y reglas"
+    },
+    {
+      "id": "contract",
+      "from": "text",
+      "to": "plan",
+      "label": "sin problemas",
+      "classification": "JSON 200",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "id": "unreadable",
+      "from": "text",
+      "to": "problems",
+      "label": "no encaja",
+      "variant": "security",
+      "labelAt": [
+        745,
+        385
+      ]
+    },
+    {
+      "id": "bad_sheet",
+      "from": "exchanges",
+      "to": "problems",
+      "label": "cabecera o menú",
+      "variant": "security"
+    },
+    {
+      "id": "rejected",
+      "from": "problems",
+      "to": "unprocessable",
+      "label": "InvalidWorkbookError",
+      "variant": "security",
+      "labelAt": [
+        853,
+        461
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "El lector se adapta al documento",
+      "items": [
+        "Opciones con •, «elegir 2» dentro del texto, intercambios separados por rayas en dos formas («arroz (1/3 vaso)» y «1 puñado de frutos secos»).",
+        "«> 1/2 plato» toma la categoría como alimento; «Momento» no se modela y los repetidos se quedan una vez."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Todos los errores a la vez",
+      "items": [
+        "Cada hoja anota sus problemas con su celda y sigue; al final, una única excepción con todos (como la Form Request).",
+        "Las reglas del plan (6 días, elige N ≤ opciones) siguen siendo del dominio de Laravel."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,290 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "POST /nutritionist-plans/read de punta a punta: 200 con el contrato o 422 con los problemas",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0029/leer-el-excel-de-punta-a-punta.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "02e0366220bdbd3fd8fcf51ad01d95de7d521090"
+    },
+    "legend": {
+      "entries": {
+        "emphasis": {
+          "label": "Excel válido"
+        },
+        "security": {
+          "label": "Excel mal formado"
+        },
+        "default": {
+          "label": "Llamada interna"
+        },
+        "return": {
+          "label": "Respuesta"
+        }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Cliente",
+      "sublabel": "curl · TestClient",
+      "sources": [
+        {
+          "path": "services/importer/tests/test_nutritionist_plans_api.py",
+          "line": 30,
+          "end_line": 35,
+          "label": "upload()"
+        }
+      ]
+    },
+    {
+      "id": "route",
+      "type": "backend",
+      "label": "ruta read",
+      "sublabel": "UploadFile",
+      "sources": [
+        {
+          "path": "services/importer/src/importer/api/nutritionist_plans.py",
+          "line": 22,
+          "end_line": 45
+        }
+      ]
+    },
+    {
+      "id": "reader",
+      "type": "backend",
+      "label": "lector",
+      "sublabel": "_Reading · openpyxl",
+      "sources": [
+        {
+          "path": "services/importer/src/importer/reading/nutritionist.py",
+          "line": 68,
+          "end_line": 101,
+          "label": "read_nutritionist_plan()"
+        },
+        {
+          "path": "services/importer/src/importer/reading/nutritionist.py",
+          "line": 120,
+          "end_line": 305,
+          "label": "_Reading"
+        }
+      ]
+    },
+    {
+      "id": "text",
+      "type": "security",
+      "label": "text.py",
+      "sublabel": "funciones puras",
+      "sources": [
+        {
+          "path": "services/importer/src/importer/reading/text.py",
+          "line": 32,
+          "end_line": 249
+        }
+      ]
+    },
+    {
+      "id": "handler",
+      "type": "messagebus",
+      "label": "manejador 422",
+      "sublabel": "errors.py",
+      "sources": [
+        {
+          "path": "services/importer/src/importer/api/errors.py",
+          "line": 46,
+          "end_line": 68
+        },
+        {
+          "path": "services/importer/src/importer/main.py",
+          "line": 37,
+          "end_line": 39,
+          "label": "add_exception_handler()"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 140,
+      "to": 520,
+      "label": "1. Excel válido"
+    },
+    {
+      "from": 550,
+      "to": 960,
+      "label": "2. Excel mal formado"
+    }
+  ],
+  "messages": [
+    {
+      "id": "post",
+      "from": "client",
+      "to": "route",
+      "y": 165,
+      "label": "POST multipart file=plan.xlsx",
+      "variant": "emphasis"
+    },
+    {
+      "id": "read",
+      "from": "route",
+      "to": "reader",
+      "y": 225,
+      "label": "read_nutritionist_plan(file.file)",
+      "variant": "emphasis",
+      "note": "def, no async: openpyxl bloquea y FastAPI la ejecuta en un hilo"
+    },
+    {
+      "id": "cells",
+      "from": "reader",
+      "to": "text",
+      "y": 295,
+      "label": "texto de cada celda",
+      "variant": "default",
+      "note": "título, •, «elegir N»…"
+    },
+    {
+      "id": "parsed",
+      "from": "text",
+      "to": "reader",
+      "y": 340,
+      "label": "number, OptionGroup, Exchange, reglas",
+      "variant": "return"
+    },
+    {
+      "id": "model",
+      "from": "reader",
+      "to": "route",
+      "y": 410,
+      "label": "NutritionistPlan (Pydantic)",
+      "variant": "return",
+      "note": "sin problemas: modelo validado e inmutable"
+    },
+    {
+      "id": "ok",
+      "from": "route",
+      "to": "client",
+      "y": 480,
+      "label": "200 JSON del contrato (ADR 0014)",
+      "variant": "return"
+    },
+    {
+      "id": "post_bad",
+      "from": "client",
+      "to": "route",
+      "y": 575,
+      "label": "POST multipart file=plan.xlsx",
+      "variant": "security"
+    },
+    {
+      "id": "read_bad",
+      "from": "route",
+      "to": "reader",
+      "y": 625,
+      "label": "read_nutritionist_plan(file.file)",
+      "variant": "security"
+    },
+    {
+      "id": "cells_bad",
+      "from": "reader",
+      "to": "text",
+      "y": 695,
+      "label": "texto de cada celda",
+      "variant": "default",
+      "note": "si la hoja es fiable"
+    },
+    {
+      "id": "unreadable",
+      "from": "text",
+      "to": "reader",
+      "y": 740,
+      "label": "UnreadableTextError",
+      "variant": "return",
+      "note": "se anota como Problem(hoja, celda) y se sigue"
+    },
+    {
+      "id": "raise",
+      "from": "reader",
+      "to": "handler",
+      "y": 820,
+      "label": "raise InvalidWorkbookError(problems)",
+      "variant": "security",
+      "note": "la ruta no tiene try: FastAPI busca el manejador"
+    },
+    {
+      "id": "unprocessable",
+      "from": "handler",
+      "to": "client",
+      "y": 900,
+      "label": "422 {message, errors: [hoja, celda, mensaje]}",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "route",
+      "from": 165,
+      "to": 480,
+      "type": "backend"
+    },
+    {
+      "participant": "reader",
+      "from": 225,
+      "to": 410,
+      "type": "backend"
+    },
+    {
+      "participant": "text",
+      "from": 295,
+      "to": 340,
+      "type": "security"
+    },
+    {
+      "participant": "route",
+      "from": 575,
+      "to": 625,
+      "type": "backend"
+    },
+    {
+      "participant": "reader",
+      "from": 625,
+      "to": 820,
+      "type": "backend"
+    },
+    {
+      "participant": "text",
+      "from": 695,
+      "to": 740,
+      "type": "security"
+    },
+    {
+      "participant": "handler",
+      "from": 820,
+      "to": 900,
+      "type": "messagebus"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Leer primero, publicar después",
+      "items": [
+        "El lector no importa nada de FastAPI: recibe un fichero binario y devuelve un modelo o lanza InvalidWorkbookError (ADR 0021).",
+        "Se prueba con pytest sin HTTP; la ruta solo traduce la subida y la respuesta."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Un único sitio para el 422",
+      "items": [
+        "Como el manejador de DomainException en bootstrap/app.php: la excepción sube sin try y se traduce una vez.",
+        "Cada error dice su hoja y su celda; una petición sin fichero recibe el 422 estándar de FastAPI."
+      ]
+    }
+  ]
+}
