@@ -9,8 +9,9 @@ Tienen la misma forma que el contrato de ``POST /api/nutrition-plans``
   ``self_week``.
 
 Falta ``starts_on``: la fecha de inicio no está en ningún Excel, la dará el
-usuario al confirmar la importación. Laravel juntará las piezas (HEXM-0031 y
-siguientes).
+usuario al confirmar la importación. Laravel las lee con el puerto
+``PlanReader`` (HEXM-0031) y las juntará en una importación pendiente
+(HEXM-0032).
 
 CONCEPTO: modelos de Pydantic como contrato
 En PHP este papel lo reparten dos piezas: un DTO (la forma de los datos, con
@@ -18,8 +19,9 @@ sus tipos) y una *Form Request* (las reglas de validación). En Pydantic son la
 misma clase: los *type hints* dan la forma y ``Field(...)`` añade las reglas
 (mínimos, longitudes). Al construir un modelo, Pydantic valida; si algo no
 cuadra, lanza ``ValidationError``. Y FastAPI lo usa para serializar la
-respuesta y describirla en el contrato OpenAPI (``/openapi.json``), que será
-la base de los tests de contrato con Laravel (HEXM-0031).
+respuesta y describirla en el contrato OpenAPI (``/openapi.json``). De estos
+modelos sale también el JSON Schema del contrato con Laravel, versionado en
+``contracts/importer`` (``tests/contract.py``, HEXM-0031, ADR 0024).
 
 Qué se valida aquí y qué no: la FORMA del contrato (tipos, que un número sea
 positivo, que una lista no esté vacía cuando no puede estarlo). Las reglas del
@@ -42,12 +44,20 @@ class ContractModel(BaseModel):
       se ignora en silencio. Con un contrato entre dos servicios, una errata
       (``fixed_meal`` en vez de ``fixed_meals``) debe fallar enseguida.
 
+    - ``json_schema_serialization_defaults_required=True``: en el JSON Schema
+      de la RESPUESTA (el contrato con Laravel, HEXM-0031), un campo con valor
+      por defecto también es obligatorio, porque al serializar sale siempre
+      (``quantity`` va en cada ingrediente, aunque sea ``null``). Sin esto, el
+      schema diría que Laravel puede no recibirlo, y no es verdad.
+
     CONCEPTO: herencia de configuración
     Los modelos que heredan de este reciben su ``model_config``: se escribe
     una vez y vale para todos, como una clase base abstracta en PHP.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(
+        frozen=True, extra="forbid", json_schema_serialization_defaults_required=True
+    )
 
 
 class MealType(StrEnum):

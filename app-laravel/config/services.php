@@ -28,6 +28,22 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    /*
+    | Servicio importer (services/importer): lee los Excel de un plan
+    | nutricional y los devuelve como JSON (HEXM-0031, ADR 0024).
+    |
+    | CONCEPTO: la dirección de un adaptador es configuración
+    | Ni el puerto PlanReader ni el adaptador HttpPlanReader saben dónde está
+    | el servicio: se lo da MealPlanningServiceProvider leyendo esta clave.
+    | En local es el `uv run poe serve` (puerto 8001); en producción, lo que
+    | diga IMPORTER_URL. El timeout se convierte a float aquí porque env()
+    | siempre devuelve texto.
+    */
+    'importer' => [
+        'url' => env('IMPORTER_URL', 'http://127.0.0.1:8001'),
+        'timeout' => (float) env('IMPORTER_TIMEOUT', 10),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

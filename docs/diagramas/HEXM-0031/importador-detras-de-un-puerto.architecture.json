@@ -1,0 +1,395 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "El importador detrás de un puerto: PlanReader y su contrato",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0031/importador-detras-de-un-puerto.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "d77176dae126fac765a5def17a4e2f2ae9e23f8b"
+    },
+    "legend": {
+      "entries": {
+        "messagebus": {
+          "label": "Puerto (interfaz)"
+        },
+        "security": {
+          "label": "Error del puerto"
+        },
+        "database": {
+          "label": "Adaptador de salida"
+        },
+        "backend": {
+          "label": "Mapper del JSON (estricto)"
+        },
+        "cloud": {
+          "label": "Raíz de composición y configuración"
+        },
+        "external": {
+          "label": "Servicio externo (Python + FastAPI)"
+        },
+        "frontend": {
+          "label": "Contrato versionado (JSON Schema + ejemplos)"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "fake",
+      "type": "database",
+      "label": "InMemoryPlanReader",
+      "sublabel": "returning · rejecting · unavailable",
+      "tag": "tests",
+      "pos": [40, 40],
+      "size": [300, 72],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/InMemoryPlanReader.php",
+          "line": 37,
+          "end_line": 98
+        }
+      ]
+    },
+    {
+      "id": "port",
+      "type": "messagebus",
+      "label": "PlanReader",
+      "sublabel": "PlanDocument → lecturas de primitivos",
+      "tag": "una lectura por Excel",
+      "pos": [40, 200],
+      "size": [300, 72],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/PlanReader.php",
+          "line": 46,
+          "end_line": 63
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Application/PlanDocument.php",
+          "line": 27,
+          "end_line": 33,
+          "label": "PlanDocument: nombre + contenido"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Application/NutritionistPlanReading.php",
+          "line": 31,
+          "end_line": 46,
+          "label": "lectura con la forma del alta"
+        }
+      ]
+    },
+    {
+      "id": "unreadable",
+      "type": "security",
+      "label": "UnreadableDocument",
+      "sublabel": "DomainException → 422 · todos los problemas",
+      "pos": [40, 360],
+      "size": [300, 72],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/UnreadableDocument.php",
+          "line": 35,
+          "end_line": 63
+        }
+      ]
+    },
+    {
+      "id": "unavailable",
+      "type": "security",
+      "label": "PlanReaderUnavailable",
+      "sublabel": "error técnico como previous",
+      "pos": [40, 520],
+      "size": [300, 72],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Application/PlanReaderUnavailable.php",
+          "line": 37,
+          "end_line": 57
+        }
+      ]
+    },
+    {
+      "id": "provider",
+      "type": "cloud",
+      "label": "MealPlanningServiceProvider",
+      "sublabel": "IMPORTER_URL · IMPORTER_TIMEOUT",
+      "pos": [520, 40],
+      "size": [280, 72],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/MealPlanningServiceProvider.php",
+          "line": 65,
+          "end_line": 69
+        },
+        {
+          "path": "app-laravel/config/services.php",
+          "line": 42,
+          "end_line": 45,
+          "label": "services.importer"
+        }
+      ]
+    },
+    {
+      "id": "http",
+      "type": "database",
+      "label": "HttpPlanReader",
+      "sublabel": "cliente HTTP de Laravel · multipart",
+      "pos": [520, 200],
+      "size": [280, 72],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Importer/HttpPlanReader.php",
+          "line": 85,
+          "end_line": 122,
+          "label": "upload(): traducción de errores"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Importer/HttpPlanReader.php",
+          "line": 67,
+          "end_line": 79,
+          "label": "una ruta por Excel"
+        }
+      ]
+    },
+    {
+      "id": "mapper",
+      "type": "backend",
+      "label": "ImporterResponse",
+      "sublabel": "falta, sobra o cambia un campo → error",
+      "pos": [520, 360],
+      "size": [280, 72],
+      "sources": [
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Importer/ImporterResponse.php",
+          "line": 49,
+          "end_line": 92,
+          "label": "nutritionistPlan()"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Importer/ImporterResponse.php",
+          "line": 173,
+          "end_line": 193,
+          "label": "object(): claves exactas"
+        },
+        {
+          "path": "app-laravel/src/MealPlanning/Infrastructure/Importer/ImporterResponse.php",
+          "line": 119,
+          "end_line": 133,
+          "label": "problems() del 422"
+        }
+      ]
+    },
+    {
+      "id": "shared",
+      "type": "security",
+      "label": "ServiceUnavailable",
+      "sublabel": "→ 503 en bootstrap/app.php · al log",
+      "pos": [520, 520],
+      "size": [280, 72],
+      "sources": [
+        {
+          "path": "app-laravel/src/Shared/Application/ServiceUnavailable.php",
+          "line": 40,
+          "end_line": 40
+        },
+        {
+          "path": "app-laravel/bootstrap/app.php",
+          "line": 131,
+          "end_line": 137,
+          "label": "render() → 503"
+        }
+      ]
+    },
+    {
+      "id": "importer",
+      "type": "external",
+      "label": "services/importer",
+      "sublabel": "/nutritionist-plans/read · /self-weeks/read",
+      "pos": [1000, 200],
+      "size": [300, 72],
+      "sources": [
+        {
+          "path": "services/importer/src/importer/api/nutritionist_plans.py",
+          "line": 28,
+          "end_line": 45
+        },
+        {
+          "path": "services/importer/src/importer/api/self_weeks.py",
+          "line": 32,
+          "end_line": 38
+        },
+        {
+          "path": "services/importer/src/importer/api/errors.py",
+          "line": 46,
+          "end_line": 68,
+          "label": "422 con los problemas"
+        }
+      ]
+    },
+    {
+      "id": "contract",
+      "type": "frontend",
+      "label": "contracts/importer",
+      "sublabel": "*.schema.json + examples/*.json",
+      "pos": [1000, 360],
+      "size": [300, 72],
+      "sources": [
+        {
+          "path": "services/importer/tests/contract.py",
+          "line": 67,
+          "end_line": 125,
+          "label": "lo genera: uv run poe contract"
+        },
+        {
+          "path": "services/importer/tests/test_contract.py",
+          "line": 27,
+          "end_line": 37,
+          "label": "Python: ¿está al día?"
+        },
+        {
+          "path": "app-laravel/tests/Feature/MealPlanning/Infrastructure/Importer/ImporterContractTest.php",
+          "line": 34,
+          "end_line": 70,
+          "label": "Laravel: ¿lo entiendo?"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "MealPlanning\\Infrastructure (fake)",
+      "wraps": ["fake"]
+    },
+    {
+      "kind": "region",
+      "label": "MealPlanning\\Application",
+      "wraps": ["port", "unreadable", "unavailable"]
+    },
+    {
+      "kind": "region",
+      "label": "MealPlanning\\Infrastructure",
+      "wraps": ["provider", "http", "mapper"]
+    },
+    {
+      "kind": "region",
+      "label": "Shared\\Application",
+      "wraps": ["shared"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Python (otro proceso)",
+      "wraps": ["importer"]
+    },
+    {
+      "kind": "region",
+      "label": "Raíz del repositorio",
+      "wraps": ["contract"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "fake_implements",
+      "from": "fake",
+      "to": "port",
+      "label": "implementa",
+      "variant": "dashed"
+    },
+    {
+      "id": "http_implements",
+      "from": "http",
+      "to": "port",
+      "label": "implementa",
+      "variant": "dashed"
+    },
+    {
+      "id": "wires",
+      "from": "provider",
+      "to": "http",
+      "label": "enchufa (URL, timeout)",
+      "variant": "dashed"
+    },
+    {
+      "id": "post",
+      "from": "http",
+      "to": "importer",
+      "label": "POST multipart (file)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "maps",
+      "from": "http",
+      "to": "mapper",
+      "label": "JSON → lecturas"
+    },
+    {
+      "id": "doc_error",
+      "from": "port",
+      "to": "unreadable",
+      "label": "422 del servicio",
+      "variant": "dashed"
+    },
+    {
+      "id": "down_error",
+      "from": "port",
+      "to": "unavailable",
+      "label": "caído · timeout · 5xx · contrato roto",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "left"
+    },
+    {
+      "id": "inherits",
+      "from": "unavailable",
+      "to": "shared",
+      "label": "hereda",
+      "variant": "dashed"
+    },
+    {
+      "id": "generates",
+      "from": "importer",
+      "to": "contract",
+      "label": "genera (Pydantic)"
+    },
+    {
+      "id": "checks",
+      "from": "contract",
+      "to": "mapper",
+      "label": "ejemplos en Http::fake()",
+      "variant": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "El valor de la hexagonal",
+      "items": [
+        "El núcleo solo ve PlanReader: ni HTTP, ni JSON, ni Python.",
+        "Leer el PDF con un LLM (nivel 15) será otro adaptador del mismo puerto.",
+        "Los casos de uso de la importación se probarán con InMemoryPlanReader."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Errores traducidos (ADR 0024)",
+      "items": [
+        "Excel mal formado (422 del servicio) → UnreadableDocument → 422.",
+        "Conexión rechazada, timeout, 5xx o JSON fuera de contrato → PlanReaderUnavailable → 503.",
+        "El usuario lee un mensaje en español; el detalle técnico va al log."
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Contract testing entre dos lenguajes",
+      "items": [
+        "Python falla si el contrato versionado no es lo que generan sus modelos.",
+        "Laravel valida los ejemplos contra el schema y los pasa por el mapper estricto.",
+        "Un cambio del JSON no llega a producción sin un test en rojo."
+      ]
+    }
+  ]
+}

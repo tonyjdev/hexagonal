@@ -1,0 +1,62 @@
+{
+  "$defs": {
+    "ProblemResponse": {
+      "description": "Un problema de forma: dónde está (hoja y celda, si se sabe) y qué pasa.",
+      "properties": {
+        "sheet": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Sheet"
+        },
+        "cell": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Cell"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sheet",
+        "cell",
+        "message"
+      ],
+      "title": "ProblemResponse",
+      "type": "object"
+    }
+  },
+  "description": "Cuerpo de un 422 por un Excel mal formado.\n\n``message`` resume y ``errors`` lleva un problema por elemento, con un\ntexto en español que ya incluye su ubicación («Hoja «Semana 1», celda A1:\n…»), para que quien lo muestre no tenga que montarlo. Es el mismo reparto\nque el ``{\"message\", \"errors\"}`` de una *Form Request* de Laravel.",
+  "properties": {
+    "message": {
+      "title": "Message",
+      "type": "string"
+    },
+    "errors": {
+      "items": {
+        "$ref": "#/$defs/ProblemResponse"
+      },
+      "title": "Errors",
+      "type": "array"
+    }
+  },
+  "required": [
+    "message",
+    "errors"
+  ],
+  "title": "InvalidWorkbookResponse",
+  "type": "object"
+}

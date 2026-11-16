@@ -1,0 +1,170 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Leer un Excel por el puerto: de la respuesta del importador a una lectura o a un error propio",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0031/traducir-la-respuesta-del-importador.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "d77176dae126fac765a5def17a4e2f2ae9e23f8b"
+    },
+    "legend": {
+      "entries": {
+        "external": { "label": "Servicio importer (Python)" },
+        "frontend": { "label": "Entrada y salida del puerto" },
+        "backend": { "label": "Adaptador HttpPlanReader y su mapper" },
+        "security": { "label": "Errores del puerto (422 o 503)" }
+      }
+    }
+  },
+  "lanes": [
+    { "id": "laravel", "label": "HttpPlanReader" },
+    { "id": "python", "label": "services/importer" },
+    { "id": "mapper", "label": "ImporterResponse" },
+    { "id": "errors", "label": "Errores del puerto", "variant": "exception" }
+  ],
+  "mainPath": ["document", "upload", "service", "status", "mapper", "reading"],
+  "nodes": [
+    {
+      "id": "document",
+      "lane": "laravel",
+      "col": 0,
+      "type": "frontend",
+      "label": "PlanDocument",
+      "sublabel": "nombre + contenido",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Application/PlanDocument.php", "line": 27, "end_line": 33 },
+        { "path": "app-laravel/src/MealPlanning/Application/PlanReader.php", "line": 46, "end_line": 63 }
+      ]
+    },
+    {
+      "id": "upload",
+      "lane": "laravel",
+      "col": 1,
+      "type": "backend",
+      "label": "upload()",
+      "sublabel": "attach('file') · timeout",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Infrastructure/Importer/HttpPlanReader.php", "line": 85, "end_line": 103 }
+      ]
+    },
+    {
+      "id": "service",
+      "lane": "python",
+      "col": 2,
+      "type": "external",
+      "label": "POST …/read",
+      "sublabel": "lee el Excel con openpyxl",
+      "sources": [
+        { "path": "services/importer/src/importer/api/nutritionist_plans.py", "line": 28, "end_line": 45 },
+        { "path": "services/importer/src/importer/api/self_weeks.py", "line": 32, "end_line": 38 },
+        { "path": "services/importer/src/importer/api/errors.py", "line": 46, "end_line": 68 }
+      ]
+    },
+    {
+      "id": "status",
+      "lane": "laravel",
+      "col": 3,
+      "type": "backend",
+      "label": "¿Qué código?",
+      "sublabel": "2xx, 422 u otro",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Infrastructure/Importer/HttpPlanReader.php", "line": 105, "end_line": 121 }
+      ]
+    },
+    {
+      "id": "problems",
+      "lane": "mapper",
+      "col": 3,
+      "type": "backend",
+      "label": "problems()",
+      "sublabel": "{message, errors[]}",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Infrastructure/Importer/ImporterResponse.php", "line": 119, "end_line": 133 }
+      ]
+    },
+    {
+      "id": "mapper",
+      "lane": "mapper",
+      "col": 4,
+      "type": "backend",
+      "label": "Leer el JSON",
+      "sublabel": "nutritionistPlan() · selfWeek()",
+      "tag": "claves y tipos exactos",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Infrastructure/Importer/ImporterResponse.php", "line": 49, "end_line": 111 },
+        { "path": "app-laravel/src/MealPlanning/Infrastructure/Importer/ImporterResponse.php", "line": 173, "end_line": 193 },
+        { "path": "app-laravel/src/MealPlanning/Infrastructure/Importer/HttpPlanReader.php", "line": 133, "end_line": 140 }
+      ]
+    },
+    {
+      "id": "reading",
+      "lane": "laravel",
+      "col": 5,
+      "type": "frontend",
+      "label": "Lectura del puerto",
+      "sublabel": "NutritionistPlanReading o SelfWeekReading",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Application/NutritionistPlanReading.php", "line": 31, "end_line": 46 },
+        { "path": "app-laravel/src/MealPlanning/Application/SelfWeekReading.php", "line": 22, "end_line": 30 }
+      ]
+    },
+    {
+      "id": "unreadable",
+      "lane": "errors",
+      "col": 3,
+      "type": "security",
+      "label": "UnreadableDocument",
+      "sublabel": "422 · el usuario corrige el Excel",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Application/UnreadableDocument.php", "line": 35, "end_line": 63 }
+      ]
+    },
+    {
+      "id": "unavailable",
+      "lane": "errors",
+      "col": 5,
+      "type": "security",
+      "label": "PlanReaderUnavailable",
+      "sublabel": "503 · detalle en el log",
+      "sources": [
+        { "path": "app-laravel/src/MealPlanning/Application/PlanReaderUnavailable.php", "line": 37, "end_line": 57 },
+        { "path": "app-laravel/bootstrap/app.php", "line": 131, "end_line": 137 }
+      ]
+    }
+  ],
+  "edges": [
+    { "id": "read", "from": "document", "to": "upload", "label": "read…()", "variant": "emphasis" },
+    { "id": "post", "from": "upload", "to": "service", "label": "multipart", "variant": "emphasis" },
+    { "id": "answer", "from": "service", "to": "status", "label": "respuesta", "variant": "emphasis" },
+    { "id": "ok", "from": "status", "to": "mapper", "label": "2xx", "variant": "emphasis" },
+    { "id": "mapped", "from": "mapper", "to": "reading", "label": "cumple el contrato", "variant": "emphasis" },
+    { "id": "malformed", "from": "status", "to": "problems", "label": "422", "variant": "security", "role": "error" },
+    { "id": "excel_wrong", "from": "problems", "to": "unreadable", "label": "problemas en español", "variant": "security", "role": "error" },
+    { "id": "no_connection", "from": "upload", "to": "unavailable", "label": "ConnectionException", "variant": "security", "role": "error" },
+    { "id": "server_error", "from": "status", "to": "unavailable", "label": "5xx u otro", "variant": "security", "role": "error" },
+    { "id": "broken", "from": "mapper", "to": "unavailable", "label": "contrato roto", "variant": "security", "role": "error" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Quién arregla cada error (ADR 0024)",
+      "items": [
+        "UnreadableDocument: el Excel está mal; el usuario lo corrige y lo vuelve a subir (422).",
+        "PlanReaderUnavailable: caído, timeout, 5xx o contrato roto; nada que el usuario pueda hacer (503).",
+        "El 422 genérico de FastAPI ({\"detail\"}) es un fallo de Laravel al pedir, no del Excel."
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Lo que no se pierde",
+      "items": [
+        "El error técnico va como previous: ConnectionException, código y cuerpo, o la ruta del campo.",
+        "ServiceUnavailable se registra en el log; los 422 y 404 no."
+      ]
+    }
+  ]
+}

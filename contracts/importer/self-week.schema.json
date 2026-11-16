@@ -1,0 +1,114 @@
+{
+  "$defs": {
+    "Ingredient": {
+      "additionalProperties": false,
+      "description": "Un ingrediente de un plato de la semana 2, con su texto entero.\n\n``name`` lleva el trozo tal como está en el Excel, con la cantidad dentro\n(«⅓ vaso de arroz en crudo»), y ``quantity`` va siempre a ``None``: separar\nla cantidad del ingrediente con fiabilidad no es trabajo de un lector\ndeterminista, sino de un LLM (nivel 9, ``IngredientExtractor``). El campo\nse envía igualmente porque es parte del contrato (ADR 0014) y así, cuando\nllegue el nivel 9, solo cambia su valor, no la forma (ADR 0023).",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "quantity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Quantity"
+        }
+      },
+      "required": [
+        "name",
+        "quantity"
+      ],
+      "title": "Ingredient",
+      "type": "object"
+    },
+    "SelfDay": {
+      "additionalProperties": false,
+      "description": "Un día de la semana 2 (8-14) con su comida y su cena.\n\nEl 13 es el sábado libre y va con las dos a ``None``; el resto, con las\ndos. Que el sábado no tenga menú es una regla del dominio (``MenuDay``),\npero el lector ya la comprueba para poder decir en qué celda está el\nproblema.",
+      "properties": {
+        "day": {
+          "maximum": 14,
+          "minimum": 8,
+          "title": "Day",
+          "type": "integer"
+        },
+        "lunch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SelfDish"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dinner": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SelfDish"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "day",
+        "lunch",
+        "dinner"
+      ],
+      "title": "SelfDay",
+      "type": "object"
+    },
+    "SelfDish": {
+      "additionalProperties": false,
+      "description": "Un plato de la semana 2: nombre corto e ingredientes (puede no tener ninguno).",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "ingredients": {
+          "items": {
+            "$ref": "#/$defs/Ingredient"
+          },
+          "title": "Ingredients",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "ingredients"
+      ],
+      "title": "SelfDish",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "El Excel de la semana 2 leído: la parte ``self_week`` del contrato del alta.\n\nSiempre lleva los 7 días, del 8 al 14 y en orden, con el 13 vacío.",
+  "properties": {
+    "self_week": {
+      "items": {
+        "$ref": "#/$defs/SelfDay"
+      },
+      "maxItems": 7,
+      "minItems": 7,
+      "title": "Self Week",
+      "type": "array"
+    }
+  },
+  "required": [
+    "self_week"
+  ],
+  "title": "SelfWeek",
+  "type": "object"
+}
