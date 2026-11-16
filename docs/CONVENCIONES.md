@@ -81,10 +81,10 @@ Además de los comentarios, el asistente:
 - **Por niveles**: seguimos [`ROADMAP.md`](ROADMAP.md). Cada nivel es pequeño, termina con tests en verde y deja la aplicación funcionando.
 - **Dominio primero, framework después**: en cada contexto se empieza por el dominio puro y sus tests, y luego se añaden los adaptadores.
 - **Tests**: Pest en PHP (incluidos *tests de arquitectura* que comprueban que el dominio no depende de Laravel) y pytest en Python.
-- **Un commit por paso lógico**, con mensaje en español que explique el porqué.
+- **Un commit por paso lógico**, con formato *conventional commits* y la descripción en español que explique el porqué.
 - **Una etiqueta git por nivel terminado** (`nivel-01`, `nivel-02`…), para poder volver atrás y ver la evolución.
-- **Tareas**: el trabajo se organiza en tareas `HEXM` gestionadas en Workspace; cada una se cierra con los documentos Resultado, Pruebas y Explicación. Ver [`TAREAS.md`](TAREAS.md).
-- **Diagramas**: cada tarea se acompaña, siempre que tenga algo que dibujar, de diagramas Archify (flujo, lógica de negocio, arquitectura) respaldados por el código. Se versiona su JSON y el HTML se regenera con `composer docs:diagrams`. Ver [`diagramas/README.md`](diagramas/README.md).
+- **Tareas**: el trabajo se organiza en tareas `HEXM` gestionadas en Workspace con el sistema de tareas compartido (cada tarea en su worktree); cada una se cierra con los documentos Resultado, Pruebas y Explicación (y Diagramas, si los hay). Ver [`TAREAS.md`](TAREAS.md).
+- **Diagramas**: cada tarea se acompaña, siempre que tenga algo que dibujar, de diagramas Archify (flujo, lógica de negocio, arquitectura) respaldados por el código. Se versiona su JSON y el HTML se regenera, fuera del proyecto, con `composer docs:diagrams`. Ver [`diagramas/README.md`](diagramas/README.md).
 - **Diario del proyecto**: al terminar cada nivel se escribe `docs/diario/NN-titulo.md` con lo hecho, los conceptos aprendidos, las decisiones tomadas y las dudas pendientes.
 - **Decisiones de arquitectura importantes** se registran como ADR en `docs/adr/NNNN-titulo.md` (contexto → decisión → consecuencias).
 
@@ -94,7 +94,10 @@ Además de los comentarios, el asistente:
 
 ```
 hexagonal/
-├── CLAUDE.md                 # instrucciones para el asistente
+├── AGENTS.md                 # instrucciones para los asistentes (lo propio del proyecto)
+├── CLAUDE.md                 # solo importa AGENTS.md
+├── .claude/task-system.conf  # configuración del sistema de tareas compartido
+├── .worktrees/               # un worktree por tarea (ignorado por git)
 ├── docs/
 │   ├── CONVENCIONES.md       # este documento
 │   ├── ROADMAP.md            # niveles y estado
@@ -117,7 +120,8 @@ hexagonal/
 │       └── Shared/           #   piezas comunes mínimas
 ├── services/                 # servicios Python / FastAPI (a partir del nivel 7)
 └── scripts/                  # utilidades del repo (db-setup.sh prepara PostgreSQL;
-                              #   diagramas.sh regenera los diagramas)
+                              #   diagramas.sh regenera los diagramas;
+                              #   worktree-setup.sh prepara el worktree de una tarea)
 ```
 
 **Por qué `src/` y no `app/`**: `app/` es la carpeta del framework. Poner el dominio fuera deja claro, físicamente, que no pertenece a Laravel. Laravel queda como un adaptador más (controladores, Eloquent, service providers).

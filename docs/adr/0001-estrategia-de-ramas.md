@@ -1,6 +1,6 @@
 # 0001. Estrategia de ramas: develop, staging y main
 
-**Fecha:** 2026-10-31 · **Estado:** aceptada (staging y main como entornos: pendiente hasta que exista un despliegue)
+**Fecha:** 2026-10-31 · **Estado:** aceptada; actualizada en HEXM-0035 (las tres ramas existen desde 2026-11-16; staging y main como entornos: pendiente hasta que exista un despliegue)
 
 ## Contexto
 
@@ -25,3 +25,14 @@ Se adopta la estrategia **1, por coherencia con los demás proyectos del usuario
   - *Deriva entre ramas*: un *hotfix* aplicado directamente en `main` debe volver a `develop`. Regla: los arreglos siempre entran por `develop`, salvo una urgencia en producción, que se fusiona de vuelta enseguida.
   - *Se reconstruye en cada rama*: lo que se prueba en staging no es exactamente el binario de producción. Mitigación para cuando haya despliegue: construir **una imagen Docker por commit** y promocionar esa imagen (la etiqueta de la imagen viaja de entorno en entorno), aunque las ramas sigan marcando el entorno.
 - **Cuándo revisarla:** si el proyecto se queda con una sola persona y despliegues sencillos, el modelo trunk-based (estrategia 2) es más ligero y sería razonable migrar a él. Se registraría en un ADR nuevo.
+
+## Actualización (2026-11-16, HEXM-0035): las tres ramas desde ya, y una tarea por worktree
+
+El repositorio pasa al **sistema de tareas compartido** de los proyectos del usuario (`~/.agents/workspace-kit`). Su primer estándar fija las tres ramas `develop`, `staging` y `main` en todos los proyectos, sin excepciones, así que **`staging` se crea ahora** (desde `main`), en lugar de esperar al primer despliegue. Cambia el *cuándo*, no la decisión: la estrategia 1 sigue vigente.
+
+- **`staging` existe pero todavía no despliega en ningún entorno**, igual que `main`. Las promociones ya siguen el camino definitivo, con sus skills: `/deploy-staging` (`develop` → `staging`, con el gate completo y una etiqueta de versión) y `/deploy-production` (`staging` → `main`). El CI/CD por entorno llegará con el primer despliegue.
+- **Las ramas de tarea cambian de nombre y de sitio.** El prefijo depende del tipo de la tarea (`feat/`, `fix/`, `chore/`, `research/`, `docs/`) y cada tarea se trabaja en su propio *worktree* (`.worktrees/hexm-nnnn`), creado por `/init-task` desde `origin/develop`. El checkout principal se queda siempre en `develop`.
+- **Se abandona «sin worktrees»** (la decisión anterior de `docs/TAREAS.md`, pensada para un solo agente): el coste es mínimo (un `composer install` y un `uv sync` por tarea, que hace `scripts/worktree-setup.sh`) y a cambio se puede revisar o preparar otra tarea sin tocar la que está a medias, con el mismo flujo que el resto de proyectos.
+- **Alternativa descartada**: documentar una excepción y seguir con dos ramas. El kit no la admite, y mantener un flujo distinto en un solo proyecto es justo lo que el sistema compartido quiere evitar.
+
+Detalle del flujo en [`docs/TAREAS.md`](../TAREAS.md).

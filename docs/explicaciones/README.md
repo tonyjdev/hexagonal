@@ -6,6 +6,8 @@ Fichero: `HEXM-NNNN-slug.md`. Secciones: Explicación · Lógica de negocio · D
 
 Los diagramas Archify de cada tarea están en [`../diagramas/`](../diagramas/README.md). Las explicaciones anteriores a su integración (HEXM-0005 a 0007) no tienen la sección "Diagramas", porque Workspace y el repositorio deben coincidir; sus diagramas se enlazan aquí, en el índice.
 
+> **Dónde se ven los diagramas** (desde HEXM-0035): `cd app-laravel && composer docs:diagrams` genera los HTML en `~/.cache/workspace-kit/diagramas/hexagonal/HEXM-NNNN/<slug>.html`, fuera del proyecto. Las explicaciones anteriores dicen que se abran en `docs/diagramas/HEXM-NNNN/<slug>.html`: se dejan tal cual porque son la copia de su documento de Workspace, pero el HTML ya está en la caché.
+
 ## Índice
 
 ### Nivel 0: Esqueleto
@@ -63,3 +65,4 @@ Los diagramas Archify de cada tarea están en [`../diagramas/`](../diagramas/REA
 
 - [HEXM-0008: Diagramas Archify en las tareas](HEXM-0008-diagramas-archify-en-las-tareas.md): por qué los diagramas se generan desde una fuente versionada, respaldados por el código en un commit fijo, y por qué el cierre de una tarea tiene dos commits.
 - [HEXM-0034: PostgreSQL nativo en local y retirada de Docker Compose](HEXM-0034-postgresql-nativo-local-retirada-docker-compose.md): por qué Docker no era necesario en desarrollo, qué hacía la imagen por nosotros y cómo lo hace ahora un script idempotente (roles, dueños, extensiones, `peer` frente a contraseña), y por qué mover la base de datos no toca el núcleo. Sin diagramas.
+- [HEXM-0035: Migrar el repositorio al sistema de tareas compartido](HEXM-0035-migrar-el-repositorio-al-sistema-de-tareas-compartido.md): por qué el repositorio solo configura un mecanismo común (kit) en vez de tener sus propias skills, por qué cada tarea en un worktree con el checkout principal fijo en `develop`, por qué `staging` desde ya y por qué los diagramas se generan fuera del proyecto. Sin diagramas.
