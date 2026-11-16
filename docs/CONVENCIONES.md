@@ -116,8 +116,8 @@ hexagonal/
 │       │   └── Infrastructure/
 │       └── Shared/           #   piezas comunes mínimas
 ├── services/                 # servicios Python / FastAPI (a partir del nivel 7)
-├── scripts/                  # utilidades del repo (diagramas.sh regenera los diagramas)
-└── docker-compose.yml        # PostgreSQL (+ pgvector más adelante)
+└── scripts/                  # utilidades del repo (db-setup.sh prepara PostgreSQL;
+                              #   diagramas.sh regenera los diagramas)
 ```
 
 **Por qué `src/` y no `app/`**: `app/` es la carpeta del framework. Poner el dominio fuera deja claro, físicamente, que no pertenece a Laravel. Laravel queda como un adaptador más (controladores, Eloquent, service providers).

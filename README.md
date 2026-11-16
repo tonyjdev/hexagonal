@@ -26,39 +26,39 @@ Proyecto de aprendizaje de **arquitectura hexagonal** con PHP/Laravel, **Python/
 |---|---|---|
 | PHP (con `pdo_pgsql`) | 8.5 | `php -v` y `php -m \| grep pdo_pgsql` |
 | Composer | 2.x | `composer --version` |
-| Docker + Docker Compose | 29 / 2.40 | `docker compose version` |
+| PostgreSQL | 18 | `psql --version` |
+| pgvector para tu PostgreSQL | 0.8 | Ubuntu: `apt install postgresql-18-pgvector` |
+
+El desarrollo local **no usa Docker** ([ADR 0020](docs/adr/0020-postgresql-nativo-en-desarrollo-local.md)): todo corre con las herramientas instaladas en la máquina. Docker queda para producción.
 
 ### Pasos
 
 ```bash
-# 1. Levantar PostgreSQL (puerto 5433 de tu máquina)
-docker compose up -d
-docker compose ps                  # esperar a que salga "(healthy)"
+# 1. Preparar PostgreSQL: rol "hexagonal", bases "hexagonal" y "hexagonal_test"
+#    y la extensión pgvector. Necesita el superusuario postgres; se puede
+#    repetir sin miedo (es idempotente).
+sudo scripts/db-setup.sh
 
 # 2. Instalar y configurar Laravel
 cd app-laravel
 composer install
-cp .env.example .env               # ya viene configurado para el PostgreSQL de Docker
+cp .env.example .env               # ya apunta al PostgreSQL local (127.0.0.1:5432)
 php artisan key:generate
 
 # 3. Crear las tablas
 php artisan migrate
 
-# 3b. Base de datos de los tests (solo si tu volumen de Docker ya existía
-#     antes de HEXM-0002; en volúmenes nuevos se crea sola)
-docker compose exec postgres createdb -U hexagonal hexagonal_test
-
-# 3c. Gate de calidad: formato + análisis estático + tests
+# 3b. Gate de calidad: formato + análisis estático + tests
 composer ci:check
 
 # 4. Arrancar la aplicación
 php artisan serve                  # http://localhost:8000
 ```
 
-Para parar la base de datos: `docker compose down` (conserva los datos) o `docker compose down -v` (los borra).
+Para empezar con la base de desarrollo vacía: `php artisan migrate:fresh`. Para borrarla del todo, `sudo -u postgres dropdb hexagonal` y vuelve al paso 1.
 
 ### Versiones elegidas
 
 - **Laravel 13**: la última versión estable cuando empezó el proyecto, y la misma que usan los demás proyectos del autor.
 - **Pest 5, Larastan 3 (PHPStan al nivel `max`) y Pint** como gate de calidad (`composer ci:check`).
-- **PostgreSQL 18 con pgvector** (`pgvector/pgvector:pg18`): pgvector hará falta en el bloque C (embeddings), y usar ya esa imagen evita migrar de imagen más adelante.
+- **PostgreSQL 18 con pgvector**, el nativo de la máquina: pgvector hará falta en el bloque C (embeddings), y tenerlo instalado desde ya evita sorpresas cuando llegue.

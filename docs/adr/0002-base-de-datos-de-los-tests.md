@@ -1,6 +1,8 @@
 # 0002. Base de datos de los tests: PostgreSQL en `hexagonal_test`
 
-**Fecha:** 2026-10-31 · **Estado:** aceptada · **Tarea:** HEXM-0002 (resuelve la deuda técnica #190)
+**Fecha:** 2026-10-31 · **Estado:** aceptada (dónde vive PostgreSQL, actualizado por el [ADR 0020](0020-postgresql-nativo-en-desarrollo-local.md)) · **Tarea:** HEXM-0002 (resuelve la deuda técnica #190)
+
+> **Actualización (HEXM-0034):** PostgreSQL ya no corre en Docker. La base `hexagonal_test` vive en el PostgreSQL nativo de la máquina y la crea `scripts/db-setup.sh`, junto a la de desarrollo; lo demás de esta decisión sigue vigente. Lo que se cuenta abajo sobre el contenedor es histórico.
 
 ## Contexto
 
