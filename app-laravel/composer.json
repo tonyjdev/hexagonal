@@ -114,6 +114,6 @@
         "format:check": "Comprueba el formato con Pint sin modificar nada.",
         "types:check": "Análisis estático con PHPStan + Larastan al nivel máximo.",
         "ci:check": "Gate de calidad completo: formato, análisis estático y tests. Debe pasar antes de cerrar cada tarea.",
-        "docs:diagrams": "Regenera los HTML de los diagramas Archify de docs/diagramas desde su fuente JSON (los HTML no se versionan)."
+        "docs:diagrams": "Regenera los HTML de los diagramas Archify de docs/diagramas desde su fuente JSON, en la caché del workspace-kit (~/.cache/workspace-kit/diagramas/hexagonal); los HTML no se versionan."
     }
 }

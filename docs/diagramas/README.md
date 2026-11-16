@@ -4,20 +4,21 @@ Cada tarea `HEXM` cerrada deja, **siempre que tenga algo que dibujar**, uno o va
 
 ## Cómo verlos
 
-En git solo se versiona la **fuente** de cada diagrama (`<slug>.<tipo>.json`, unos pocos KB). El HTML ocupa unos 850 KB porque lleva el visor dentro, así que se genera en local:
+En git solo se versiona la **fuente** de cada diagrama (`<slug>.<tipo>.json`, unos pocos KB). El HTML ocupa unos 850 KB porque lleva el visor dentro, así que se genera en local y **fuera del proyecto**, en la caché del sistema de tareas compartido (desde HEXM-0035):
 
 ```bash
 cd app-laravel && composer docs:diagrams     # o, desde la raíz: scripts/diagramas.sh [HEXM-NNNN]
+                                             # (atajo de ~/.agents/workspace-kit/bin/diagrams.sh)
 ```
 
-Después se abre `docs/diagramas/HEXM-NNNN/<slug>.html` en el navegador. Requiere Node y la skill de Archify; con `ARCHIFY_CLI=/ruta/archify.mjs` se usa otra instalación.
+El script imprime la ruta de cada HTML: `~/.cache/workspace-kit/diagramas/hexagonal/HEXM-NNNN/<slug>.html`, que se abre en el navegador. La caché es común al checkout principal y a todos los worktrees de tarea, así que en `docs/diagramas/` nunca queda nada generado. Requiere Node y la skill de Archify; con `ARCHIFY_CLI=/ruta/archify.mjs` se usa otra instalación.
 
 ## Convenciones
 
-- **Ubicación:** `docs/diagramas/HEXM-NNNN/<slug>.<tipo>.json`, con `meta.output` apuntando a `docs/diagramas/HEXM-NNNN/<slug>.html`. El tipo en el nombre del fichero permite al script saber cómo renderizarlo.
+- **Ubicación:** `docs/diagramas/HEXM-NNNN/<slug>.<tipo>.json`, con `meta.output` apuntando a `docs/diagramas/HEXM-NNNN/<slug>.html` (el HTML real se escribe en la caché). El tipo en el nombre del fichero permite al script saber cómo renderizarlo.
 - **Idioma:** `meta.locale: "es"`. Títulos, etiquetas y tarjetas en español; los nombres de código (`Recipe`, `save()`) tal cual.
 - **Respaldados por el código:** cada elemento principal cita sus ficheros y líneas (`sources`) en un commit fijo (`meta.repository.revision`, con la URL HTTPS de GitHub). Archify comprueba que esas líneas existen en ese commit, y el visor enlaza cada elemento a su código en GitHub.
-- **Calidad:** se generan con `archify finalize … --repo-root . --quality showcase`, que valida el esquema, renderiza, comprueba el artefacto y hace una prueba real en navegador.
+- **Calidad:** al cerrar la tarea se generan con `archify finalize … --repo-root . --quality showcase` (paso de diagramas de `/close-task`, del kit), que valida el esquema, renderiza, comprueba el artefacto y hace una prueba real en navegador.
 - **Leyenda con el vocabulario del proyecto:** los tipos de nodo de Archify (`backend`, `security`, `database`…) se reetiquetan en `meta.legend.entries` (por ejemplo, `security` → "Dominio: reglas de negocio", `messagebus` → "Puerto (interfaz)").
 
 ## Qué tipo de diagrama usar

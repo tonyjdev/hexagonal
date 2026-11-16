@@ -11,7 +11,9 @@ datos-personales/
 
 # Diagramas Archify (docs/diagramas): solo se versiona la fuente (*.<tipo>.json)
 # y el README. El HTML (~850 KB, lleva el visor dentro) y los recibos de
-# validación se regeneran con scripts/diagramas.sh (o composer docs:diagrams).
+# validación se generan fuera del proyecto, en ~/.cache/workspace-kit/diagramas/
+# (scripts/diagramas.sh o composer docs:diagrams). Estas reglas son la red de
+# seguridad por si alguno acaba aquí.
 docs/diagramas/**/*.html
 docs/diagramas/**/*.delivery.json
 docs/diagramas/**/*.delivery-pending.json
@@ -21,3 +23,6 @@ docs/diagramas/**/*.browser-check.json
 docs/diagramas/**/*.visual-check.*
 docs/diagramas/**/review-*/
 docs/diagramas/**/visual-check/
+
+# Worktrees de tarea del sistema de tareas compartido (HEXM-0035)
+/.worktrees
