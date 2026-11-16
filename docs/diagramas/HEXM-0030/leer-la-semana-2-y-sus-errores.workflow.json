@@ -1,0 +1,178 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Leer el Excel de la semana 2: de «Detalle» y «Resumen» a self_week, o a un 422",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0030/leer-la-semana-2-y-sus-errores.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "24af6673b41223782159d2d3c9e7b7776a1c1a52"
+    },
+    "legend": {
+      "entries": {
+        "external": { "label": "Fichero del usuario" },
+        "frontend": { "label": "Adaptador HTTP (importer.api)" },
+        "backend": { "label": "Lectura sin HTTP (importer.reading)" },
+        "security": { "label": "Problemas de forma y 422" }
+      }
+    }
+  },
+  "lanes": [
+    { "id": "http", "label": "HTTP" },
+    { "id": "detail", "label": "Hoja «Detalle»" },
+    { "id": "summary", "label": "Hoja «Resumen»" },
+    { "id": "problems", "label": "Problemas", "variant": "exception" }
+  ],
+  "mainPath": ["upload", "route", "open", "rows", "free_day", "dish", "compare", "ok"],
+  "nodes": [
+    {
+      "id": "upload",
+      "lane": "http",
+      "col": 0,
+      "type": "external",
+      "label": "Excel de la semana 2",
+      "sublabel": "multipart, campo file"
+    },
+    {
+      "id": "route",
+      "lane": "http",
+      "col": 1,
+      "type": "frontend",
+      "label": "POST /self-weeks/read",
+      "sublabel": "UploadFile, ruta def",
+      "sources": [
+        { "path": "services/importer/src/importer/api/self_weeks.py", "line": 27, "end_line": 38 },
+        { "path": "services/importer/src/importer/main.py", "line": 38, "end_line": 40 }
+      ]
+    },
+    {
+      "id": "open",
+      "lane": "detail",
+      "col": 1,
+      "type": "backend",
+      "label": "open_workbook",
+      "sublabel": "¿es un .xlsx?",
+      "sources": [
+        { "path": "services/importer/src/importer/reading/workbook.py", "line": 35, "end_line": 52 },
+        { "path": "services/importer/src/importer/reading/self_week.py", "line": 74, "end_line": 83 }
+      ]
+    },
+    {
+      "id": "rows",
+      "lane": "detail",
+      "col": 2,
+      "type": "backend",
+      "label": "Cada fila",
+      "sublabel": "día 8-14, Comida o Cena, sin repetir",
+      "sources": [
+        { "path": "services/importer/src/importer/reading/self_week.py", "line": 129, "end_line": 158 },
+        { "path": "services/importer/src/importer/reading/text.py", "line": 269, "end_line": 274 }
+      ]
+    },
+    {
+      "id": "free_day",
+      "lane": "detail",
+      "col": 3,
+      "type": "backend",
+      "label": "¿Día 13?",
+      "sublabel": "sábado libre: sin plato",
+      "sources": [
+        { "path": "services/importer/src/importer/reading/self_week.py", "line": 160, "end_line": 174 }
+      ]
+    },
+    {
+      "id": "dish",
+      "lane": "detail",
+      "col": 4,
+      "type": "backend",
+      "label": "SelfDish",
+      "sublabel": "ingredientes: texto entero",
+      "tag": "quantity: null",
+      "sources": [
+        { "path": "services/importer/src/importer/reading/self_week.py", "line": 175, "end_line": 183 },
+        { "path": "services/importer/src/importer/reading/text.py", "line": 283, "end_line": 331 }
+      ]
+    },
+    {
+      "id": "compare",
+      "lane": "summary",
+      "col": 4,
+      "type": "backend",
+      "label": "compare_summary",
+      "sublabel": "mismos platos, normalizados",
+      "sources": [
+        { "path": "services/importer/src/importer/reading/self_week.py", "line": 193, "end_line": 234 }
+      ]
+    },
+    {
+      "id": "ok",
+      "lane": "http",
+      "col": 5,
+      "type": "frontend",
+      "label": "200 SelfWeek",
+      "sublabel": "días 8-14, el 13 vacío",
+      "sources": [
+        { "path": "services/importer/src/importer/reading/self_week.py", "line": 85, "end_line": 98 },
+        { "path": "services/importer/src/importer/reading/models.py", "line": 145, "end_line": 187 }
+      ]
+    },
+    {
+      "id": "problems",
+      "lane": "problems",
+      "col": 3,
+      "type": "security",
+      "label": "Problem",
+      "sublabel": "hoja y celda; se reúnen todos",
+      "sources": [
+        { "path": "services/importer/src/importer/reading/workbook.py", "line": 82, "end_line": 87 },
+        { "path": "services/importer/src/importer/reading/self_week.py", "line": 185, "end_line": 191 }
+      ]
+    },
+    {
+      "id": "unprocessable",
+      "lane": "problems",
+      "col": 5,
+      "type": "security",
+      "label": "422 en español",
+      "sublabel": "InvalidWorkbookResponse",
+      "sources": [
+        { "path": "services/importer/src/importer/api/errors.py", "line": 46, "end_line": 68 }
+      ]
+    }
+  ],
+  "edges": [
+    { "id": "send", "from": "upload", "to": "route", "label": "subida", "variant": "emphasis" },
+    { "id": "read", "from": "route", "to": "open", "label": "file.file", "variant": "emphasis" },
+    { "id": "walk", "from": "open", "to": "rows", "label": "data_rows", "variant": "emphasis" },
+    { "id": "valid_row", "from": "rows", "to": "free_day", "variant": "emphasis" },
+    { "id": "menu_day", "from": "free_day", "to": "dish", "label": "8-12 y 14", "variant": "emphasis" },
+    { "id": "dishes", "from": "dish", "to": "compare", "label": "platos", "variant": "emphasis" },
+    { "id": "no_problems", "from": "compare", "to": "ok", "label": "sin problemas", "variant": "emphasis" },
+    { "id": "bad_row", "from": "rows", "to": "problems", "label": "fila inválida", "variant": "security", "role": "error" },
+    { "id": "saturday_dish", "from": "free_day", "to": "problems", "label": "13 con plato", "variant": "security", "role": "error" },
+    { "id": "mismatch", "from": "compare", "to": "problems", "label": "no coincide", "variant": "security", "role": "error" },
+    { "id": "raise", "from": "problems", "to": "unprocessable", "label": "raise_if_any", "variant": "security", "role": "error" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Decisiones (ADR 0023)",
+      "items": [
+        "«Detalle» es la fuente; «Resumen», escrita a mano, solo se comprueba",
+        "Cada ingrediente sale con su texto entero; separar la cantidad es del nivel 9",
+        "Un fichero que no es .xlsx también da 422, desde open_workbook"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Errores",
+      "items": [
+        "El lector anota cada problema y sigue: el 422 los trae todos",
+        "Mismo formato y mismo manejador que el Excel de la nutricionista"
+      ]
+    }
+  ]
+}

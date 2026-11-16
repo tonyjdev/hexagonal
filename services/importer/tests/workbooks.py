@@ -1,6 +1,7 @@
-"""Excel ficticios de la nutricionista para los tests.
+"""Excel ficticios para los tests: el de la nutricionista y el de la semana 2.
 
-``nutritionist_workbook()`` construye en memoria un libro con la MISMA
+``nutritionist_workbook()`` (y ``self_week_workbook()``, para la semana 2)
+construye en memoria un libro con la MISMA
 estructura que el Excel real (hojas, títulos, cabeceras en la fila 3, celdas
 combinadas, viñetas ``•``, intercambios separados por guiones...), pero con
 contenido inventado: el Excel real del usuario no se versiona (datos de salud,
@@ -22,6 +23,7 @@ from pathlib import Path
 from openpyxl import Workbook
 
 FIXTURE = Path(__file__).parent / "fixtures" / "plan-nutricionista-ficticio.xlsx"
+SELF_WEEK_FIXTURE = Path(__file__).parent / "fixtures" / "semana-2-ficticia.xlsx"
 
 MENUS: list[tuple[int, str, str]] = [
     (
@@ -119,6 +121,84 @@ def nutritionist_workbook() -> Workbook:
     return workbook
 
 
+# --- Excel de la semana 2 (HEXM-0030) ---------------------------------------
+
+# (día, comida, cena): cada una con (plato, ingredientes). El 13 no está: es
+# el sábado libre y sus filas van sin plato. Los ingredientes cubren los casos
+# del troceado (ADR 0023): coma dentro de paréntesis, coma decimal, punto de
+# abreviatura («cda.»), una frase después de un punto y un plato sin
+# ingredientes (día 14, cena).
+type Dish = tuple[str, str | None]
+
+SELF_DAYS: list[tuple[int, Dish, Dish]] = [
+    (
+        8,
+        ("Lentejas estofadas", "½ bote de lentejas, 1 zanahoria, ½ cebolla."),
+        ("Tortilla de calabacín", "2 huevos, ½ calabacín, 1 cda. de aceite."),
+    ),
+    (
+        9,
+        ("Arroz con pollo", "⅓ vaso de arroz en crudo, 2 filetes de pollo, ¼ pimiento rojo."),
+        ("Crema de verduras con queso", "1 bol de crema de verduras, 1 tarrina de queso fresco."),
+    ),
+    (
+        10,
+        ("Patatas con bacalao", "1,5 patatas medianas, 1 lomo de bacalao, perejil."),
+        ("Ensalada de garbanzos", "½ bote de garbanzos, 1 tomate, pepino, 2 cdas. de semillas."),
+    ),
+    (
+        11,
+        (
+            "Macarrones con atún",
+            "Macarrones (¾ vaso en crudo, integrales), 1 lata de atún, tomate triturado.",
+        ),
+        ("Sardinas con pimientos", "1 lata de sardinas, ½ pimiento verde, ¼ cebolla."),
+    ),
+    (
+        12,
+        ("Quinoa con verduras", "⅓ vaso de quinoa, ½ calabacín, 1 zanahoria."),
+        ("Wrap de pavo", "1 tortilla integral, 3 lonchas de pavo, lechuga. Fruta de postre."),
+    ),
+    (
+        14,
+        ("Ensalada de pasta", "Pasta (½ vaso en crudo), 1 huevo duro, maíz, aceitunas."),
+        ("Sopa de picadillo", None),
+    ),
+]
+
+
+def self_week_workbook() -> Workbook:
+    """Un Excel de la semana 2 válido, ficticio, con la estructura del real.
+
+    Las etiquetas de «Resumen» van en mayúsculas («DÍA 8», «COMIDA») como en
+    el real: el lector las compara sin mayúsculas ni tildes.
+    """
+    workbook = Workbook()
+
+    summary = workbook.active
+    assert summary is not None
+    summary.title = "Resumen"
+    summary.append([None, *(f"DÍA {day}" for day in range(8, 15))])
+    by_day = {day: (lunch, dinner) for day, lunch, dinner in SELF_DAYS}
+    for label, meal in (("COMIDA", 0), ("CENA", 1)):
+        summary.append(
+            [label, *(by_day[d][meal][0] if d in by_day else None for d in range(8, 15))]
+        )
+
+    detail = workbook.create_sheet("Detalle")
+    detail.append(["Día", "Tipo", "Plato", "Ingredientes / cantidades"])
+    for day in range(8, 15):
+        if day not in by_day:
+            detail.append([day, "Comida"])
+            detail.append([day, "Cena"])
+            continue
+        (lunch, lunch_ingredients), (dinner, dinner_ingredients) = by_day[day]
+        detail.append([day, "Comida", lunch, lunch_ingredients])
+        detail.append([day, "Cena", dinner, dinner_ingredients])
+
+    return workbook
+
+
 def as_file(workbook: Workbook) -> BytesIO:
     """El libro guardado como ``.xlsx`` en memoria, listo para leer o subir.
 
@@ -139,3 +219,5 @@ if __name__ == "__main__":
     FIXTURE.parent.mkdir(exist_ok=True)
     nutritionist_workbook().save(FIXTURE)
     print(f"Guardado {FIXTURE}")
+    self_week_workbook().save(SELF_WEEK_FIXTURE)
+    print(f"Guardado {SELF_WEEK_FIXTURE}")

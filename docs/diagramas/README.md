@@ -119,6 +119,8 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 | HEXM-0028 | [GET /health de punta a punta](HEXM-0028/get-health-de-punta-a-punta.sequence.json) (`sequence`) | La misma petición por dos entradas: con uvicorn (TCP → ASGI → ruta → modelo Pydantic → JSON) y con `TestClient`, en el mismo proceso. |
 | HEXM-0029 | [Del Excel al contrato](HEXM-0029/del-excel-al-contrato.dataflow.json) (`dataflow`) | El Excel de la nutricionista entra por `POST /nutritionist-plans/read`, cada hoja se lee por separado, el texto de las celdas pasa por las funciones puras de `text.py` y sale `NutritionistPlan` (200) o `Problem[]` y un 422 (ADR 0022). |
 | HEXM-0029 | [POST /nutritionist-plans/read de punta a punta](HEXM-0029/leer-el-excel-de-punta-a-punta.sequence.json) (`sequence`) | Los dos caminos de una subida: el Excel válido hasta el JSON del contrato, y el mal formado, con los problemas anotados, `InvalidWorkbookError` sin `try` y el manejador que responde 422. |
+| HEXM-0030 | [Leer el Excel de la semana 2](HEXM-0030/leer-la-semana-2-y-sus-errores.workflow.json) (`workflow`) | El recorrido de `POST /self-weeks/read`: cada fila de «Detalle» (día 8-14, «Comida» o «Cena», sin repetir), el día 13 sin plato, los platos con sus ingredientes en texto entero y la comprobación de «Resumen»; cada rama de error anota un `Problem` y todos salen en un único 422 (ADR 0023). |
+| HEXM-0030 | [Dos formatos, un servicio](HEXM-0030/dos-formatos-un-servicio.class.json) (`class`) | Cada Excel con su lector y su modelo (`NutritionistPlan`, `SelfWeek` → `SelfDay` → `SelfDish` → `Ingredient`), y lo común a los dos en `WorkbookReading`, de la que heredan. |
 
 ### Transversal
 

@@ -1,11 +1,16 @@
-"""Modelos del contrato: lo que devuelve la lectura del Excel de la nutricionista.
+"""Modelos del contrato: lo que devuelve la lectura de los Excel de un plan.
 
-Tienen la misma forma que la parte de la semana 1 del contrato de
-``POST /api/nutrition-plans`` (ADR 0014): ``number``, ``fixed_meals``,
-``exchanges``, ``exchange_rules`` y ``nutritionist_week``. Faltan ``starts_on``
-(la fecha de inicio no está en el Excel: la dará el usuario al confirmar la
-importación) y ``self_week`` (sale del otro Excel, HEXM-0030). Laravel juntará
-las piezas (HEXM-0031 y siguientes).
+Tienen la misma forma que el contrato de ``POST /api/nutrition-plans``
+(ADR 0014), repartido entre los dos documentos de un plan:
+
+- ``NutritionistPlan``, el Excel de la nutricionista (HEXM-0029): ``number``,
+  ``fixed_meals``, ``exchanges``, ``exchange_rules`` y ``nutritionist_week``.
+- ``SelfWeek``, el Excel de la semana 2 que elabora el usuario (HEXM-0030):
+  ``self_week``.
+
+Falta ``starts_on``: la fecha de inicio no está en ningún Excel, la dará el
+usuario al confirmar la importación. Laravel juntará las piezas (HEXM-0031 y
+siguientes).
 
 CONCEPTO: modelos de Pydantic como contrato
 En PHP este papel lo reparten dos piezas: un DTO (la forma de los datos, con
@@ -132,3 +137,51 @@ class NutritionistPlan(ContractModel):
     exchanges: list[Exchange]
     exchange_rules: list[str]
     nutritionist_week: list[NutritionistMenu] = Field(min_length=6, max_length=6)
+
+
+# --- Excel de la semana 2 (HEXM-0030) --------------------------------------
+
+
+class Ingredient(ContractModel):
+    """Un ingrediente de un plato de la semana 2, con su texto entero.
+
+    ``name`` lleva el trozo tal como está en el Excel, con la cantidad dentro
+    («⅓ vaso de arroz en crudo»), y ``quantity`` va siempre a ``None``: separar
+    la cantidad del ingrediente con fiabilidad no es trabajo de un lector
+    determinista, sino de un LLM (nivel 9, ``IngredientExtractor``). El campo
+    se envía igualmente porque es parte del contrato (ADR 0014) y así, cuando
+    llegue el nivel 9, solo cambia su valor, no la forma (ADR 0023).
+    """
+
+    name: str = Field(min_length=1)
+    quantity: str | None = None
+
+
+class SelfDish(ContractModel):
+    """Un plato de la semana 2: nombre corto e ingredientes (puede no tener ninguno)."""
+
+    name: str = Field(min_length=1)
+    ingredients: list[Ingredient]
+
+
+class SelfDay(ContractModel):
+    """Un día de la semana 2 (8-14) con su comida y su cena.
+
+    El 13 es el sábado libre y va con las dos a ``None``; el resto, con las
+    dos. Que el sábado no tenga menú es una regla del dominio (``MenuDay``),
+    pero el lector ya la comprueba para poder decir en qué celda está el
+    problema.
+    """
+
+    day: int = Field(ge=8, le=14)
+    lunch: SelfDish | None
+    dinner: SelfDish | None
+
+
+class SelfWeek(ContractModel):
+    """El Excel de la semana 2 leído: la parte ``self_week`` del contrato del alta.
+
+    Siempre lleva los 7 días, del 8 al 14 y en orden, con el 13 vacío.
+    """
+
+    self_week: list[SelfDay] = Field(min_length=7, max_length=7)

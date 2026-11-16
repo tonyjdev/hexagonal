@@ -78,7 +78,46 @@ Si el Excel no tiene la forma esperada, responde **422** con todos los problemas
 
 Una petición sin el campo `file` recibe el 422 estándar de FastAPI (`{"detail": [...]}`): es un error de la petición, no del Excel.
 
-**Datos de prueba**: el Excel real no se versiona (datos de salud). Los tests construyen un Excel ficticio con la misma estructura (`tests/workbooks.py`), y `uv run poe fixtures` lo guarda en `tests/fixtures/plan-nutricionista-ficticio.xlsx` para probar a mano.
+**Datos de prueba**: los Excel reales no se versionan (datos de salud). Los tests construyen Excel ficticios con la misma estructura (`tests/workbooks.py`), y `uv run poe fixtures` los guarda en `tests/fixtures/` (`plan-nutricionista-ficticio.xlsx` y `semana-2-ficticia.xlsx`) para probar a mano.
+
+## Leer el Excel de la semana 2
+
+`POST /self-weeks/read` recibe el Excel de la semana 2 que elabora el usuario (campo `file`, *multipart*) y devuelve la parte `self_week` del mismo contrato: `{"self_week": [...]}`, con los días del 8 al 14 en orden y el 13 vacío (`lunch` y `dinner` a `null`).
+
+```bash
+curl -s -F file=@tests/fixtures/semana-2-ficticia.xlsx \
+  http://127.0.0.1:8001/self-weeks/read | python3 -m json.tool
+```
+
+Excel esperado (las dos hojas, con las cabeceras en la fila 1):
+
+| Hoja | Columnas |
+|---|---|
+| «Detalle» | Día (8-14) · Tipo (Comida o Cena) · Plato · Ingredientes / cantidades |
+| «Resumen» | Una columna por día («Día 8» … «Día 14», de B a H) y las filas «Comida» (2) y «Cena» (3), con el nombre de cada plato |
+
+Decisiones (el detalle y el porqué, en el [ADR 0023](../../docs/adr/0023-lectura-del-excel-de-la-semana-2.md)):
+
+| En el Excel | En el JSON |
+|---|---|
+| «Detalle» | La fuente: un plato por fila, con su nombre e ingredientes |
+| «Resumen» | Se comprueba que diga los mismos platos (sin distinguir mayúsculas ni tildes). Si no coincide, 422 con las dos celdas |
+| Ingredientes separados por comas | Un ingrediente por trozo, con su texto entero: `{"name": "⅓ vaso de arroz en crudo", "quantity": null}`. Las comas dentro de paréntesis y la coma decimal no parten |
+| Un punto que acaba una frase («…2 huevos. Chocolate 85%.») | También parte; el de una abreviatura («1 cda. de») no |
+| Día 13 sin plato (o sin filas) | `{"day": 13, "lunch": null, "dinner": null}` |
+| Plato sin ingredientes | `ingredients: []` |
+
+La cantidad no se separa del ingrediente: hacerlo con fiabilidad es trabajo de un LLM (nivel 9, `IngredientExtractor`).
+
+Un Excel mal formado responde **422** con el mismo formato que el de la nutricionista, por ejemplo:
+
+- «Hoja «Detalle», celda A4: la comida del día 8 está repetida»;
+- «Hoja «Detalle», celda B2: el tipo «Merienda» no es «Comida» ni «Cena»»;
+- «Hoja «Resumen», celda C3: el plato «X» no coincide con el de la hoja «Detalle» (celda C5: «Y»)».
+
+Subir aquí el Excel de la nutricionista da «falta la hoja «Detalle»»: cada formato tiene su ruta y no se adivina.
+
+## Documentación de la API
 
 FastAPI genera la documentación de la API a partir del código: <http://127.0.0.1:8001/docs> (Swagger UI) y el contrato en <http://127.0.0.1:8001/openapi.json>.
 
@@ -112,15 +151,18 @@ services/importer/
 │   ├── api/              #   capa HTTP: rutas de FastAPI (adaptador de entrada)
 │   │   ├── health.py
 │   │   ├── nutritionist_plans.py  # POST /nutritionist-plans/read
-│   │   └── errors.py     #     InvalidWorkbookError → 422
+│   │   ├── self_weeks.py #     POST /self-weeks/read
+│   │   └── errors.py     #     InvalidWorkbookError → 422 (para las dos rutas)
 │   └── reading/          #   lectura de los Excel, sin nada de FastAPI (ADR 0021)
 │       ├── models.py     #     el contrato de salida (modelos de Pydantic)
 │       ├── text.py       #     traducción del texto de una celda (funciones puras)
+│       ├── workbook.py   #     lo común a los lectores: abrir, leer celdas, reunir problemas
 │       ├── nutritionist.py #   lector del Excel de la nutricionista (openpyxl)
+│       ├── self_week.py  #     lector del Excel de la semana 2
 │       └── problems.py   #     problemas de forma con su hoja y su celda
 └── tests/                # pytest
-    ├── workbooks.py      #   Excel ficticio para los tests (y para tests/fixtures)
-    └── fixtures/         #   plan-nutricionista-ficticio.xlsx (pruebas manuales)
+    ├── workbooks.py      #   Excel ficticios para los tests (y para tests/fixtures)
+    └── fixtures/         #   los mismos Excel ficticios, para las pruebas manuales
 ```
 
 ## Dependencias

@@ -124,3 +124,51 @@ def test_an_exchange_item_is_split_into_food_and_serving(
 def test_an_exchange_without_serving_is_unreadable() -> None:
     with pytest.raises(text.UnreadableTextError, match="no se reconoce el intercambio «pan»"):
         text.exchange_item("pan", "Hidratos de carbono")
+
+
+# --- Semana 2: hoja «Detalle» (HEXM-0030) ----------------------------------
+
+
+@pytest.mark.parametrize(
+    ("label", "expected"),
+    [("Comida", "lunch"), ("CENA", "dinner"), (" cena ", "dinner")],
+)
+def test_the_type_of_a_self_week_row_is_lunch_or_dinner(label: str, expected: str) -> None:
+    assert text.self_meal(label) == expected
+
+
+def test_a_type_that_is_not_lunch_or_dinner_is_unreadable() -> None:
+    with pytest.raises(
+        text.UnreadableTextError, match="el tipo «Desayuno» no es «Comida» ni «Cena»"
+    ):
+        text.self_meal("Desayuno")
+
+
+@pytest.mark.parametrize(
+    ("cell", "expected"),
+    [
+        # Por comas, sin el punto final y con cada trozo entero (la cantidad dentro).
+        (
+            "⅓ vaso de arroz en crudo, 2 filetes de merluza, tomate.",
+            ["⅓ vaso de arroz en crudo", "2 filetes de merluza", "tomate"],
+        ),
+        # La coma dentro de un paréntesis no parte el ingrediente.
+        (
+            "Pasta (¾ vaso en crudo, integral), 2 cdas. de pesto",
+            ["Pasta (¾ vaso en crudo, integral)", "2 cdas. de pesto"],
+        ),
+        # La coma decimal (sin espacio detrás) tampoco.
+        ("1,5 kg de patatas, perejil", ["1,5 kg de patatas", "perejil"]),
+        # Un punto que acaba una frase parte; el de una abreviatura, no.
+        (
+            "1 cda. de queso rallado, 2 huevos. Chocolate 85%.",
+            ["1 cda. de queso rallado", "2 huevos", "Chocolate 85%"],
+        ),
+        # Lo vacío se descarta.
+        ("tomate, , rúcula,", ["tomate", "rúcula"]),
+    ],
+)
+def test_the_ingredients_of_a_dish_are_split_keeping_each_text_whole(
+    cell: str, expected: list[str]
+) -> None:
+    assert text.ingredients(cell) == expected
