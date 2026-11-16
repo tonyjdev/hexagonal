@@ -88,16 +88,20 @@ feat/hexm-NNNN-slug ──PR──► develop ──PR──► staging ──PR
 Antes de cerrar una tarea tiene que pasar el gate (`CHECK_CMD` en `CLAUDE.md`):
 
 ```bash
-cd app-laravel && composer ci:check   # los tests usan el PostgreSQL local (ADR 0002 y 0020)
+(cd app-laravel && composer ci:check) && (cd services/importer && uv run poe check)
 ```
 
-`ci:check` ejecuta, por orden y parando en el primer fallo (de lo más rápido a lo más lento):
+Son dos gates, uno por aplicación, y los dos tienen que pasar.
+
+**Laravel** (`composer ci:check`; los tests usan el PostgreSQL local, ADR 0002 y 0020) ejecuta, por orden y parando en el primer fallo (de lo más rápido a lo más lento):
 
 | Paso | Comando suelto | Qué comprueba |
 |---|---|---|
 | 1. Formato | `composer format:check` | Pint, con el preset de Laravel. Para corregirlo: `composer lint`. |
 | 2. Análisis estático | `composer types:check` | PHPStan + Larastan al nivel `max`. |
 | 3. Tests | `composer test` | Pest, contra la base de datos `hexagonal_test`. |
+
+**Servicio `importer`** (`uv run poe check`, desde HEXM-0028, ADR 0021): ruff format, ruff check, mypy estricto y pytest, con el mismo orden y la misma regla. El detalle, en [`services/importer/README.md`](../services/importer/README.md).
 
 La salida exacta del gate se copia siempre en el documento de resultado de la tarea.
 
