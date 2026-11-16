@@ -60,6 +60,7 @@ Los diagramas Archify de cada tarea están en [`../diagramas/`](../diagramas/REA
 ### Nivel 7: Importador de planes
 
 - [HEXM-0028: Esqueleto del servicio importer en FastAPI](HEXM-0028-esqueleto-servicio-importer-fastapi.md): el primer código Python. Por qué uv y poethepoet (el `composer.json` y los `scripts` de Python), por qué el gate copia al de Laravel (ruff, mypy estricto, pytest), qué hacen ASGI, uvicorn y la *application factory*, y por qué el servicio no es hexagonal por dentro pero separa la lectura de HTTP. Diagramas: [tareas, gate y piezas](../diagramas/HEXM-0028/servicio-importer-tareas-y-gate.architecture.json) y [GET /health de punta a punta](../diagramas/HEXM-0028/get-health-de-punta-a-punta.sequence.json).
+- [HEXM-0029: Leer el Excel de la nutricionista](HEXM-0029-leer-excel-de-la-nutricionista.md): cómo se traduce un Excel pensado para personas al contrato del alta de un plan (opciones con `•`, «elegir N» dentro del texto, intercambios en dos formas, «> 1/2 plato» sin alimento, reglas escondidas y la columna «Momento» que no se modela), por qué la lectura son funciones puras separadas de HTTP, por qué se reúnen todos los problemas con su hoja y su celda en un único 422 y por qué los tests usan un Excel ficticio. Diagramas: [del Excel al contrato](../diagramas/HEXM-0029/del-excel-al-contrato.dataflow.json) y [de punta a punta](../diagramas/HEXM-0029/leer-el-excel-de-punta-a-punta.sequence.json).
 
 ### Transversal
 
