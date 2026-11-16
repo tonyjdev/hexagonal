@@ -14,7 +14,7 @@ de ``php artisan serve`` con ``public/index.php``. Por eso se arranca con
 
 from fastapi import FastAPI
 
-from importer.api import health, nutritionist_plans
+from importer.api import health, nutritionist_plans, self_weeks
 from importer.api.errors import invalid_workbook_handler
 from importer.reading.problems import InvalidWorkbookError
 
@@ -35,6 +35,7 @@ def create_app() -> FastAPI:
     )
     app.include_router(health.router)
     app.include_router(nutritionist_plans.router)
+    app.include_router(self_weeks.router)
     # Un Excel mal formado, en cualquier ruta, responde 422 con sus problemas.
     app.add_exception_handler(InvalidWorkbookError, invalid_workbook_handler)
     return app

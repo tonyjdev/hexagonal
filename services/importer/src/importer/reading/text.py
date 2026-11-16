@@ -1,9 +1,10 @@
 """Traducción del texto de una celda: funciones puras, sin Excel ni HTTP.
 
 Cada función recibe el texto de una celda tal como lo escribió la
-nutricionista y devuelve un dato del contrato, o lanza ``UnreadableTextError`` con
-un mensaje en español. No saben en qué hoja ni en qué celda están: eso lo
-añade el lector (``nutritionist``) al convertir el error en un ``Problem``.
+nutricionista (o el usuario, en la semana 2) y devuelve un dato del contrato,
+o lanza ``UnreadableTextError`` con un mensaje en español. No saben en qué
+hoja ni en qué celda están: eso lo añade el lector (``nutritionist`` o
+``self_week``) al convertir el error en un ``Problem``.
 
 CONCEPTO: función pura
 Su resultado solo depende de sus argumentos y no tiene efectos secundarios (no
@@ -20,11 +21,13 @@ busca en cualquier parte, ``re.fullmatch`` exige que encaje el texto entero y
 
 Las decisiones de traducción (por qué se parte por ``•``, cómo se reconoce
 «elegir N», qué se hace con un intercambio sin alimento...) están en el
-ADR 0022.
+ADR 0022; las de la semana 2 (cómo se parten los ingredientes), en el
+ADR 0023.
 """
 
 import re
 import unicodedata
+from typing import Literal
 
 from importer.reading.models import ExchangeCategory, MealType
 
@@ -247,3 +250,82 @@ def exchange_item(item: str, category_name: str) -> tuple[str, str]:
         f"no se reconoce el intercambio «{item}»: "
         "se espera «alimento (ración)» o «ración de alimento»"
     )
+
+
+# --- Excel de la semana 2, hoja «Detalle» (HEXM-0030) ----------------------
+
+# CONCEPTO: ``Literal`` y la sentencia ``type``
+# ``Literal["lunch", "dinner"]`` es un tipo cuyos únicos valores son esos dos
+# textos: mypy rechaza ``"breakfast"`` donde se espera un ``SelfMeal``. Es lo
+# que en PHPStan se escribe ``@return 'lunch'|'dinner'``. ``type X = ...``
+# le da un nombre (un alias de tipo). No hace falta un enum porque estos
+# textos no salen en el JSON como valores: son los nombres de los campos
+# ``lunch`` y ``dinner`` del contrato.
+type SelfMeal = Literal["lunch", "dinner"]
+
+_SELF_MEALS: dict[str, SelfMeal] = {"comida": "lunch", "cena": "dinner"}
+
+
+def self_meal(label: str) -> SelfMeal:
+    """La comida de la columna «Tipo»: «Comida» → ``lunch``, «Cena» → ``dinner``."""
+    meal = _SELF_MEALS.get(normalize(label))
+    if meal is None:
+        raise UnreadableTextError(f"el tipo «{label}» no es «Comida» ni «Cena»")
+    return meal
+
+
+# Un punto que acaba una frase: seguido de espacio y de una mayúscula
+# («…2 huevos. Chocolate 85%»). El de una abreviatura va seguido de minúscula
+# («1 cda. de queso») y no parte nada.
+_SENTENCE_END = re.compile(r"\.\s+(?=[A-ZÁÉÍÓÚÑ¿¡])")
+
+
+def ingredients(cell: str) -> list[str]:
+    """Los ingredientes de una celda, cada uno con su texto entero.
+
+    «⅓ vaso de arroz en crudo, 2 filetes de merluza, tomate.» →
+    ["⅓ vaso de arroz en crudo", "2 filetes de merluza", "tomate"].
+
+    Reglas (ADR 0023):
+
+    - Se parte por una coma seguida de espacio, salvo dentro de paréntesis:
+      «Pasta (¾ vaso en crudo, integral)» es UN ingrediente. Pedir el espacio
+      deja entera la coma decimal («1,5 kg de patatas»).
+    - También se parte por un punto que acaba una frase («…2 huevos.
+      Chocolate 85%.»), y se quita el punto final de la celda.
+    - No se separa la cantidad del ingrediente: «⅓ vaso de arroz en crudo» se
+      queda así. Hacerlo bien («tomate» sin cantidad, «1 lata y media de
+      atún», «6-8 tomates cherry») es trabajo de un LLM (nivel 9).
+    """
+    pieces: list[str] = []
+    for sentence in _SENTENCE_END.split(cell.strip().removesuffix(".")):
+        pieces.extend(_split_outside_parentheses(sentence))
+    return [piece.strip() for piece in pieces if piece.strip()]
+
+
+def _split_outside_parentheses(sentence: str) -> list[str]:
+    """Parte por «, » sin entrar en los paréntesis.
+
+    CONCEPTO: máquina de estados mínima
+    Una expresión regular no lleva bien la cuenta de los paréntesis abiertos
+    (y anidados), así que se recorre el texto carácter a carácter con un
+    contador (``depth``): una coma solo parte el texto si no hay ningún
+    paréntesis abierto. Es el mismo bucle que se escribiría en PHP con
+    ``mb_str_split()``.
+    """
+    pieces: list[str] = []
+    start = depth = 0
+    for index, char in enumerate(sentence):
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            depth = max(depth - 1, 0)
+        elif char == "," and depth == 0:
+            # Lo que viene después: un espacio parte, el final del texto también
+            # («rúcula,»), y una cifra no («1,5 kg»: coma decimal).
+            following = sentence[index + 1 : index + 2]
+            if following == "" or following.isspace():
+                pieces.append(sentence[start:index])
+                start = index + 1
+    pieces.append(sentence[start:])
+    return pieces
