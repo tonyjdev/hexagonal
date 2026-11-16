@@ -29,7 +29,7 @@ El script imprime la ruta de cada HTML: `~/.cache/workspace-kit/diagramas/hexago
 | El recorrido de una petición o de un caso de uso entre objetos | `sequence` | [CreateRecipe paso a paso](HEXM-0007/create-recipe-paso-a-paso.sequence.json) |
 | Una regla de negocio o una validación con sus ramas de error | `workflow` | [De texto a cantidad exacta](HEXM-0005/de-texto-a-cantidad-exacta.workflow.json) |
 | Entidades, value objects y sus relaciones (agregados) | `class` | [Agregado Recipe](HEXM-0006/agregado-recipe.class.json) |
-| Estados y transiciones (un plan vigente, una importación…) | `lifecycle` | — |
+| Estados y transiciones (un plan vigente, una importación…) | `lifecycle` | [Ciclo de vida de una importación](HEXM-0032/ciclo-de-vida-de-la-importacion.lifecycle.json) |
 | Tablas, claves y relaciones de la base de datos (nivel 2 en adelante) | `erd` | [Tablas del recetario](HEXM-0009/tablas-del-recetario.erd.json) |
 | Datos que fluyen entre servicios o capas y cambian de forma (Laravel ↔ FastAPI, embeddings…) | `dataflow` | [Del papel a la base de datos](HEXM-0021/del-papel-a-la-base-de-datos.dataflow.json) |
 | Qué pasa en cada fecha, sobre un eje de tiempo proporcional (calendario, historial) | `timeline` | [Alternancia de semanas](HEXM-0017/alternancia-de-semanas.timeline.json) |
@@ -123,6 +123,8 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 | HEXM-0030 | [Dos formatos, un servicio](HEXM-0030/dos-formatos-un-servicio.class.json) (`class`) | Cada Excel con su lector y su modelo (`NutritionistPlan`, `SelfWeek` → `SelfDay` → `SelfDish` → `Ingredient`), y lo común a los dos en `WorkbookReading`, de la que heredan. |
 | HEXM-0031 | [El importador detrás de un puerto](HEXM-0031/importador-detras-de-un-puerto.architecture.json) (`architecture`) | El puerto `PlanReader` en `Application` con sus dos adaptadores (`HttpPlanReader`, que sube el Excel por *multipart* al servicio Python, y el fake `InMemoryPlanReader`), los errores del puerto (`UnreadableDocument` y `PlanReaderUnavailable`, sobre `ServiceUnavailable` → 503) y el contrato `contracts/importer` que genera el servicio y comprueba el *mapper* de Laravel (ADR 0024). |
 | HEXM-0031 | [Traducir la respuesta del importador](HEXM-0031/traducir-la-respuesta-del-importador.workflow.json) (`workflow`) | Una lectura de punta a punta: subida, código de la respuesta y *mapper* estricto, con la rama de cada resultado: la lectura del puerto, `UnreadableDocument` (422 del servicio) o `PlanReaderUnavailable` (sin conexión, 5xx o contrato roto). |
+| HEXM-0032 | [Ciclo de vida de una importación de plan](HEXM-0032/ciclo-de-vida-de-la-importacion.lifecycle.json) (`lifecycle`) | Los tres estados de `PlanImport` (pendiente de la semana 2, lista para confirmar, confirmada), las transiciones, los dos rechazos de `InvalidPlanImport` y el `NutritionPlan` que crea `RegisterNutritionPlan` antes de `confirm()` (ADR 0025). |
+| HEXM-0032 | [Confirmar una importación](HEXM-0032/confirmar-una-importacion.sequence.json) (`sequence`) | `ConfirmPlanImport` en sus tres caminos: el plan 99 creado con el mismo comando que el alta manual y la importación confirmada en un segundo guardado; el rechazo sin semana 2 antes de intentar el plan; y el alta que rechaza un martes sin guardar nada. |
 
 ### Transversal
 
