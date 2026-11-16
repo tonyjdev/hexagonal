@@ -30,7 +30,7 @@ return [
 
     /*
     | Servicio importer (services/importer): lee los Excel de un plan
-    | nutricionial y los devuelve como JSON (HEXM-0031, ADR 0024).
+    | nutricional y los devuelve como JSON (HEXM-0031, ADR 0024).
     |
     | CONCEPTO: la dirección de un adaptador es configuración
     | Ni el puerto PlanReader ni el adaptador HttpPlanReader saben dónde está
