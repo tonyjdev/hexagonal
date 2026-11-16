@@ -12,8 +12,10 @@ use Illuminate\Support\ServiceProvider;
 use MealPlanning\Application\PlanReader;
 use MealPlanning\Application\RecipeCatalog;
 use MealPlanning\Domain\NutritionPlanRepository;
+use MealPlanning\Domain\PlanImportRepository;
 use MealPlanning\Infrastructure\Importer\HttpPlanReader;
 use MealPlanning\Infrastructure\Persistence\Eloquent\EloquentNutritionPlanRepository;
+use MealPlanning\Infrastructure\Persistence\Eloquent\EloquentPlanImportRepository;
 use MealPlanning\Infrastructure\Recipes\RecipeDeletedListener;
 use MealPlanning\Infrastructure\Recipes\RecipesContextRecipeCatalog;
 use Recipes\Domain\RecipeDeleted;
@@ -33,7 +35,7 @@ use Recipes\Domain\RecipeDeleted;
  * no obliga a tocar los demás. Se registra en bootstrap/providers.php.
  *
  * Enchufa los puertos de salida del contexto: el repositorio de planes, el
- * recetario (RecipeCatalog, HEXM-0025) y el lector de los Excel de un plan
+ * de las importaciones de planes (HEXM-0032), el recetario (RecipeCatalog, HEXM-0025) y el lector de los Excel de un plan
  * (PlanReader → HttpPlanReader, HEXM-0031). El puerto Clock es de
  * Shared y lo enchufa SharedServiceProvider (HEXM-0022). Y, desde HEXM-0027,
  * el adaptador de entrada que escucha eventos de otros contextos
@@ -48,6 +50,7 @@ final class MealPlanningServiceProvider extends ServiceProvider
     {
         // Puerto de salida (Domain) → adaptador de salida (Infrastructure).
         $this->app->bind(NutritionPlanRepository::class, EloquentNutritionPlanRepository::class);
+        $this->app->bind(PlanImportRepository::class, EloquentPlanImportRepository::class);
 
         // Puerto hacia otro contexto (Application) → adaptador anticorrupción
         // que habla con la capa de aplicación de Recipes (HEXM-0025). El
