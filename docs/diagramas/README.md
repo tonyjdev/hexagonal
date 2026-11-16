@@ -110,6 +110,13 @@ Si una tarea no tiene nada que dibujar (por ejemplo, un cambio de configuración
 | HEXM-0027 | [Dos contextos, dos direcciones](HEXM-0027/dos-contextos-dos-direcciones.architecture.json) (`architecture`) | El mapa del nivel 6: `MealPlanning` **pregunta** al recetario con su puerto `RecipeCatalog` y una capa anticorrupción, y **reacciona** a `RecipeDeleted` con un oyente que lo traduce a `UnlinkDeletedRecipe`; el test de arquitectura solo autoriza ese evento como contrato público (ADR 0017 a 0019). |
 | HEXM-0027 | [Reaccionar al borrado](HEXM-0027/reaccion-al-borrado.sequence.json) (`sequence`) | Del `DELETE` de una receta a los planes: el plan 27 desvincula sus platos (`usingRecipe` → `withoutRecipe` → `save`), una receta sin uso no cambia nada, y si la reacción falla el borrado se mantiene (204) y el error se registra. |
 
+### Nivel 7: Importador de planes
+
+| Tarea | Diagrama | Qué muestra |
+|---|---|---|
+| HEXM-0028 | [El servicio importer: sus tareas, su gate y sus piezas](HEXM-0028/servicio-importer-tareas-y-gate.architecture.json) (`architecture`) | El primer servicio Python: `CHECK_CMD` ejecuta el gate de Laravel y después `uv run poe check` (ruff, mypy estricto, pytest); `poe serve` arranca uvicorn sobre `main.py`, y los tests entran por `create_app()` sin servidor (ADR 0021). |
+| HEXM-0028 | [GET /health de punta a punta](HEXM-0028/get-health-de-punta-a-punta.sequence.json) (`sequence`) | La misma petición por dos entradas: con uvicorn (TCP → ASGI → ruta → modelo Pydantic → JSON) y con `TestClient`, en el mismo proceso. |
+
 ### Transversal
 
 | Tarea | Diagrama | Qué muestra |

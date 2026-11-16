@@ -1,0 +1,297 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "GET /health de punta a punta: con uvicorn y con TestClient",
+    "locale": "es",
+    "output": "docs/diagramas/HEXM-0028/get-health-de-punta-a-punta.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tonyjdev/hexagonal.git",
+      "provider": "github",
+      "revision": "69dfbfa727fb5ddb2ced55a16333b584c1c3937e"
+    },
+    "legend": {
+      "entries": {
+        "emphasis": {
+          "label": "Petición real (servidor uvicorn)"
+        },
+        "default": {
+          "label": "Petición de un test (en el mismo proceso)"
+        },
+        "return": {
+          "label": "Respuesta"
+        }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Cliente",
+      "sublabel": "curl · TestClient",
+      "sources": [
+        {
+          "path": "services/importer/tests/test_health.py",
+          "line": 20,
+          "end_line": 28
+        }
+      ]
+    },
+    {
+      "id": "uvicorn",
+      "type": "cloud",
+      "label": "uvicorn",
+      "sublabel": "servidor ASGI",
+      "sources": [
+        {
+          "path": "services/importer/pyproject.toml",
+          "line": 85,
+          "end_line": 88,
+          "label": "poe serve"
+        }
+      ]
+    },
+    {
+      "id": "app",
+      "type": "backend",
+      "label": "app FastAPI",
+      "sublabel": "create_app()",
+      "sources": [
+        {
+          "path": "services/importer/src/importer/main.py",
+          "line": 20,
+          "end_line": 39
+        }
+      ]
+    },
+    {
+      "id": "route",
+      "type": "backend",
+      "label": "health()",
+      "sublabel": "APIRouter",
+      "sources": [
+        {
+          "path": "services/importer/src/importer/api/health.py",
+          "line": 18,
+          "end_line": 18,
+          "label": "router"
+        },
+        {
+          "path": "services/importer/src/importer/api/health.py",
+          "line": 49,
+          "end_line": 52,
+          "label": "GET /health"
+        }
+      ]
+    },
+    {
+      "id": "model",
+      "type": "messagebus",
+      "label": "HealthResponse",
+      "sublabel": "modelo Pydantic",
+      "sources": [
+        {
+          "path": "services/importer/src/importer/api/health.py",
+          "line": 21,
+          "end_line": 41
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 140,
+      "to": 605,
+      "label": "1. En local: uv run poe serve y curl"
+    },
+    {
+      "from": 635,
+      "to": 960,
+      "label": "2. En pytest: TestClient, sin servidor"
+    }
+  ],
+  "messages": [
+    {
+      "id": "curl",
+      "from": "client",
+      "to": "uvicorn",
+      "y": 165,
+      "label": "GET 127.0.0.1:8001/health",
+      "variant": "emphasis",
+      "note": "uvicorn importer.main:app, lanzado por poe serve"
+    },
+    {
+      "id": "asgi",
+      "from": "uvicorn",
+      "to": "app",
+      "y": 235,
+      "label": "app(scope, receive, send)",
+      "variant": "emphasis",
+      "note": "ASGI: el contrato entre el servidor y la aplicación"
+    },
+    {
+      "id": "dispatch",
+      "from": "app",
+      "to": "route",
+      "y": 305,
+      "label": "health()",
+      "variant": "emphasis",
+      "note": "include_router registró GET /health"
+    },
+    {
+      "id": "build",
+      "from": "route",
+      "to": "model",
+      "y": 375,
+      "label": "HealthResponse(status, service)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "built",
+      "from": "model",
+      "to": "route",
+      "y": 420,
+      "label": "modelo validado e inmutable",
+      "variant": "return"
+    },
+    {
+      "id": "returned",
+      "from": "route",
+      "to": "app",
+      "y": 465,
+      "label": "HealthResponse",
+      "variant": "return",
+      "note": "FastAPI lo serializa a JSON con el modelo"
+    },
+    {
+      "id": "asgi_back",
+      "from": "app",
+      "to": "uvicorn",
+      "y": 535,
+      "label": "200 application/json",
+      "variant": "return"
+    },
+    {
+      "id": "ok",
+      "from": "uvicorn",
+      "to": "client",
+      "y": 580,
+      "label": "200 {\"status\": \"ok\", \"service\": \"importer\"}",
+      "variant": "return"
+    },
+    {
+      "id": "test_get",
+      "from": "client",
+      "to": "app",
+      "y": 660,
+      "label": "client.get(\"/health\")",
+      "variant": "default",
+      "note": "TestClient(create_app()): una app nueva, sin abrir puerto"
+    },
+    {
+      "id": "test_dispatch",
+      "from": "app",
+      "to": "route",
+      "y": 730,
+      "label": "health()",
+      "variant": "default"
+    },
+    {
+      "id": "test_build",
+      "from": "route",
+      "to": "model",
+      "y": 775,
+      "label": "HealthResponse(status, service)",
+      "variant": "default"
+    },
+    {
+      "id": "test_built",
+      "from": "model",
+      "to": "route",
+      "y": 820,
+      "label": "modelo validado e inmutable",
+      "variant": "return"
+    },
+    {
+      "id": "test_returned",
+      "from": "route",
+      "to": "app",
+      "y": 865,
+      "label": "HealthResponse",
+      "variant": "return"
+    },
+    {
+      "id": "test_ok",
+      "from": "app",
+      "to": "client",
+      "y": 910,
+      "label": "response: 200 + JSON",
+      "variant": "return",
+      "note": "assert status_code == 200 y el JSON exacto"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "uvicorn",
+      "from": 165,
+      "to": 580,
+      "type": "cloud"
+    },
+    {
+      "participant": "app",
+      "from": 235,
+      "to": 535,
+      "type": "backend"
+    },
+    {
+      "participant": "route",
+      "from": 305,
+      "to": 465,
+      "type": "backend"
+    },
+    {
+      "participant": "model",
+      "from": 375,
+      "to": 420,
+      "type": "messagebus"
+    },
+    {
+      "participant": "app",
+      "from": 660,
+      "to": 910,
+      "type": "backend"
+    },
+    {
+      "participant": "route",
+      "from": 730,
+      "to": 865,
+      "type": "backend"
+    },
+    {
+      "participant": "model",
+      "from": 775,
+      "to": 820,
+      "type": "messagebus"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "El mismo código, dos entradas",
+      "items": [
+        "En local, uvicorn recibe la petición TCP y llama a la app por ASGI (como PHP-FPM con public/index.php).",
+        "En los tests, TestClient llama a la app en el mismo proceso, como $this->getJson() en Laravel: sin servidor ni puerto."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Los type hints hacen el trabajo",
+      "items": [
+        "El tipo de retorno de health() es el modelo de la respuesta: FastAPI lo valida, lo serializa y lo documenta en /openapi.json (lo comprueba el segundo test).",
+        "Literal[\"ok\"] solo admite ese valor: mypy rechaza cualquier otro sin ejecutar nada."
+      ]
+    }
+  ]
+}
