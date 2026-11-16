@@ -119,6 +119,8 @@ hexagonal/
 │       │   └── Infrastructure/
 │       └── Shared/           #   piezas comunes mínimas
 ├── services/                 # servicios Python / FastAPI (a partir del nivel 7)
+├── contracts/                # contratos entre Laravel y los servicios (JSON Schema
+│                             #   + ejemplos; los genera el servicio, ADR 0024)
 └── scripts/                  # utilidades del repo (db-setup.sh prepara PostgreSQL;
                               #   diagramas.sh regenera los diagramas;
                               #   worktree-setup.sh prepara el worktree de una tarea)

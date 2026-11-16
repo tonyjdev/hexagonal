@@ -1,0 +1,112 @@
+{
+  "number": 99,
+  "fixed_meals": [
+    {
+      "meal_type": "breakfast",
+      "description": "Café con leche desnatada + 2 tostadas integrales con tomate",
+      "option_groups": []
+    },
+    {
+      "meal_type": "mid_morning",
+      "description": "1 pieza de fruta y elegir 2 de las opciones",
+      "option_groups": [
+        {
+          "choose": 2,
+          "options": [
+            "1 yogur natural",
+            "15 g de almendras",
+            "2 lonchas de pavo"
+          ]
+        }
+      ]
+    },
+    {
+      "meal_type": "afternoon_snack",
+      "description": "Infusión + 1 puñado de nueces",
+      "option_groups": []
+    }
+  ],
+  "exchanges": [
+    {
+      "category": "carbohydrates",
+      "food": "Arroz",
+      "serving": "1/3 vaso"
+    },
+    {
+      "category": "carbohydrates",
+      "food": "pan",
+      "serving": "2 rebanadas"
+    },
+    {
+      "category": "protein",
+      "food": "Huevo",
+      "serving": "2 uds"
+    },
+    {
+      "category": "protein",
+      "food": "pollo",
+      "serving": "2 filetes"
+    },
+    {
+      "category": "protein",
+      "food": "pescado blanco",
+      "serving": "1 filete grande"
+    },
+    {
+      "category": "vegetables",
+      "food": "Vegetales",
+      "serving": "> 1/2 plato"
+    },
+    {
+      "category": "fat",
+      "food": "aguacate",
+      "serving": "1/2"
+    },
+    {
+      "category": "fat",
+      "food": "nueces",
+      "serving": "1 puñado"
+    },
+    {
+      "category": "fat",
+      "food": "aceitunas",
+      "serving": "6-7"
+    }
+  ],
+  "exchange_rules": [
+    "La legumbre cuenta como 1/2 intercambio de proteína",
+    "Grasas: solo en una de las dos (comida o cena)"
+  ],
+  "nutritionist_week": [
+    {
+      "menu": 1,
+      "lunch": "Garbanzos (1/2 bote) con espinacas + 1 huevo cocido",
+      "dinner": "Merluza al horno (1 filete) con judías verdes"
+    },
+    {
+      "menu": 2,
+      "lunch": "Arroz (1/3 vaso en crudo) con verduras y pollo (2 filetes)",
+      "dinner": "Crema de calabaza + tortilla francesa (2 huevos)"
+    },
+    {
+      "menu": 3,
+      "lunch": "Ensalada de lentejas (1/2 bote) con pimiento y cebolla",
+      "dinner": "Salmón a la plancha (1 filete) con espárragos"
+    },
+    {
+      "menu": 4,
+      "lunch": "Pasta integral (3/4 vaso en crudo) con atún y tomate",
+      "dinner": "Revuelto de champiñones (2 huevos) + pan (1 rebanada)"
+    },
+    {
+      "menu": 5,
+      "lunch": "Patata asada (1 mediana) con pavo (4 filetes) y ensalada",
+      "dinner": "Sopa de verduras + queso fresco (1 tarrina)"
+    },
+    {
+      "menu": 6,
+      "lunch": "Quinoa (1/3 vaso en crudo) salteada con gambas y brócoli",
+      "dinner": "Ensalada verde con caballa (1 lata) y nueces"
+    }
+  ]
+}

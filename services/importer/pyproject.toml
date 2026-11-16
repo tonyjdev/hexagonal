@@ -85,6 +85,9 @@ test = { cmd = "pytest", help = "Tests (como composer test)" }
 # El Excel ficticio de tests/fixtures (pruebas manuales con curl) se genera con
 # el mismo constructor que usan los tests (tests/workbooks.py).
 fixtures = { cmd = "python tests/workbooks.py", help = "Regenera el Excel ficticio de tests/fixtures" }
+# El contrato con Laravel (JSON Schema + ejemplos, ADR 0024) en
+# contracts/importer, en la raíz del repositorio: lo leen los dos lados.
+contract = { cmd = "python tests/contract.py", help = "Regenera el contrato con Laravel de contracts/importer" }
 
 # Gate de calidad: de lo más rápido a lo más lento, parando en el primer fallo,
 # igual que composer ci:check. Una "sequence" de poe ejecuta las tareas en orden.

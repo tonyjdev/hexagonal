@@ -1,0 +1,187 @@
+{
+  "$defs": {
+    "Exchange": {
+      "additionalProperties": false,
+      "description": "Un intercambio: categoría + alimento + ración, todo como en el Excel.",
+      "properties": {
+        "category": {
+          "$ref": "#/$defs/ExchangeCategory"
+        },
+        "food": {
+          "minLength": 1,
+          "title": "Food",
+          "type": "string"
+        },
+        "serving": {
+          "minLength": 1,
+          "title": "Serving",
+          "type": "string"
+        }
+      },
+      "required": [
+        "category",
+        "food",
+        "serving"
+      ],
+      "title": "Exchange",
+      "type": "object"
+    },
+    "ExchangeCategory": {
+      "description": "Categoría de un intercambio, con los valores del ``ExchangeCategory`` del dominio.",
+      "enum": [
+        "carbohydrates",
+        "protein",
+        "vegetables",
+        "fat"
+      ],
+      "title": "ExchangeCategory",
+      "type": "string"
+    },
+    "FixedMeal": {
+      "additionalProperties": false,
+      "description": "Una pauta fija: desayuno, media mañana o media tarde.\n\n``description`` es la parte fija en texto libre (``None`` si no hay) y\n``option_groups``, sus grupos de opciones (``[]`` si no hay).\n\nCONCEPTO: ``str | None``\nUn tipo opcional: puede ser un texto o ``None``. Es el ``?string`` de PHP.",
+      "properties": {
+        "meal_type": {
+          "$ref": "#/$defs/MealType"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Description"
+        },
+        "option_groups": {
+          "items": {
+            "$ref": "#/$defs/OptionGroup"
+          },
+          "title": "Option Groups",
+          "type": "array"
+        }
+      },
+      "required": [
+        "meal_type",
+        "description",
+        "option_groups"
+      ],
+      "title": "FixedMeal",
+      "type": "object"
+    },
+    "MealType": {
+      "description": "Tipo de una pauta fija, con los valores del ``MealType`` del dominio.\n\nCONCEPTO: ``StrEnum``\nUn enum cuyos casos SON textos (``MealType.BREAKFAST == \"breakfast\"``): el\nequivalente a un *backed enum* de PHP (``enum MealType: string``). Pydantic\nlo serializa con su valor, así que en el JSON sale ``\"breakfast\"``.\n\nSolo tiene las pautas fijas: comida y cena no son pautas fijas (regla 15),\ny el Excel no las trae en la hoja «Desayunos y snacks».",
+      "enum": [
+        "breakfast",
+        "mid_morning",
+        "afternoon_snack"
+      ],
+      "title": "MealType",
+      "type": "string"
+    },
+    "NutritionistMenu": {
+      "additionalProperties": false,
+      "description": "Un menú de la semana 1: su número (1-6), la comida y la cena en texto libre.\n\nEl número va dentro de cada elemento (y no como clave de un objeto) para\nque el orden y los duplicados sean visibles (ADR 0014). ``ge=1, le=6``\nacota el número: el menú 6 es el domingo, eso lo decide el dominio.",
+      "properties": {
+        "menu": {
+          "maximum": 6,
+          "minimum": 1,
+          "title": "Menu",
+          "type": "integer"
+        },
+        "lunch": {
+          "minLength": 1,
+          "title": "Lunch",
+          "type": "string"
+        },
+        "dinner": {
+          "minLength": 1,
+          "title": "Dinner",
+          "type": "string"
+        }
+      },
+      "required": [
+        "menu",
+        "lunch",
+        "dinner"
+      ],
+      "title": "NutritionistMenu",
+      "type": "object"
+    },
+    "OptionGroup": {
+      "additionalProperties": false,
+      "description": "Un grupo «elegir N de las siguientes».\n\n``Field(ge=1)`` es «mayor o igual que 1» (como la regla ``min:1`` de\nLaravel) y ``min_length=1`` exige al menos una opción. Que N no supere el\nnúmero de opciones es una regla del dominio (``OptionGroup::choose()``).",
+      "properties": {
+        "choose": {
+          "minimum": 1,
+          "title": "Choose",
+          "type": "integer"
+        },
+        "options": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Options",
+          "type": "array"
+        }
+      },
+      "required": [
+        "choose",
+        "options"
+      ],
+      "title": "OptionGroup",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "El Excel de la nutricionista leído: número, pautas fijas, intercambios y semana 1.\n\nCONCEPTO: ``list[Modelo]``\nUna lista tipada de modelos: Pydantic valida cada elemento. Es el\n``list<FixedMeal>`` de un ``@var`` de PHPStan, pero comprobado al ejecutar.",
+  "properties": {
+    "number": {
+      "minimum": 1,
+      "title": "Number",
+      "type": "integer"
+    },
+    "fixed_meals": {
+      "items": {
+        "$ref": "#/$defs/FixedMeal"
+      },
+      "title": "Fixed Meals",
+      "type": "array"
+    },
+    "exchanges": {
+      "items": {
+        "$ref": "#/$defs/Exchange"
+      },
+      "title": "Exchanges",
+      "type": "array"
+    },
+    "exchange_rules": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Exchange Rules",
+      "type": "array"
+    },
+    "nutritionist_week": {
+      "items": {
+        "$ref": "#/$defs/NutritionistMenu"
+      },
+      "maxItems": 6,
+      "minItems": 6,
+      "title": "Nutritionist Week",
+      "type": "array"
+    }
+  },
+  "required": [
+    "number",
+    "fixed_meals",
+    "exchanges",
+    "exchange_rules",
+    "nutritionist_week"
+  ],
+  "title": "NutritionistPlan",
+  "type": "object"
+}

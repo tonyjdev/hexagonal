@@ -5,9 +5,14 @@ declare(strict_types=1);
 namespace MealPlanning\Infrastructure;
 
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Http\Client\Factory;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
+use MealPlanning\Application\PlanReader;
 use MealPlanning\Application\RecipeCatalog;
 use MealPlanning\Domain\NutritionPlanRepository;
+use MealPlanning\Infrastructure\Importer\HttpPlanReader;
 use MealPlanning\Infrastructure\Persistence\Eloquent\EloquentNutritionPlanRepository;
 use MealPlanning\Infrastructure\Recipes\RecipeDeletedListener;
 use MealPlanning\Infrastructure\Recipes\RecipesContextRecipeCatalog;
@@ -27,8 +32,9 @@ use Recipes\Domain\RecipeDeleted;
  * context se enchufa a la aplicación por su cuenta, y quitar o cambiar uno
  * no obliga a tocar los demás. Se registra en bootstrap/providers.php.
  *
- * Enchufa los dos puertos de salida del contexto: el repositorio de planes
- * y, desde HEXM-0025, el recetario (RecipeCatalog). El puerto Clock es de
+ * Enchufa los puertos de salida del contexto: el repositorio de planes, el
+ * recetario (RecipeCatalog, HEXM-0025) y el lector de los Excel de un plan
+ * (PlanReader → HttpPlanReader, HEXM-0031). El puerto Clock es de
  * Shared y lo enchufa SharedServiceProvider (HEXM-0022). Y, desde HEXM-0027,
  * el adaptador de entrada que escucha eventos de otros contextos
  * (RecipeDeletedListener).
@@ -49,6 +55,18 @@ final class MealPlanningServiceProvider extends ServiceProvider
         // de RecipesServiceProvider: este provider no sabe cómo se guardan
         // las recetas.
         $this->app->bind(RecipeCatalog::class, RecipesContextRecipeCatalog::class);
+
+        // Puerto hacia el servicio externo que lee los Excel (Application) →
+        // adaptador HTTP (HEXM-0031). Con una closure, y no solo con el nombre
+        // de la clase, porque el adaptador necesita dos valores que el
+        // contenedor no puede adivinar: la URL del servicio y el timeout, que
+        // salen de config/services.php. La Factory del cliente HTTP sí la
+        // resuelve el contenedor (y es la misma que intercepta Http::fake()).
+        $this->app->bind(PlanReader::class, fn (Application $app): PlanReader => new HttpPlanReader(
+            $app->make(Factory::class),
+            Config::string('services.importer.url'),
+            Config::float('services.importer.timeout'),
+        ));
     }
 
     /**

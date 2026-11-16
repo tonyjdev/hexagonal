@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Shared\Application\NotFound;
+use Shared\Application\ServiceUnavailable;
 use Shared\Domain\DomainException;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -104,4 +105,34 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Buscar algo que no existe es una respuesta normal, no un fallo.
         $exceptions->dontReport(NotFound::class);
+
+        /*
+        | CONCEPTO: "un servicio del que dependo no responde" → 503 (HEXM-0031)
+        | Cuando un adaptador de salida no puede hablar con un sistema externo
+        | (el importador de Excel caído, un timeout, una respuesta que no
+        | cumple el contrato), lo traduce a una subclase de
+        | Shared\Application\ServiceUnavailable (PlanReaderUnavailable). Aquí
+        | se convierte en HTTP 503 Service Unavailable, una vez para todos los
+        | contextos, igual que DomainException → 422 y NotFound → 404.
+        |
+        | Por qué 503 y no 500: no es un fallo de NUESTRO código, sino de una
+        | dependencia, y probablemente pasajero: el 503 le dice al cliente
+        | que puede reintentar más tarde. Y no es un 502 (Bad Gateway) porque
+        | la aplicación no es un proxy: el usuario no sabe que hay otro
+        | servicio detrás, y el mensaje tampoco se lo cuenta.
+        |
+        | A diferencia de los dos anteriores, NO se añade a dontReport(): un
+        | servicio caído es un fallo del sistema y tiene que llegar al log,
+        | con el error técnico original encadenado como "previous".
+        |
+        | Fuera de la API (una página web) se deja a Laravel (null): todavía
+        | no hay ninguna pantalla que use un servicio externo.
+        */
+        $exceptions->render(function (ServiceUnavailable $exception, Request $request) use ($wantsJson): ?JsonResponse {
+            if (! $wantsJson($request)) {
+                return null;
+            }
+
+            return new JsonResponse(['message' => $exception->getMessage()], JsonResponse::HTTP_SERVICE_UNAVAILABLE);
+        });
     })->create();

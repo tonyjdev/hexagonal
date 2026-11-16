@@ -1,0 +1,15 @@
+{
+  "message": "El Excel no tiene la forma esperada.",
+  "errors": [
+    {
+      "sheet": "Detalle",
+      "cell": null,
+      "message": "Hoja «Detalle»: falta la hoja"
+    },
+    {
+      "sheet": "Resumen",
+      "cell": null,
+      "message": "Hoja «Resumen»: falta la hoja"
+    }
+  ]
+}

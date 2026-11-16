@@ -117,6 +117,21 @@ Un Excel mal formado responde **422** con el mismo formato que el de la nutricio
 
 Subir aquí el Excel de la nutricionista da «falta la hoja «Detalle»»: cada formato tiene su ruta y no se adivina.
 
+## Contrato con Laravel
+
+Laravel lee los Excel a través del puerto `PlanReader`, cuyo adaptador `HttpPlanReader` llama a las dos rutas de arriba (HEXM-0031). Los dos lados se prueban por separado, así que comparten un **contrato versionado** en `contracts/importer/`, en la raíz del repositorio ([ADR 0024](../../docs/adr/0024-puerto-planreader-y-contrato-con-el-importador.md)):
+
+| Fichero | Qué es |
+|---|---|
+| `*.schema.json` | El JSON Schema de cada respuesta (las dos rutas y su 422), generado desde los modelos de Pydantic. |
+| `examples/*.json` | Respuestas reales de las rutas con los Excel ficticios de `tests/workbooks.py`. |
+
+```bash
+uv run poe contract  # regenera contracts/importer
+```
+
+`tests/test_contract.py` falla si un modelo o un lector cambia y el contrato no se ha regenerado. Del lado de Laravel, `ImporterContractTest` valida los ejemplos contra los schemas y los pasa por el adaptador. Cambiar la forma de una respuesta es, por tanto: cambiar el modelo, regenerar el contrato, revisar su diff y adaptar Laravel si sus tests se ponen en rojo.
+
 ## Documentación de la API
 
 FastAPI genera la documentación de la API a partir del código: <http://127.0.0.1:8001/docs> (Swagger UI) y el contrato en <http://127.0.0.1:8001/openapi.json>.
@@ -162,6 +177,7 @@ services/importer/
 │       └── problems.py   #     problemas de forma con su hoja y su celda
 └── tests/                # pytest
     ├── workbooks.py      #   Excel ficticios para los tests (y para tests/fixtures)
+    ├── contract.py       #   genera el contrato con Laravel (contracts/importer, ADR 0024)
     └── fixtures/         #   los mismos Excel ficticios, para las pruebas manuales
 ```
 

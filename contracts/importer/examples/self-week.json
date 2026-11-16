@@ -1,0 +1,226 @@
+{
+  "self_week": [
+    {
+      "day": 8,
+      "lunch": {
+        "name": "Lentejas estofadas",
+        "ingredients": [
+          {
+            "name": "½ bote de lentejas",
+            "quantity": null
+          },
+          {
+            "name": "1 zanahoria",
+            "quantity": null
+          },
+          {
+            "name": "½ cebolla",
+            "quantity": null
+          }
+        ]
+      },
+      "dinner": {
+        "name": "Tortilla de calabacín",
+        "ingredients": [
+          {
+            "name": "2 huevos",
+            "quantity": null
+          },
+          {
+            "name": "½ calabacín",
+            "quantity": null
+          },
+          {
+            "name": "1 cda. de aceite",
+            "quantity": null
+          }
+        ]
+      }
+    },
+    {
+      "day": 9,
+      "lunch": {
+        "name": "Arroz con pollo",
+        "ingredients": [
+          {
+            "name": "⅓ vaso de arroz en crudo",
+            "quantity": null
+          },
+          {
+            "name": "2 filetes de pollo",
+            "quantity": null
+          },
+          {
+            "name": "¼ pimiento rojo",
+            "quantity": null
+          }
+        ]
+      },
+      "dinner": {
+        "name": "Crema de verduras con queso",
+        "ingredients": [
+          {
+            "name": "1 bol de crema de verduras",
+            "quantity": null
+          },
+          {
+            "name": "1 tarrina de queso fresco",
+            "quantity": null
+          }
+        ]
+      }
+    },
+    {
+      "day": 10,
+      "lunch": {
+        "name": "Patatas con bacalao",
+        "ingredients": [
+          {
+            "name": "1,5 patatas medianas",
+            "quantity": null
+          },
+          {
+            "name": "1 lomo de bacalao",
+            "quantity": null
+          },
+          {
+            "name": "perejil",
+            "quantity": null
+          }
+        ]
+      },
+      "dinner": {
+        "name": "Ensalada de garbanzos",
+        "ingredients": [
+          {
+            "name": "½ bote de garbanzos",
+            "quantity": null
+          },
+          {
+            "name": "1 tomate",
+            "quantity": null
+          },
+          {
+            "name": "pepino",
+            "quantity": null
+          },
+          {
+            "name": "2 cdas. de semillas",
+            "quantity": null
+          }
+        ]
+      }
+    },
+    {
+      "day": 11,
+      "lunch": {
+        "name": "Macarrones con atún",
+        "ingredients": [
+          {
+            "name": "Macarrones (¾ vaso en crudo, integrales)",
+            "quantity": null
+          },
+          {
+            "name": "1 lata de atún",
+            "quantity": null
+          },
+          {
+            "name": "tomate triturado",
+            "quantity": null
+          }
+        ]
+      },
+      "dinner": {
+        "name": "Sardinas con pimientos",
+        "ingredients": [
+          {
+            "name": "1 lata de sardinas",
+            "quantity": null
+          },
+          {
+            "name": "½ pimiento verde",
+            "quantity": null
+          },
+          {
+            "name": "¼ cebolla",
+            "quantity": null
+          }
+        ]
+      }
+    },
+    {
+      "day": 12,
+      "lunch": {
+        "name": "Quinoa con verduras",
+        "ingredients": [
+          {
+            "name": "⅓ vaso de quinoa",
+            "quantity": null
+          },
+          {
+            "name": "½ calabacín",
+            "quantity": null
+          },
+          {
+            "name": "1 zanahoria",
+            "quantity": null
+          }
+        ]
+      },
+      "dinner": {
+        "name": "Wrap de pavo",
+        "ingredients": [
+          {
+            "name": "1 tortilla integral",
+            "quantity": null
+          },
+          {
+            "name": "3 lonchas de pavo",
+            "quantity": null
+          },
+          {
+            "name": "lechuga",
+            "quantity": null
+          },
+          {
+            "name": "Fruta de postre",
+            "quantity": null
+          }
+        ]
+      }
+    },
+    {
+      "day": 13,
+      "lunch": null,
+      "dinner": null
+    },
+    {
+      "day": 14,
+      "lunch": {
+        "name": "Ensalada de pasta",
+        "ingredients": [
+          {
+            "name": "Pasta (½ vaso en crudo)",
+            "quantity": null
+          },
+          {
+            "name": "1 huevo duro",
+            "quantity": null
+          },
+          {
+            "name": "maíz",
+            "quantity": null
+          },
+          {
+            "name": "aceitunas",
+            "quantity": null
+          }
+        ]
+      },
+      "dinner": {
+        "name": "Sopa de picadillo",
+        "ingredients": []
+      }
+    }
+  ]
+}
